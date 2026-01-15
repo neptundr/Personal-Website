@@ -1,0 +1,12 @@
+from sqlalchemy import Column, Integer, String, Text
+from .database import Base
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    image_url = Column(String, nullable=False)
+    time_span = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    position = Column(String, nullable=True)
