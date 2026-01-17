@@ -17,7 +17,7 @@ const ContactSection = ({ settings }) => {
     <section className="relative py-32 px-6 md:px-12 lg:px-24 bg-black border-t border-zinc-900 overflow-hidden">
       {/* Game of Life Background */}
       <GameOfLife />
-
+      
       {/* Section header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -26,7 +26,7 @@ const ContactSection = ({ settings }) => {
         transition={{ duration: 0.6 }}
         className="text-center mb-16"
       >
-        <motion.span
+        <motion.span 
           className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -35,7 +35,7 @@ const ContactSection = ({ settings }) => {
         >
           Get in Touch
         </motion.span>
-        <motion.h2
+        <motion.h2 
           className="mt-4 text-4xl md:text-5xl lg:text-6xl font-light text-white tracking-tight relative z-10"
           style={{ textShadow: '0 2px 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.6)' }}
           initial={{ opacity: 0, y: 20 }}
@@ -88,7 +88,7 @@ const ContactSection = ({ settings }) => {
         {availableLinks.map((link, index) => {
           const Icon = link.icon;
           const href = settings[link.key];
-
+          
           return (
             <motion.a
               key={link.key}
