@@ -1,11 +1,9 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite:///./projects.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///./portfolio.db"  # use PostgreSQL in production
 
 engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}  # SQLite only
 )
-
-SessionLocal = sessionmaker(bind=engine, autoflush=False)
-Base = declarative_base()
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

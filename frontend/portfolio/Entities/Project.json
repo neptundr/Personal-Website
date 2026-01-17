@@ -1,0 +1,78 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "work",
+        "project",
+        "achievement"
+      ],
+      "default": "project",
+      "description": "Type of experience"
+    },
+    "company": {
+      "type": "string",
+      "description": "Company/Organization (for work experiences)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": false,
+      "description": "Currently ongoing"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Image URL"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Skills/technologies used"
+    },
+    "link": {
+      "type": "string",
+      "description": "External link"
+    },
+    "github_url": {
+      "type": "string",
+      "description": "GitHub repository URL"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "description"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "SiteSettings",
+  "type": "object",
+  "properties": {
+    "available_for_hire": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show available for hire badge"
+    },
+    "hero_name": {
+      "type": "string",
+      "default": "Denis",
+      "description": "Name displayed in hero"
+    },
+    "hero_subtitle": {
+      "type": "string",
+      "description": "Subtitle text"
+    },
+    "hero_video_url": {
+      "type": "string",
+      "description": "Hero background video URL"
+    },
+    "love_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Items for 'I love X' rotation"
+    },
+    "linkedin_url": {
+      "type": "string"
+    },
+    "github_url": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "twitter_url": {
+      "type": "string"
+    },
+    "resume_url": {
+      "type": "string"
+    }
+  },
+  "required": []
+}

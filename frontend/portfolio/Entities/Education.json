@@ -1,0 +1,53 @@
+{
+  "name": "Education",
+  "type": "object",
+  "properties": {
+    "institution": {
+      "type": "string",
+      "description": "School/University name"
+    },
+    "institution_url": {
+      "type": "string",
+      "description": "Institution website URL"
+    },
+    "degree": {
+      "type": "string",
+      "description": "Degree or diploma"
+    },
+    "field": {
+      "type": "string",
+      "description": "Field of study"
+    },
+    "start_year": {
+      "type": "string",
+      "description": "Start year"
+    },
+    "end_year": {
+      "type": "string",
+      "description": "End year"
+    },
+    "description": {
+      "type": "string",
+      "description": "Additional details"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Institution logo"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "school",
+        "university"
+      ],
+      "description": "Type of institution"
+    },
+    "order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "institution",
+    "degree"
+  ]
+}

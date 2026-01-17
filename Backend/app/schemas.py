@@ -1,13 +1,59 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
+from datetime import date
 
-class ProjectOut(BaseModel):
-    id: int
-    name: str
-    image_url: str
-    time_span: str
-    description: Optional[str]
-    position: Optional[str]
+class ProjectSchema(BaseModel):
+    title: str
+    description: str
+    type: Optional[str] = "project"
+    company: Optional[str]
+    location: Optional[str]
+    start_date: Optional[date]
+    end_date: Optional[date]
+    is_current: Optional[bool] = False
+    image_url: Optional[str]
+    skills: Optional[List[str]] = []
+    link: Optional[str]
+    github_url: Optional[str]
+    order: Optional[int]
+    featured: Optional[bool] = False
 
     class Config:
-        from_attributes = True
+        orm_mode = True
+
+class EducationSchema(BaseModel):
+    institution: str
+    degree: str
+    institution_url: Optional[str]
+    field: Optional[str]
+    start_year: Optional[str]
+    end_year: Optional[str]
+    description: Optional[str]
+    logo_url: Optional[str]
+    type: Optional[str]
+    order: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+class SiteSettingsSchema(BaseModel):
+    available_for_hire: Optional[bool] = True
+    hero_name: Optional[str] = "Denis"
+    hero_subtitle: Optional[str]
+    hero_video_url: Optional[str]
+    love_items: Optional[List[str]] = []
+    linkedin_url: Optional[str]
+    github_url: Optional[str]
+    email: Optional[str]
+    twitter_url: Optional[str]
+    resume_url: Optional[str]
+
+    class Config:
+        orm_mode = True
+
+class SkillIconSchema(BaseModel):
+    skill_name: str
+    icon_url: str
+
+    class Config:
+        orm_mode = True

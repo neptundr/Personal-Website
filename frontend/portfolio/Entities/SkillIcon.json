@@ -1,0 +1,18 @@
+{
+  "name": "SkillIcon",
+  "type": "object",
+  "properties": {
+    "skill_name": {
+      "type": "string",
+      "description": "Skill name (e.g., Python, React)"
+    },
+    "icon_url": {
+      "type": "string",
+      "description": "URL to skill icon image"
+    }
+  },
+  "required": [
+    "skill_name",
+    "icon_url"
+  ]
+}
