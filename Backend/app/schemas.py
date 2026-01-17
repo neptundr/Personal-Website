@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import date
 
 class ProjectSchema(BaseModel):
+    id: int
     title: str
     description: str
     type: Optional[str] = "project"
@@ -19,9 +20,10 @@ class ProjectSchema(BaseModel):
     featured: Optional[bool] = False
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class EducationSchema(BaseModel):
+    id: int
     institution: str
     degree: str
     institution_url: Optional[str]
@@ -34,12 +36,12 @@ class EducationSchema(BaseModel):
     order: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class SiteSettingsSchema(BaseModel):
     available_for_hire: Optional[bool] = True
     hero_name: Optional[str] = "Denis"
-    hero_subtitle: Optional[str]
+    hero_subtitle: Optional[str] = "Subtitle"
     hero_video_url: Optional[str]
     love_items: Optional[List[str]] = []
     linkedin_url: Optional[str]
@@ -49,11 +51,12 @@ class SiteSettingsSchema(BaseModel):
     resume_url: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class SkillIconSchema(BaseModel):
+    id: int
     skill_name: str
     icon_url: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

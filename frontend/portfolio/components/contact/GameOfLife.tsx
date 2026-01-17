@@ -110,7 +110,15 @@ const GameOfLife = () => {
             for (let i = 0; i < cols; i++) {
                 for (let j = 0; j < rows; j++) {
                     if (displayGrid[i][j] > 0.01) {
-                        ctx.fillStyle = `rgba(255,255,255,${displayGrid[i][j]*displayGrid[i][j]})`;
+                        // const x = (i + 0.5) / cols;          // 0 → 1 across columns
+                        // const d = Math.abs(x - 0.5) * 2;     // 0 at center, 1 at edges
+                        // const t = 1 - d;                     // 1 at center, 0 at edges
+                        // const curve = t ** 0.75;              // optional: sharper falloff
+
+                        // const v = Math.floor(255 - 100 * curve);
+
+                        const v = 255
+                        ctx.fillStyle = `rgba(${v},${v},${v},${displayGrid[i][j] ** 2})`;
                         ctx.fillRect(i * cellSize + 1, j * cellSize + 1, cellSize - 2, cellSize - 2);
                     }
                 }

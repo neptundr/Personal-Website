@@ -1,21 +1,23 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Text, ARRAY
+from sqlalchemy import Column, Integer, String, Boolean, Date, Text
+from sqlalchemy.types import JSON
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
 class Project(Base):
     __tablename__ = "projects"
+
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)
-    type = Column(String, default="project")  # "work", "project", "achievement"
+    type = Column(String, default="project")
     company = Column(String)
     location = Column(String)
     start_date = Column(Date)
     end_date = Column(Date)
     is_current = Column(Boolean, default=False)
     image_url = Column(String)
-    skills = Column(ARRAY(String))
+    skills = Column(JSON)  # list[str]
     link = Column(String)
     github_url = Column(String)
     order = Column(Integer)
@@ -37,12 +39,13 @@ class Education(Base):
 
 class SiteSettings(Base):
     __tablename__ = "site_settings"
+
     id = Column(Integer, primary_key=True, index=True)
     available_for_hire = Column(Boolean, default=True)
     hero_name = Column(String, default="Denis")
     hero_subtitle = Column(String)
     hero_video_url = Column(String)
-    love_items = Column(ARRAY(String))
+    love_items = Column(JSON)  # list[str]
     linkedin_url = Column(String)
     github_url = Column(String)
     email = Column(String)
