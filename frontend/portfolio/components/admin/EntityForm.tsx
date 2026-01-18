@@ -1,22 +1,83 @@
-import React from 'react';
+'use client';
+
+import * as React from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { X, Save } from 'lucide-react';
 
-const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, isLoading }) => {
-  const handleChange = (key, value) => {
-    setFormData({ ...formData, [key]: value });
+/* ---------- types ---------- */
+
+type FieldType =
+  | 'text'
+  | 'textarea'
+  | 'date'
+  | 'number'
+  | 'boolean'
+  | 'select'
+  | 'array';
+
+export interface FieldOption {
+  label: string;
+  value: string;
+}
+
+export interface FieldConfig {
+  key: string;
+  label: string;
+  type: FieldType;
+  placeholder?: string;
+  description?: string;
+  options?: FieldOption[];
+}
+
+interface EntityFormProps<T extends Record<string, any>> {
+  title: string;
+  fields: FieldConfig[];
+  formData: T;
+  setFormData: React.Dispatch<React.SetStateAction<T>>;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onCancel: () => void;
+  isLoading?: boolean;
+}
+
+/* ---------- component ---------- */
+
+export default function EntityForm<T extends Record<string, any>>({
+  title,
+  fields,
+  formData,
+  setFormData,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}: EntityFormProps<T>) {
+  const handleChange = (key: string, value: any) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleArrayChange = (key, value) => {
-    const arr = value.split(',').map(s => s.trim()).filter(Boolean);
-    setFormData({ ...formData, [key]: arr });
+  const handleArrayChange = (key: string, value: string) => {
+    const arr = value
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    setFormData(prev => ({ ...prev, [key]: arr }));
   };
 
   return (
@@ -37,16 +98,21 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
             <X className="w-5 h-5" />
           </Button>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
-            {fields.map((field) => (
+            {fields.map(field => (
               <div key={field.key}>
-                <Label className="text-white/80 mb-2 block">{field.label}</Label>
+                <Label className="text-white/80 mb-2 block">
+                  {field.label}
+                </Label>
 
                 {field.type === 'text' && (
                   <Input
-                    value={formData[field.key] || ''}
-                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    value={formData[field.key] ?? ''}
+                    onChange={e =>
+                      handleChange(field.key, e.target.value)
+                    }
                     placeholder={field.placeholder}
                     className="bg-black border-white/10 text-white placeholder:text-white/30"
                   />
@@ -54,8 +120,10 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
 
                 {field.type === 'textarea' && (
                   <Textarea
-                    value={formData[field.key] || ''}
-                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    value={formData[field.key] ?? ''}
+                    onChange={e =>
+                      handleChange(field.key, e.target.value)
+                    }
                     placeholder={field.placeholder}
                     className="bg-black border-white/10 text-white placeholder:text-white/30 min-h-[100px]"
                   />
@@ -64,8 +132,10 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
                 {field.type === 'date' && (
                   <Input
                     type="date"
-                    value={formData[field.key] || ''}
-                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    value={formData[field.key] ?? ''}
+                    onChange={e =>
+                      handleChange(field.key, e.target.value)
+                    }
                     className="bg-black border-white/10 text-white"
                   />
                 )}
@@ -73,35 +143,51 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
                 {field.type === 'number' && (
                   <Input
                     type="number"
-                    value={formData[field.key] || ''}
-                    onChange={(e) => handleChange(field.key, Number(e.target.value))}
-                    placeholder={field.placeholder}
-                    className="bg-black border-white/10 text-white placeholder:text-white/30"
+                    value={formData[field.key] ?? ''}
+                    onChange={e =>
+                      handleChange(
+                        field.key,
+                        Number(e.target.value)
+                      )
+                    }
+                    className="bg-black border-white/10 text-white"
                   />
                 )}
 
                 {field.type === 'boolean' && (
                   <div className="flex items-center gap-3">
                     <Switch
-                      checked={formData[field.key] || false}
-                      onCheckedChange={(checked) => handleChange(field.key, checked)}
+                      checked={Boolean(formData[field.key])}
+                      onCheckedChange={checked =>
+                        handleChange(field.key, checked)
+                      }
                       className="data-[state=checked]:bg-red-500"
                     />
-                    <span className="text-white/60 text-sm">{field.description}</span>
+                    <span className="text-white/60 text-sm">
+                      {field.description}
+                    </span>
                   </div>
                 )}
 
-                {field.type === 'select' && (
+                {field.type === 'select' && field.options && (
                   <Select
-                    value={formData[field.key] || ''}
-                    onValueChange={(value) => handleChange(field.key, value)}
+                    value={formData[field.key] ?? ''}
+                    onValueChange={value =>
+                      handleChange(field.key, value)
+                    }
                   >
                     <SelectTrigger className="bg-black border-white/10 text-white">
-                      <SelectValue placeholder={field.placeholder} />
+                      <SelectValue
+                        placeholder={field.placeholder}
+                      />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-white/10">
-                      {field.options.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="text-white">
+                      {field.options.map(opt => (
+                        <SelectItem
+                          key={opt.value}
+                          value={opt.value}
+                          className="text-white"
+                        >
                           {opt.label}
                         </SelectItem>
                       ))}
@@ -111,8 +197,13 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
 
                 {field.type === 'array' && (
                   <Input
-                    value={(formData[field.key] || []).join(', ')}
-                    onChange={(e) => handleArrayChange(field.key, e.target.value)}
+                    value={(formData[field.key] ?? []).join(', ')}
+                    onChange={e =>
+                      handleArrayChange(
+                        field.key,
+                        e.target.value
+                      )
+                    }
                     placeholder={field.placeholder}
                     className="bg-black border-white/10 text-white placeholder:text-white/30"
                   />
@@ -129,6 +220,7 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
               >
                 Cancel
               </Button>
+
               <Button
                 type="submit"
                 disabled={isLoading}
@@ -149,6 +241,4 @@ const EntityForm = ({ title, fields, formData, setFormData, onSubmit, onCancel, 
       </Card>
     </motion.div>
   );
-};
-
-export default EntityForm;
+}

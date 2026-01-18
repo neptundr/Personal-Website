@@ -23,12 +23,15 @@ const badgeVariants = cva(
   }
 )
 
-function Badge({
-  className,
-  variant,
-  ...props
-}) {
-  return (<div className={cn(badgeVariants({ variant }), className)} {...props} />);
+class Badge extends React.Component<{ className: any, variant: any }> {
+    render() {
+        let {
+            className,
+            variant,
+            ...props
+        } = this.props;
+        return (<div className={cn(badgeVariants({variant}), className)} {...props} />);
+    }
 }
 
 export { Badge, badgeVariants }

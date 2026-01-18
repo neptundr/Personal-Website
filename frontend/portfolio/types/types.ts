@@ -1,6 +1,6 @@
 // types/types.ts
 export interface Project {
-  id?: number;
+  id: number;
   title: string;
   description: string;
   type?: 'work' | 'project' | 'achievement';

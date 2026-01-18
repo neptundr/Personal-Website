@@ -33,19 +33,19 @@ export default function AdminSkillIcons() {
     });
 
     const deleteMutation = useMutation({
-        mutationFn: (id) => api.entities.SkillIcon.delete(id),
+        mutationFn: (id: number) => api.entities.SkillIcon.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['skillIcons']});
         }
     });
 
-    const handleUpload = async (e) => {
+    const handleUpload = async (e:any) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setUploading(true);
         try {
-            const {file_url} = await api.integrations.Core.UploadFile({file});
+            const {file_url} = await api.uploadFile(file);
             setIconUrl(file_url);
         } catch (error) {
             console.error('Upload failed:', error);
@@ -105,7 +105,7 @@ export default function AdminSkillIcons() {
                                             <Upload className="w-4 h-4 text-white/60"/>
                                             <span className="text-white/60 text-sm">
                         {uploading ? 'Uploading...' : 'Upload Icon'}
-                      </span>
+                        </span>
                                         </div>
                                         <input
                                             id="icon-upload"
@@ -147,7 +147,7 @@ export default function AdminSkillIcons() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {skillIcons.map((skill) => (
+                        {skillIcons.map((skill:any) => (
                             <Card key={skill.id} className="bg-zinc-950 border-white/10">
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">

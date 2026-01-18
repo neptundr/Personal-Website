@@ -52,7 +52,7 @@ export default function AdminProjects() {
 
     const {data: projects, isLoading} = useQuery({
         queryKey: ['projects'],
-        queryFn: () => api.entities.Project.list('order', 50),
+        queryFn: () => api.entities.Project.list(/*'order', 50*/),
         initialData: []
     });
 
@@ -83,7 +83,7 @@ export default function AdminProjects() {
         }
     });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         if (editingProject) {
             updateMutation.mutate({id: editingProject.id, data: formData});

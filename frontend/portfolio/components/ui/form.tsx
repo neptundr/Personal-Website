@@ -1,23 +1,25 @@
 "use client";
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
-import { Controller, FormProvider, useFormContext } from "react-hook-form";
+import { Controller, FormProvider, useFormContext, type ControllerFieldState, type ControllerRenderProps, type FieldValues, type UseFormStateReturn} from "react-hook-form";
 
-import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
+import {cn} from "@/lib/utils"
+import {Label} from "@/components/ui/label"
 
 const Form = FormProvider
 
 const FormFieldContext = React.createContext({})
 
 const FormField = (
-  {
-    ...props
-  }
+    {
+        ...props
+    }
 ) => {
-  return (
-    (<FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
+    return (
+        (<FormFieldContext.Provider value={{name: props.name}}>
+            <Controller render={function (): React.ReactElement {
+                throw new Error("Function not implemented.");
+            }} name={""} {...props} />
     </FormFieldContext.Provider>)
   );
 }

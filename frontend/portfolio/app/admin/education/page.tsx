@@ -36,7 +36,7 @@ const educationFields = [
   { key: 'order', label: 'Display Order', type: 'number', placeholder: '1' },
 ];
 
-export function AdminEducation() {
+export default function AdminEducation() {
     const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
