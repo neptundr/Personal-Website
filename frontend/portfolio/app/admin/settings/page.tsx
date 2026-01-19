@@ -70,7 +70,7 @@ export default function AdminSettings() {
         if (!settings) return;
 
         setFormData({
-            available_for_hire: settings.available_for_hire ?? true,
+            available_for_hire: settings.available_for_hire ?? false,
             hero_name: settings.hero_name ?? 'Denis',
             hero_subtitle: settings.hero_subtitle ?? '',
             hero_video_url: settings.hero_video_url ?? '',
