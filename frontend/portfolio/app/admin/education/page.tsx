@@ -182,7 +182,7 @@ export default function AdminEducation() {
                                     <Card
                                         className="bg-zinc-950 border-white/10 hover:border-white/20 transition-colors">
                                         <CardContent className="p-6">
-                                            <div className="flex items-start gap-4">
+                                            <div className="flex items-start gap-4 pt-6">
                                                 <div
                                                     className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
                                                     <Icon className="w-5 h-5 text-red-400"/>
@@ -199,8 +199,14 @@ export default function AdminEducation() {
                                                     )}
                                                 </div>
                                                 {edu.logo_url && (
-                                                    <img src={edu.logo_url} alt={edu.institution}
-                                                         className="w-12 h-12 object-contain opacity-50"/>
+                                                    <div
+                                                        className="w-28 h-28 rounded-xl bg-white/90 flex items-center justify-center shrink-0">
+                                                        <img
+                                                            src={edu.logo_url}
+                                                            alt={edu.institution}
+                                                            className="w-22 h-22 object-contain"
+                                                        />
+                                                    </div>
                                                 )}
                                                 <div className="flex items-center gap-2">
                                                     <Button

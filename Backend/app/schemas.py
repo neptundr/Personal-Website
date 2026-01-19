@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import date
 
 class ProjectSchema(BaseModel):
-    id: int
+    # id: int
     title: str
     description: str
     type: Optional[str] = "project"
@@ -21,6 +21,9 @@ class ProjectSchema(BaseModel):
 
     class Config:
         from_attributes = True
+#
+# class ProjectOut(ProjectSchema):
+#     id: int
 
 class EducationSchema(BaseModel):
     # id: int

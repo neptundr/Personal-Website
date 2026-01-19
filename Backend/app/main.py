@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine
 from app import models, schemas
-
 from app.models import Project, SiteSettings, Education, SkillIcon
 from app.schemas import ProjectSchema, SiteSettingsSchema, EducationSchema, SkillIconSchema
 
@@ -158,7 +157,6 @@ def list_skills(db: Session = Depends(get_db)):
 
 @app.post("/skills")
 def create_skill(skill: SkillIconSchema, db: Session = Depends(get_db)):
-
     db_skill = SkillIcon(**skill.dict())
     db.add(db_skill)
     db.commit()

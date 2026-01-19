@@ -185,7 +185,6 @@ export default function AdminProjects() {
                     )}
                 </AnimatePresence>
 
-                {/* rest unchanged */}
             </motion.div>
         </AdminLayout>
     );
