@@ -1,21 +1,44 @@
 import React, {useRef, useEffect, useState} from 'react';
 
-const GameOfLife = () => {
-    const canvasRef = useRef(null);
-    const animationRef = useRef(null);
-    const [key, setKey] = useState(0);
+type Grid = number[][];
+
+const GameOfLife: React.FC = () => {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const animationRef = useRef<number | null>(null);
+    const [key, setKey] = useState<number>(0);
 
     const cellSize = 20;
-    let cols, rows;
-    let grid, nextGrid, displayGrid;
 
-    // Desired updates per second for the Game of Life logic
-    const updatesPerSecond = 2;
-    const updateInterval = 1000 / updatesPerSecond; // milliseconds
+    let cols = 0;
+    let rows = 0;
+    let grid: Grid;
+    let nextGrid: Grid;
+    let displayGrid: Grid;
+
+    const updatesPerSecond = 1.35;
+    const updateInterval = 1000 / updatesPerSecond;
 
     useEffect(() => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const createEmptyGrid = (): Grid =>
+            Array.from({length: cols}, () => Array(rows).fill(0));
+
+        const createEmptyGridFloat = (): Grid =>
+            Array.from({length: cols}, () => Array(rows).fill(0));
+
+        const randomizeGrid = () => {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    grid[i][j] = Math.random() > 0.85 ? 1 : 0;
+                    displayGrid[i][j] = grid[i][j];
+                }
+            }
+        };
 
         const resize = () => {
             canvas.width = window.innerWidth;
@@ -27,22 +50,11 @@ const GameOfLife = () => {
             grid = createEmptyGrid();
             nextGrid = createEmptyGrid();
             displayGrid = createEmptyGridFloat();
+
             randomizeGrid();
         };
 
-        const createEmptyGrid = () => Array(cols).fill(null).map(() => Array(rows).fill(0));
-        const createEmptyGridFloat = () => Array(cols).fill(null).map(() => Array(rows).fill(0));
-
-        const randomizeGrid = () => {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    grid[i][j] = Math.random() > 0.85 ? 1 : 0;
-                    displayGrid[i][j] = grid[i][j]; // initialize fade
-                }
-            }
-        };
-
-        const countNeighbors = (x, y) => {
+        const countNeighbors = (x: number, y: number): number => {
             let count = 0;
             for (let i = -1; i <= 1; i++) {
                 for (let j = -1; j <= 1; j++) {
@@ -72,12 +84,11 @@ const GameOfLife = () => {
         const updateDisplayGrid = () => {
             for (let i = 0; i < cols; i++) {
                 for (let j = 0; j < rows; j++) {
-                    const target = grid[i][j]; // 0 or 1
-                    if (target === 1) {
-                        displayGrid[i][j] += (target - displayGrid[i][j]) * 0.95;
-                    } else {
-                        displayGrid[i][j] += (target - displayGrid[i][j]) * 0.125; // fade speed
-                    }
+                    const target = grid[i][j];
+                    displayGrid[i][j] +=
+                        target === 1
+                            ? (target - displayGrid[i][j]) * 0.95
+                            : (target - displayGrid[i][j]) * 0.125;
                 }
             }
         };
@@ -86,7 +97,6 @@ const GameOfLife = () => {
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Optional grid lines
             for (let i = 0; i <= cols; i++) {
                 const x = i * cellSize;
                 ctx.strokeStyle = 'rgba(64,64,64,0.15)';
@@ -96,6 +106,7 @@ const GameOfLife = () => {
                 ctx.lineTo(x, canvas.height);
                 ctx.stroke();
             }
+
             for (let j = 0; j <= rows; j++) {
                 const y = j * cellSize;
                 ctx.strokeStyle = 'rgba(64,64,64,0.15)';
@@ -106,20 +117,18 @@ const GameOfLife = () => {
                 ctx.stroke();
             }
 
-            // Draw cells with fade
             for (let i = 0; i < cols; i++) {
                 for (let j = 0; j < rows; j++) {
-                    if (displayGrid[i][j] > 0.01) {
-                        // const x = (i + 0.5) / cols;          // 0 → 1 across columns
-                        // const d = Math.abs(x - 0.5) * 2;     // 0 at center, 1 at edges
-                        // const t = 1 - d;                     // 1 at center, 0 at edges
-                        // const curve = t ** 0.75;              // optional: sharper falloff
-
-                        // const v = Math.floor(255 - 100 * curve);
-
-                        const v = 255
-                        ctx.fillStyle = `rgba(${v},${v},${v},${displayGrid[i][j] ** 2})`;
-                        ctx.fillRect(i * cellSize + 1, j * cellSize + 1, cellSize - 2, cellSize - 2);
+                    const alpha: number = displayGrid[i][j];
+                    if (alpha > 0.01) {
+                        const v = 255;
+                        ctx.fillStyle = `rgba(${v},${v},${v},${alpha ** 2})`;
+                        ctx.fillRect(
+                            i * cellSize + 1,
+                            j * cellSize + 1,
+                            cellSize - 2,
+                            cellSize - 2
+                        );
                     }
                 }
             }
@@ -127,17 +136,15 @@ const GameOfLife = () => {
 
         let lastUpdateTime = 0;
 
-        const animate = (time) => {
+        const animate = (time: number) => {
             if (!lastUpdateTime) lastUpdateTime = time;
 
-            // Only update logic if enough real time has passed
-            const delta = time - lastUpdateTime;
-            if (delta >= updateInterval) {
+            if (time - lastUpdateTime >= updateInterval) {
                 updateGrid();
                 lastUpdateTime = time;
             }
 
-            updateDisplayGrid(); // fade animation every frame
+            updateDisplayGrid();
             draw();
 
             animationRef.current = requestAnimationFrame(animate);
@@ -149,7 +156,9 @@ const GameOfLife = () => {
 
         return () => {
             window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationRef.current);
+            if (animationRef.current !== null) {
+                cancelAnimationFrame(animationRef.current);
+            }
         };
     }, [key]);
 

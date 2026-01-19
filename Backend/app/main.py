@@ -158,6 +158,7 @@ def list_skills(db: Session = Depends(get_db)):
 
 @app.post("/skills")
 def create_skill(skill: SkillIconSchema, db: Session = Depends(get_db)):
+
     db_skill = SkillIcon(**skill.dict())
     db.add(db_skill)
     db.commit()

@@ -23,7 +23,7 @@ class ProjectSchema(BaseModel):
         from_attributes = True
 
 class EducationSchema(BaseModel):
-    id: int
+    # id: int
     institution: str
     degree: str
     institution_url: Optional[str]
@@ -54,7 +54,7 @@ class SiteSettingsSchema(BaseModel):
         from_attributes = True
 
 class SkillIconSchema(BaseModel):
-    id: int
+    # id: int
     skill_name: str
     icon_url: str
 

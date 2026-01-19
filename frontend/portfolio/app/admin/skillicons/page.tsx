@@ -11,6 +11,11 @@ import {Label} from '@/components/ui/label';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Plus, Trash2, Upload} from 'lucide-react';
 
+type CreateSkillIconPayload = {
+    skill_name: string;
+    icon_url: string;
+};
+
 export default function AdminSkillIcons() {
     const queryClient = useQueryClient();
     const [skillName, setSkillName] = useState('');
@@ -23,13 +28,17 @@ export default function AdminSkillIcons() {
         initialData: []
     });
 
-    const createMutation = useMutation({
+    const createMutation = useMutation<
+        unknown,
+        unknown,
+        CreateSkillIconPayload
+    >({
         mutationFn: (data) => api.entities.SkillIcon.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['skillIcons']});
             setSkillName('');
             setIconUrl('');
-        }
+        },
     });
 
     const deleteMutation = useMutation({
@@ -39,7 +48,7 @@ export default function AdminSkillIcons() {
         }
     });
 
-    const handleUpload = async (e:any) => {
+    const handleUpload = async (e: any) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -54,7 +63,7 @@ export default function AdminSkillIcons() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: any) => {
         e.preventDefault();
         if (skillName && iconUrl) {
             createMutation.mutate({skill_name: skillName, icon_url: iconUrl});
@@ -147,7 +156,7 @@ export default function AdminSkillIcons() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {skillIcons.map((skill:any) => (
+                        {skillIcons.map((skill: any) => (
                             <Card key={skill.id} className="bg-zinc-950 border-white/10">
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">

@@ -1,82 +1,113 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import React, {useState} from 'react';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {api} from '@/api/client';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import EntityForm from '../../../components/admin/EntityForm';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, GraduationCap, School } from 'lucide-react';
+import {motion, AnimatePresence} from 'framer-motion';
+import {Button} from '@/components/ui/button';
+import {Card, CardContent} from '@/components/ui/card';
+import {Plus, Pencil, Trash2, GraduationCap, School} from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const educationFields = [
-  { key: 'institution', label: 'Institution Name', type: 'text', placeholder: 'University/School name' },
-  { key: 'institution_url', label: 'Institution URL', type: 'text', placeholder: 'https://university.edu' },
-  { key: 'degree', label: 'Degree/Diploma', type: 'text', placeholder: "Bachelor's in Computer Science" },
-  { key: 'field', label: 'Field of Study', type: 'text', placeholder: 'Computer Science' },
-  { key: 'start_year', label: 'Start Year', type: 'text', placeholder: '2020' },
-  { key: 'end_year', label: 'End Year', type: 'text', placeholder: '2024 (or expected)' },
-  { key: 'type', label: 'Type', type: 'select', placeholder: 'Select type', options: [
-    { value: 'school', label: 'High School' },
-    { value: 'university', label: 'University/College' }
-  ]},
-  { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Additional details, achievements, etc.' },
-  { key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://...' },
-  { key: 'order', label: 'Display Order', type: 'number', placeholder: '1' },
+interface Education {
+    id: number;
+    institution: string;
+    institution_url?: string;
+    degree: string;
+    field?: string;
+    start_year: string;
+    end_year?: string;
+    type: 'school' | 'university';
+    description?: string;
+    logo_url?: string;
+    order?: number;
+}
+
+interface FormData {
+    [key: string]: any;
+}
+
+type FieldConfig = {
+    key: string;
+    label: string;
+    type: 'text' | 'number' | 'textarea' | 'select';
+    placeholder?: string;
+    options?: { value: string; label: string }[];
+};
+
+const educationFields: FieldConfig[] = [
+    {key: 'institution', label: 'Institution Name', type: 'text', placeholder: 'University/School name'},
+    {key: 'institution_url', label: 'Institution URL', type: 'text', placeholder: 'https://university.edu'},
+    {key: 'degree', label: 'Degree/Diploma', type: 'text', placeholder: "Bachelor's in Computer Science"},
+    {key: 'field', label: 'Field of Study', type: 'text', placeholder: 'Computer Science'},
+    {key: 'start_year', label: 'Start Year', type: 'text', placeholder: '2020'},
+    {key: 'end_year', label: 'End Year', type: 'text', placeholder: '2024 (or expected)'},
+    {
+        key: 'type',
+        label: 'Type',
+        type: 'select',
+        placeholder: 'Select type',
+        options: [
+            {value: 'school', label: 'High School'},
+            {value: 'university', label: 'University/College'},
+        ],
+    },
+    {key: 'description', label: 'Description', type: 'textarea', placeholder: 'Additional details, achievements, etc.'},
+    {key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://...'},
+    {key: 'order', label: 'Display Order', type: 'number', placeholder: '1'},
 ];
 
 export default function AdminEducation() {
     const queryClient = useQueryClient();
-    const [showForm, setShowForm] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
-    const [deleteItem, setDeleteItem] = useState(null);
-    const [formData, setFormData] = useState({});
+    const [showForm, setShowForm] = useState<boolean>(false);
+    const [editingItem, setEditingItem] = useState<Education | null>(null);
+    const [deleteItem, setDeleteItem] = useState<Education | null>(null);
+    const [formData, setFormData] = useState<FormData>({});
 
-    const {data: education, isLoading} = useQuery({
+    const {data: education = [], isLoading} = useQuery<Education[]>({
         queryKey: ['education'],
-        queryFn: () => api.entities.Education.list('order', 10),
-        initialData: []
+        queryFn: () => api.entities.Education.list(),
     });
 
-    const createMutation = useMutation({
+    const createMutation = useMutation<Education, unknown, FormData>({
         mutationFn: (data) => api.entities.Education.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['education']});
             setShowForm(false);
             setFormData({});
-        }
+        },
     });
 
-    const updateMutation = useMutation({
+    const updateMutation = useMutation<Education, unknown, { id: number; data: FormData }>({
         mutationFn: ({id, data}) => api.entities.Education.update(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['education']});
             setShowForm(false);
             setEditingItem(null);
             setFormData({});
-        }
+        },
     });
 
-    const deleteMutation = useMutation({
+    const deleteMutation = useMutation<boolean, unknown, number>({
         mutationFn: (id) => api.entities.Education.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['education']});
             setDeleteItem(null);
-        }
+        },
     });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (editingItem) {
             updateMutation.mutate({id: editingItem.id, data: formData});
@@ -85,7 +116,7 @@ export default function AdminEducation() {
         }
     };
 
-    const handleEdit = (item) => {
+    const handleEdit = (item: Education) => {
         setEditingItem(item);
         setFormData(item);
         setShowForm(true);
@@ -99,10 +130,7 @@ export default function AdminEducation() {
 
     return (
         <AdminLayout currentPage="AdminEducation">
-            <motion.div
-                initial={{opacity: 0, y: 20}}
-                animate={{opacity: 1, y: 0}}
-            >
+            <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}}>
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-light text-white">Education</h1>
@@ -171,11 +199,8 @@ export default function AdminEducation() {
                                                     )}
                                                 </div>
                                                 {edu.logo_url && (
-                                                    <img
-                                                        src={edu.logo_url}
-                                                        alt={edu.institution}
-                                                        className="w-12 h-12 object-contain opacity-50"
-                                                    />
+                                                    <img src={edu.logo_url} alt={edu.institution}
+                                                         className="w-12 h-12 object-contain opacity-50"/>
                                                 )}
                                                 <div className="flex items-center gap-2">
                                                     <Button
@@ -202,7 +227,7 @@ export default function AdminEducation() {
                             );
                         })}
 
-                        {education.length === 0 && (
+                        {education.length === 0 && !isLoading && (
                             <div className="text-center py-16 text-white/40">
                                 <p>No education yet. Add your school and university!</p>
                             </div>
@@ -225,7 +250,7 @@ export default function AdminEducation() {
                                 Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
-                                onClick={() => deleteMutation.mutate(deleteItem.id)}
+                                onClick={() => deleteMutation.mutate(deleteItem!.id)}
                                 className="bg-red-500 hover:bg-red-600 text-white"
                             >
                                 Delete
