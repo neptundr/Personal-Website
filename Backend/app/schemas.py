@@ -4,19 +4,19 @@ from datetime import date
 
 class ProjectSchema(BaseModel):
     # id: int
-    title: str
-    description: str
+    title: str = "Empty Title"
+    description: Optional[str] = ""
     type: Optional[str] = "project"
-    company: Optional[str]
-    location: Optional[str]
-    start_date: Optional[date]
-    end_date: Optional[date]
+    company: Optional[str] = ""
+    location: Optional[str] = ""
+    start_date: Optional[date] = date(2025, 1, 1)
+    end_date: Optional[date] = date(2026, 1, 1)
     is_current: Optional[bool] = False
-    image_url: Optional[str]
+    image_url: Optional[str] = ""
     skills: Optional[List[str]] = []
-    link: Optional[str]
-    github_url: Optional[str]
-    order: Optional[int]
+    link: Optional[str] = ""
+    github_url: Optional[str] = ""
+    order: Optional[int] = 0
     featured: Optional[bool] = False
 
     class Config:
@@ -46,6 +46,7 @@ class SiteSettingsSchema(BaseModel):
     hero_name: Optional[str] = "Denis"
     hero_subtitle: Optional[str] = "Subtitle"
     hero_video_url: Optional[str]
+    # love_items_text: Optional[str]
     love_items: Optional[List[str]] = []
     linkedin_url: Optional[str]
     github_url: Optional[str]

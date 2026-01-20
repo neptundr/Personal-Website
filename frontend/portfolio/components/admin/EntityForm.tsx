@@ -1,244 +1,245 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import {motion} from 'framer-motion';
+import {Input} from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
+import {Textarea} from '@/components/ui/textarea';
+import {Label} from '@/components/ui/label';
+import {Switch} from '@/components/ui/switch';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
-import { X, Save } from 'lucide-react';
+import {X, Save} from 'lucide-react';
 
 /* ---------- types ---------- */
 
 type FieldType =
-  | 'text'
-  | 'textarea'
-  | 'date'
-  | 'number'
-  | 'boolean'
-  | 'select'
-  | 'array';
+    | 'text'
+    | 'textarea'
+    | 'date'
+    | 'number'
+    | 'boolean'
+    | 'select'
+    | 'array';
 
 export interface FieldOption {
-  label: string;
-  value: string;
+    label: string;
+    value: string;
 }
 
 export interface FieldConfig {
-  key: string;
-  label: string;
-  type: FieldType;
-  placeholder?: string;
-  description?: string;
-  options?: FieldOption[];
+    key: string;
+    label: string;
+    type: FieldType;
+    placeholder?: string;
+    description?: string;
+    options?: FieldOption[];
 }
 
 interface EntityFormProps<T extends Record<string, any>> {
-  title: string;
-  fields: FieldConfig[];
-  formData: T;
-  setFormData: React.Dispatch<React.SetStateAction<T>>;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onCancel: () => void;
-  isLoading?: boolean;
+    title: string;
+    fields: FieldConfig[];
+    formData: T;
+    setFormData: React.Dispatch<React.SetStateAction<T>>;
+    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+    onCancel: () => void;
+    isLoading?: boolean;
 }
 
 /* ---------- component ---------- */
 
 export default function EntityForm<T extends Record<string, any>>({
-  title,
-  fields,
-  formData,
-  setFormData,
-  onSubmit,
-  onCancel,
-  isLoading = false,
-}: EntityFormProps<T>) {
-  const handleChange = (key: string, value: any) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-  };
+                                                                      title,
+                                                                      fields,
+                                                                      formData,
+                                                                      setFormData,
+                                                                      onSubmit,
+                                                                      onCancel,
+                                                                      isLoading = false,
+                                                                  }: EntityFormProps<T>) {
+    const handleChange = (key: string, value: any) => {
+        setFormData(prev => ({...prev, [key]: value}));
+    };
 
-  const handleArrayChange = (key: string, value: string) => {
-    const arr = value
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
-    setFormData(prev => ({ ...prev, [key]: arr }));
-  };
+    const handleArrayChange = (key: string, value: string) => {
+        const arr = value
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+        setFormData(prev => ({...prev, [key]: arr}));
+    };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Card className="bg-zinc-950 border-white/10">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-white">{title}</CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-            className="text-white/40 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </CardHeader>
+    return (
+        <motion.div
+            initial={{opacity: 0, y: 20}}
+            animate={{opacity: 1, y: 0}}
+            exit={{opacity: 0, y: -20}}
+        >
+            <Card className="bg-zinc-950 border-white/10">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-white">{title}</CardTitle>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onCancel}
+                        className="text-white/40 hover:text-white"
+                    >
+                        <X className="w-5 h-5"/>
+                    </Button>
+                </CardHeader>
 
-        <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
-            {fields.map(field => (
-              <div key={field.key}>
-                <Label className="text-white/80 mb-2 block">
-                  {field.label}
-                </Label>
+                <CardContent>
+                    <form onSubmit={onSubmit} className="space-y-4">
+                        {fields.map(field => (
+                            <div key={field.key}>
+                                <Label className="text-white/80 mb-2 block">
+                                    {field.label}
+                                </Label>
 
-                {field.type === 'text' && (
-                  <Input
-                    value={formData[field.key] ?? ''}
-                    onChange={e =>
-                      handleChange(field.key, e.target.value)
-                    }
-                    placeholder={field.placeholder}
-                    className="bg-black border-white/10 text-white placeholder:text-white/30"
-                  />
-                )}
+                                {field.type === 'text' && (
+                                    <Input
+                                        value={formData[field.key] ?? ''}
+                                        onChange={e =>
+                                            handleChange(field.key, e.target.value)
+                                        }
+                                        placeholder={field.placeholder}
+                                        className="bg-black border-white/10 text-white placeholder:text-white/30"
+                                    />
+                                )}
 
-                {field.type === 'textarea' && (
-                  <Textarea
-                    value={formData[field.key] ?? ''}
-                    onChange={e =>
-                      handleChange(field.key, e.target.value)
-                    }
-                    placeholder={field.placeholder}
-                    className="bg-black border-white/10 text-white placeholder:text-white/30 min-h-[100px]"
-                  />
-                )}
+                                {field.type === 'textarea' && (
+                                    <Textarea
+                                        value={formData[field.key] ?? ''}
+                                        onChange={e =>
+                                            handleChange(field.key, e.target.value)
+                                        }
+                                        placeholder={field.placeholder}
+                                        className="bg-black border-white/10 text-white placeholder:text-white/30 min-h-[100px]"
+                                    />
+                                )}
 
-                {field.type === 'date' && (
-                  <Input
-                    type="date"
-                    value={formData[field.key] ?? ''}
-                    onChange={e =>
-                      handleChange(field.key, e.target.value)
-                    }
-                    className="bg-black border-white/10 text-white"
-                  />
-                )}
+                                {field.type === 'date' && (
+                                    <Input
+                                        type="date"
+                                        value={formData[field.key] ?? ''}
+                                        onChange={e =>
+                                            handleChange(field.key, e.target.value)
+                                        }
+                                        className="bg-black border-white/10 text-white"
+                                    />
+                                )}
 
-                {field.type === 'number' && (
-                  <Input
-                    type="number"
-                    value={formData[field.key] ?? ''}
-                    onChange={e =>
-                      handleChange(
-                        field.key,
-                        Number(e.target.value)
-                      )
-                    }
-                    className="bg-black border-white/10 text-white"
-                  />
-                )}
+                                {field.type === 'number' && (
+                                    <Input
+                                        type="number"
+                                        value={formData[field.key] ?? ''}
+                                        onChange={e =>
+                                            handleChange(
+                                                field.key,
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                        className="bg-black border-white/10 text-white"
+                                    />
+                                )}
 
-                {field.type === 'boolean' && (
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={Boolean(formData[field.key])}
-                      onCheckedChange={checked =>
-                        handleChange(field.key, checked)
-                      }
-                      className="data-[state=checked]:bg-red-500"
-                    />
-                    <span className="text-white/60 text-sm">
+                                {field.type === 'boolean' && (
+                                    <div className="flex items-center gap-3">
+                                        <Switch
+                                            checked={Boolean(formData[field.key])}
+                                            onCheckedChange={checked =>
+                                                handleChange(field.key, checked)
+                                            }
+                                            className="data-[state=checked]:bg-red-500"
+                                        />
+                                        <span className="text-white/60 text-sm">
                       {field.description}
                     </span>
-                  </div>
-                )}
+                                    </div>
+                                )}
 
-                {field.type === 'select' && field.options && (
-                  <Select
-                    value={formData[field.key] ?? ''}
-                    onValueChange={value =>
-                      handleChange(field.key, value)
-                    }
-                  >
-                    <SelectTrigger className="bg-black border-white/10 text-white">
-                      <SelectValue
-                        placeholder={field.placeholder}
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10">
-                      {field.options.map(opt => (
-                        <SelectItem
-                          key={opt.value}
-                          value={opt.value}
-                          className="text-white"
-                        >
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                                {field.type === 'select' && field.options && (
+                                    <Select
+                                        value={formData[field.key] ?? ''}
+                                        onValueChange={value =>
+                                            handleChange(field.key, value)
+                                        }
+                                    >
+                                        <SelectTrigger className="bg-black border-white/10 text-white">
+                                            <SelectValue
+                                                placeholder={field.placeholder}
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-zinc-900 border-white/10">
+                                            {field.options.map(opt => (
+                                                <SelectItem
+                                                    key={opt.value}
+                                                    value={opt.value}
+                                                    className="text-white"
+                                                >
+                                                    {opt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
 
-                {field.type === 'array' && (
-                  <Input
-                    value={(formData[field.key] ?? []).join(', ')}
-                    onChange={e =>
-                      handleArrayChange(
-                        field.key,
-                        e.target.value
-                      )
-                    }
-                    placeholder={field.placeholder}
-                    className="bg-black border-white/10 text-white placeholder:text-white/30"
-                  />
-                )}
-              </div>
-            ))}
+                                {field.type === 'array' && (
+                                    <Input
+                                        value={(formData[field.key] ?? []).join(', ')}
+                                        onChange={e =>
+                                            handleArrayChange(
+                                                field.key,
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder={field.placeholder}
+                                        className="bg-black border-white/10 text-white placeholder:text-white/30"
+                                    />
+                                )}
+                            </div>
+                        ))}
 
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1 border-white/10 text-white/60 hover:text-white hover:bg-white/5"
-              >
-                Cancel
-              </Button>
+                        <div className="flex gap-3 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onCancel}
+                                className="flex-1 border-white/10 text-white/60 hover:text-white hover:bg-white/5"
+                            >
+                                Cancel
+                            </Button>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+                            <Button
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                            >
+                                {isLoading ? (
+                                    <div
+                                        className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"/>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4 mr-2"/>
+                                        Save
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </motion.div>
+    );
 }

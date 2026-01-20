@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import date
 from sqlalchemy import Column, Integer, String, Boolean, Date, Text
 from sqlalchemy.types import JSON
 from sqlalchemy.ext.declarative import declarative_base
@@ -8,19 +10,19 @@ class Project(Base):
     __tablename__ = "projects"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(Text, nullable=False)
+    title = Column(String, nullable=False, default="Empty Title")
+    description = Column(Text, nullable=False, default="Empty Description")
     type = Column(String, default="project")
-    company = Column(String)
-    location = Column(String)
-    start_date = Column(Date)
-    end_date = Column(Date)
+    company = Column(String, default="Empty Company")
+    location = Column(String, default="Empty Location")
+    start_date = Column(Date, default=date(2025, 1, 1))
+    end_date = Column(Date, default=date(2026, 1, 1))
     is_current = Column(Boolean, default=False)
-    image_url = Column(String)
+    image_url = Column(String,default="")
     skills = Column(JSON)  # list[str]
-    link = Column(String)
-    github_url = Column(String)
-    order = Column(Integer)
+    link = Column(String,default="")
+    github_url = Column(String,default="")
+    order = Column(Integer, default=0)
     featured = Column(Boolean, default=False)
 
 class Education(Base):
