@@ -21,6 +21,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import {X, Save} from 'lucide-react';
+import {useState} from "react";
 
 /* ---------- types ---------- */
 
@@ -79,6 +80,10 @@ export default function EntityForm<T extends Record<string, any>>({
             .filter(Boolean);
         setFormData(prev => ({...prev, [key]: arr}));
     };
+
+    const [skillsInput, setSkillsInput] = useState(
+        (formData.skills ?? []).join(', ')
+    );
 
     return (
         <motion.div
@@ -197,15 +202,17 @@ export default function EntityForm<T extends Record<string, any>>({
 
                                 {field.type === 'array' && (
                                     <Input
-                                        value={(formData[field.key] ?? []).join(', ')}
-                                        onChange={e =>
-                                            handleArrayChange(
-                                                field.key,
-                                                e.target.value
-                                            )
-                                        }
-                                        placeholder={field.placeholder}
-                                        className="bg-black border-white/10 text-white placeholder:text-white/30"
+                                        value={skillsInput}
+                                        onChange={(e) => setSkillsInput(e.target.value)}
+                                        onBlur={() => {
+                                            const arr = skillsInput
+                                                .split(',')
+                                                .map((s: string) => s.trim())
+                                                .filter(Boolean);
+
+                                            setFormData(prev => ({...prev, skills: arr}));
+                                        }}
+                                        placeholder="React, TypeScript, Framer Motion"
                                     />
                                 )}
                             </div>

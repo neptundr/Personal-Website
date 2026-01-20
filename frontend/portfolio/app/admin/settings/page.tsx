@@ -47,6 +47,7 @@ export default function AdminSettings() {
         resume_url: ''
     });
 
+    const [loveItemsText, setLoveItemsText] = useState<string>('');
     const [uploading, setUploading] = useState(false);
     const [uploadingResume, setUploadingResume] = useState(false);
 
@@ -61,20 +62,22 @@ export default function AdminSettings() {
     });
 
     useEffect(() => {
-        if (settings) {
-            setFormData({
-                available_for_hire: settings.available_for_hire ?? true,
-                hero_name: settings.hero_name || 'Denis',
-                hero_subtitle: settings.hero_subtitle || '',
-                hero_video_url: settings.hero_video_url || '',
-                love_items: settings.love_items || [],
-                linkedin_url: settings.linkedin_url || '',
-                github_url: settings.github_url || '',
-                email: settings.email || '',
-                twitter_url: settings.twitter_url || '',
-                resume_url: settings.resume_url || ''
-            });
-        }
+        if (!settings) return;
+
+        setFormData({
+            available_for_hire: settings.available_for_hire ?? false,
+            hero_name: settings.hero_name ?? 'Denis',
+            hero_subtitle: settings.hero_subtitle ?? '',
+            hero_video_url: settings.hero_video_url ?? '',
+            love_items: settings.love_items ?? [],
+            linkedin_url: settings.linkedin_url ?? '',
+            github_url: settings.github_url ?? '',
+            email: settings.email ?? '',
+            twitter_url: settings.twitter_url ?? '',
+            resume_url: settings.resume_url ?? '',
+        });
+
+        setLoveItemsText((settings.love_items ?? [''])?.join(", "));
     }, [settings]);
 
     /* ---------------------------- uploads ---------------------------- */
@@ -216,15 +219,21 @@ export default function AdminSettings() {
                             <div>
                                 <Label className="text-white/80 mb-2 block">"I love X" Items (comma-separated)</Label>
                                 <Textarea
-                                    value={formData.love_items.join(', ')}
-                                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                                    value={loveItemsText ?? "coding"}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+
+                                        setLoveItemsText(value);
                                         setFormData(prev => ({
                                             ...prev,
-                                            love_items: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                                        }))
+                                            love_items: value
+                                                .split(',')
+                                                .map(s => s.trim())
+                                                .filter(Boolean),
+                                        }));
                                     }
-                                    placeholder="coding, Python, creativity, innovation..."
-                                    className="bg-black border-white/10 text-white placeholder:text-white/30"
+                                    }
+                                    placeholder="coding, math, music..."
                                     rows={2}
                                 />
                                 <p className="text-xs text-white/30 mt-1">These will rotate in the hero section</p>
