@@ -53,6 +53,7 @@ export default function AdminSettings() {
         resume_url: '',
     });
 
+    const [loveItemsText, setLoveItemsText] = useState<string>('');
     const [uploading, setUploading] = useState(false);
     const [uploadingResume, setUploadingResume] = useState(false);
 
@@ -81,6 +82,8 @@ export default function AdminSettings() {
             twitter_url: settings.twitter_url ?? '',
             resume_url: settings.resume_url ?? '',
         });
+
+        setLoveItemsText((settings.love_items ?? [''])?.join(", "));
     }, [settings]);
 
     /* ---------------------------- uploads ---------------------------- */
@@ -240,15 +243,19 @@ export default function AdminSettings() {
                             />
 
                             <Textarea
-                                value={(formData.love_items ?? ["coding"]).join(', ')}
-                                onChange={(e) =>
+                                value={loveItemsText ?? "coding"}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+
+                                    setLoveItemsText(value);
                                     setFormData(prev => ({
                                         ...prev,
-                                        love_items: e.target.value
+                                        love_items: value
                                             .split(',')
                                             .map(s => s.trim())
-                                    .filter(Boolean),
-                                }))
+                                            .filter(Boolean),
+                                    }));
+                                }
                                 }
                                 placeholder="coding, math, music..."
                                 rows={2}

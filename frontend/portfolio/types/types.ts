@@ -37,6 +37,7 @@ export interface SiteSettings {
   hero_name?: string;
   hero_subtitle?: string;
   hero_video_url?: string;
+  // love_items_text?: string;
   love_items?: string[];
   linkedin_url?: string;
   github_url?: string;
