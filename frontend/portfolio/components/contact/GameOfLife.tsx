@@ -138,6 +138,14 @@ const GameOfLife: React.FC = () => {
                     }
                 }
             }
+
+            // Add black fade at the bottom
+            const fadeHeight = 128;
+            const gradient = ctx.createLinearGradient(0, canvas.height - fadeHeight, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(1, 'rgba(0,0,0,1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, canvas.height - fadeHeight, canvas.width, fadeHeight);
         };
 
         let lastUpdateTime = 0;
