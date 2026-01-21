@@ -28,16 +28,16 @@ class Project(Base):
 class Education(Base):
     __tablename__ = "education"
     id = Column(Integer, primary_key=True, index=True)
-    institution = Column(String, nullable=False)
-    institution_url = Column(String)
-    degree = Column(String, nullable=False)
-    field = Column(String)
-    start_year = Column(String)
-    end_year = Column(String)
-    description = Column(Text)
-    logo_url = Column(String)
-    type = Column(String)  # school / university
-    order = Column(Integer)
+    institution = Column(String, nullable=False, default="Empty Institution")
+    institution_url = Column(String, default="")
+    degree = Column(String, nullable=False, default="Empty Degree")
+    field = Column(String, default="Computer Science")
+    start_year = Column(String, default="2025")
+    end_year = Column(String, default="2026")
+    description = Column(Text, default="Empty Description")
+    logo_url = Column(String, default="")
+    type = Column(String, default="university")  # school / university
+    order = Column(Integer, default=0)
 
 class SiteSettings(Base):
     __tablename__ = "site_settings"

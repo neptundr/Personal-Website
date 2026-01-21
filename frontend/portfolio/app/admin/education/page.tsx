@@ -25,7 +25,7 @@ interface Education {
     institution: string;
     institution_url?: string;
     degree: string;
-    field?: string;
+    // field?: string;
     start_year: string;
     end_year?: string;
     type: 'school' | 'university';
@@ -50,7 +50,7 @@ const educationFields: FieldConfig[] = [
     {key: 'institution', label: 'Institution Name', type: 'text', placeholder: 'University/School name'},
     {key: 'institution_url', label: 'Institution URL', type: 'text', placeholder: 'https://university.edu'},
     {key: 'degree', label: 'Degree/Diploma', type: 'text', placeholder: "Bachelor's in Computer Science"},
-    {key: 'field', label: 'Field of Study', type: 'text', placeholder: 'Computer Science'},
+    // {key: 'field', label: 'Field of Study', type: 'text', placeholder: 'Computer Science'},
     {key: 'start_year', label: 'Start Year', type: 'text', placeholder: '2020'},
     {key: 'end_year', label: 'End Year', type: 'text', placeholder: '2024 (or expected)'},
     {
@@ -190,7 +190,7 @@ export default function AdminEducation() {
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="text-lg font-light text-white">{edu.institution}</h3>
                                                     <p className="text-white/60 text-sm">{edu.degree}</p>
-                                                    {edu.field && <p className="text-white/40 text-sm">{edu.field}</p>}
+                                                    {/*{edu.field && <p className="text-white/40 text-sm">{edu.field}</p>}*/}
                                                     <p className="text-white/30 text-xs mt-1">
                                                         {edu.start_year} — {edu.end_year || 'Present'}
                                                     </p>

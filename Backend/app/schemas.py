@@ -27,16 +27,16 @@ class ProjectSchema(BaseModel):
 
 class EducationSchema(BaseModel):
     # id: int
-    institution: str
-    degree: str
-    institution_url: Optional[str]
-    field: Optional[str]
-    start_year: Optional[str]
-    end_year: Optional[str]
-    description: Optional[str]
-    logo_url: Optional[str]
-    type: Optional[str]
-    order: Optional[int]
+    institution: str = "Empty"
+    degree: str = "Computer Science"
+    institution_url: Optional[str] = ""
+    field: Optional[str] = ""
+    start_year: Optional[str] = "2025"
+    end_year: Optional[str] = "2026"
+    description: Optional[str] = ""
+    logo_url: Optional[str] = ""
+    type: Optional[str] = "university"
+    order: Optional[int] = 0
 
     class Config:
         from_attributes = True
