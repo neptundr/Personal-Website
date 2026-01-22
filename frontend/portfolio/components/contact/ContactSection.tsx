@@ -98,8 +98,8 @@ const ContactSection = ({settings}) => {
                     <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
                         Get in Touch
                     </span>
-                    <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-light text-white tracking-tight">
-                        Let&apos;s <span className="italic text-gray-300 font-serif">Connect</span>
+                    <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-codec text-white tracking-tight" style={{fontFamily: 'var(--font-codec)'}}>
+                        Let&apos;s <span className=" text-gray-300" style={{fontFamily: 'var(--font-futura)'}}>Connect</span>
                     </h2>
                 </div>
 

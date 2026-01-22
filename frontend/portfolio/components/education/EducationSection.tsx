@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import {motion} from 'framer-motion';
 import EducationCard from './EducationCard';
 
 class EducationSection extends React.Component<{ education: any }> {
@@ -33,15 +33,16 @@ class EducationSection extends React.Component<{ education: any }> {
                         Background
                     </motion.span>
                     <motion.h2
-                        className="mt-4 text-4xl md:text-5xl lg:text-6xl font-light text-white tracking-tight"
+                        className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight" style={{fontFamily: 'var(--font-codec)'}}
                         initial={{opacity: 0, y: 20}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true}}
                         transition={{duration: 0.6, delay: 0.2}}
                     >
-          <span className="italic text-gray-300" style={{fontFamily: 'Georgia, serif'}}>
-            Education
-          </span>
+                        Education
+                        <span className=" text-gray-300" style={{fontFamily: 'var(--font-futura)'}}>
+
+                        </span>
                     </motion.h2>
                 </motion.div>
 

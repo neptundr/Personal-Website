@@ -78,17 +78,17 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 <div className="mb-4">
                     <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">
-                            <h3 className="text-2xl font-light text-white mb-2 group-hover:text-red-400 transition-colors">
+                            <h3 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors" style={{fontFamily: 'var(--font-codec)'}}>
                                 {item.title}
                                 {item.featured && (
-                                    <span className="ml-3 text-xs text-yellow-400 italic font-normal">
+                                    <span className="ml-3 text-xs text-yellow-400 font-normal whitespace-nowrap">
                     ★ Featured
                   </span>
                                 )}
                             </h3>
 
-                            <div className="flex flex-wrap items-center gap-3 text-sm">
-                                {item.company && <span className="text-gray-300 font-medium">{item.company}</span>}
+                            <div className="flex flex-wrap items-center gap-3 text-sm" style={{fontFamily: 'var(--font-codecLight)'}}>
+                                {item.company && <span className="text-gray-300 font-normal">{item.company}</span>}
                                 {item.location && <span className="text-gray-500">{item.location}</span>}
                                 {(item.start_date || item.end_date || item.is_current) && (
                                     <span className="text-gray-500">
@@ -150,7 +150,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
                 {/* Description */}
                 {item.description && (
-                    <p className="text-gray-400 text-sm leading-relaxed mb-4">{item.description}</p>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-4" style={{fontFamily: 'var(--font-codecLight)'}}>{item.description}</p>
                 )}
 
                 {/* Skills */}

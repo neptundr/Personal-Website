@@ -133,7 +133,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm'}) 
         transition-all duration-300 cursor-pointer backdrop-blur-sm`}
         >
             {icon}
-            <span className="tracking-wide">{skill}</span>
+            <span className="tracking-wide" style={{fontFamily: 'var(--font-codec)'}}>{skill}</span>
         </motion.span>
     );
 };
