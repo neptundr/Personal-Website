@@ -1,5 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Request
 from fastapi.staticfiles import StaticFiles
 import uuid
 import os
@@ -175,7 +174,7 @@ def delete_skill(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(request: Request, file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
@@ -202,6 +201,6 @@ async def upload_file(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     return {
-        "file_url": f"/uploads/{subdir}/{filename}",
+        "file_url": str(request.base_url) + f"uploads/{subdir}/{filename}",
         "file_type": subdir
     }
