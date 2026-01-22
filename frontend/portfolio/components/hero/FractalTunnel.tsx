@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, {useRef, useEffect, useCallback} from 'react';
 
 type IntroPhase = 0 | 1;
 
@@ -86,18 +86,18 @@ export default function FractalTunnel() {
                 const r0 =
                     innerR +
                     (radius - innerR) *
-                        (0.5 +
-                            0.3 * Math.cos(5 * a0 + time * 0.4) +
-                            0.2 * Math.cos(3 * a0 - time * 0.3) +
-                            0.15 * Math.sin(layer * 0.5 + time * 0.2));
+                    (0.5 +
+                        0.3 * Math.cos(5 * a0 + time * 0.4) +
+                        0.2 * Math.cos(3 * a0 - time * 0.3) +
+                        0.15 * Math.sin(layer * 0.5 + time * 0.2));
 
                 const r1 =
                     innerR +
                     (radius - innerR) *
-                        (0.5 +
-                            0.3 * Math.cos(5 * a1 + time * 0.4) +
-                            0.2 * Math.cos(3 * a1 - time * 0.3) +
-                            0.15 * Math.sin(layer * 0.5 + time * 0.2));
+                    (0.5 +
+                        0.3 * Math.cos(5 * a1 + time * 0.4) +
+                        0.2 * Math.cos(3 * a1 - time * 0.3) +
+                        0.15 * Math.sin(layer * 0.5 + time * 0.2));
 
                 const sa0 = a0 + Math.sqrt(scale) * Math.PI * 2;
                 const sa1 = a1 + Math.sqrt(scale) * Math.PI * 2;
@@ -130,7 +130,7 @@ export default function FractalTunnel() {
 
         for (let p = 0; p < numParticles; p++) {
             // Shift t earlier so particles appear sooner
-            const t = (1+ time * 0.3 + p * 0.2 + Math.sin(p * 7.89) * 0.8) % 4;
+            const t = (1 + time * 0.3 + p * 0.2 + Math.sin(p * 7.89) * 0.8) % 4;
             const a = (p / numParticles) * Math.PI * 2 + time * 0.08 + Math.cos(p * 3.14) * 1.2;
             const r = t * maxRadius * 0.55;
 
@@ -200,8 +200,8 @@ export default function FractalTunnel() {
     return (
         <canvas
             ref={canvasRef}
-            className="fixed inset-0 w-full h-full"
-            style={{ background: '#000' }}
+            className="absolute top-0 left-0 w-full h-full"
+            style={{background: '#000'}}
         />
     );
 }

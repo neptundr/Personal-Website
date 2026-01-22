@@ -10,6 +10,7 @@ import ContactSection from '../components/contact/ContactSection';
 import FooterSection from '../components/footer/FooterSection';
 import type {Project, Education, SiteSettings} from '@/types/types';
 import {motion} from "framer-motion";
+import FractalTunnel from "@/components/hero/FractalTunnel";
 
 export default function Home() {
     // Type the returned data
@@ -35,7 +36,8 @@ export default function Home() {
     });
 
     return (
-        <div className="bg-black min-h-screen">
+        <div className="{/*bg-black*/} min-h-screenr elative z-10">
+
             <HeroSection
                 name={settings.hero_name || "Denis"}
                 subtitle={settings.hero_subtitle}
@@ -43,6 +45,7 @@ export default function Home() {
                 videoUrl={settings.hero_video_url}
                 loveItems={settings.love_items || ["coding"]}
             />
+
             <ExperienceSection items={items}/>
             <EducationSection education={education}/>
             <ContactSection settings={settings}/>
