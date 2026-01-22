@@ -15,7 +15,7 @@ const GameOfLife: React.FC = () => {
     let nextGrid: Grid;
     let displayGrid: Grid;
 
-    const updatesPerSecond = 1.35;
+    const updatesPerSecond = 1;
     const updateInterval = 1000 / updatesPerSecond;
 
     useEffect(() => {
@@ -24,6 +24,28 @@ const GameOfLife: React.FC = () => {
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
+
+        const fillRoundedRect = (
+            ctx: CanvasRenderingContext2D,
+            x: number,
+            y: number,
+            width: number,
+            height: number,
+            radius: number
+        ) => {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        };
 
         const createEmptyGrid = (): Grid =>
             Array.from({length: cols}, () => Array(rows).fill(0));
@@ -93,7 +115,7 @@ const GameOfLife: React.FC = () => {
                     // @ts-ignore
                     const target = grid[i][j];
                     // @ts-ignore
-                    displayGrid[i][j] += target === 1 ? (target - displayGrid[i][j]) * 0.95 : (target - displayGrid[i][j]) * 0.125;
+                    displayGrid[i][j] += target === 1 ? (target - displayGrid[i][j]) * 0.15 : (target - displayGrid[i][j]) * 0.1;
                 }
             }
         };
@@ -129,11 +151,16 @@ const GameOfLife: React.FC = () => {
                     if (alpha > 0.01) {
                         const v = 255;
                         ctx.fillStyle = `rgba(${v},${v},${v},${alpha ** 2})`;
-                        ctx.fillRect(
+
+                        // draw with rounded corners
+                        const radius = 6; // adjust corner radius
+                        fillRoundedRect(
+                            ctx,
                             i * cellSize + 1,
                             j * cellSize + 1,
                             cellSize - 2,
-                            cellSize - 2
+                            cellSize - 2,
+                            radius
                         );
                     }
                 }
