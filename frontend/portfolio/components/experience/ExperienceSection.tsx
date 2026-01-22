@@ -5,6 +5,7 @@ import {X} from 'lucide-react';
 import {useQuery} from '@tanstack/react-query';
 import {api} from '@/api/client';
 import ExperienceCard from "@/components/experience/ExperienceCard";
+import {Button} from "@/components/ui/button";
 
 interface ExperienceItem {
     id: number;
@@ -67,7 +68,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
         <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
           Experience
         </span>
-                <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight" style={{fontFamily: 'var(--font-codec)'}}>
+                <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
+                    style={{fontFamily: 'var(--font-codec)'}}>
                     What I’ve Built<span className=" text-gray-300" style={{fontFamily: 'var(--font-futura)'}}></span>
                 </h2>
             </motion.div>
@@ -82,7 +84,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                 value={v}
                                 className="data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 text-gray-400"
                             >
-                                {v === 'all' ? 'All' : ((v ?? "")[0]?? "").toUpperCase() + v.slice(1)}
+                                {v === 'all' ? 'All' : ((v ?? "")[0] ?? "").toUpperCase() + v.slice(1)}
                             </TabsTrigger>
                         ))}
                     </TabsList>
@@ -92,6 +94,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                     <button
                         onClick={() => setSkillFilter(null)}
                         className="px-4 py-2 rounded-full text-sm bg-white/10 text-white border border-white/20 flex items-center gap-2"
+                        style={{fontFamily: 'var(--font-codec)'}}
                     >
                         {getSkillIcon(skillFilter) && (
                             <img
@@ -101,7 +104,9 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                             />
                         )}
                         {skillFilter}
-                        <X className="w-3 h-3"/>
+                        <motion.div whileHover={{scale: 1.25}} transition={{type: "spring", stiffness: 300}}>
+                            <X className="w-3 h-3"/>
+                        </motion.div>
                     </button>
                 )}
             </div>

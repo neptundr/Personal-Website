@@ -36,7 +36,7 @@ export default function Home() {
     });
 
     return (
-        <div className="{/*bg-black*/} min-h-screenr elative z-10">
+        <div className="{/*bg-black*/} min-h-screenr elative z-10" style={{fontFamily: 'var(--font-codecLight)'}}>
 
             <HeroSection
                 name={settings.hero_name || "Denis"}

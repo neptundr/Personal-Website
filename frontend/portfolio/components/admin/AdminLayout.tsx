@@ -10,7 +10,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
 
     return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black" style={{fontFamily: 'var(--font-codecLight)'}}>
       <AdminNav currentPage={currentPage} />
       <main className="ml-64 p-8">{children}</main>
     </div>
