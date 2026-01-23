@@ -12,7 +12,7 @@ const RotatingText: React.FC<RotatingTextProps> = ({
                                                        items = [],
                                                        intervalMs = 3000,
                                                        className = '',
-                                                       textClassName = 'text-red-400',
+                                                       textClassName = '',
                                                    }) => {
     const [index, setIndex] = useState(0);
 
