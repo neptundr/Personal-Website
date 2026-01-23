@@ -35,7 +35,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     }, [])
 
     /* ----------------------------
-       INTRO SEQUENCE (STRICT SAFE)
+       INTRO SEQUENCE
     ---------------------------- */
     useEffect(() => {
         if (hasStartedRef.current) return
@@ -79,7 +79,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
     const words = [
         {text: 'Welcome', left: '15vw', top: '70vh'},
-        {text: 'to', left: '50vw', top: '30vh', center: true},
+        {text: 'to', left: '45vw', top: '30vh', center: true},
         {text: 'my', left: '75vw', top: '50vh', center: true},
     ]
     const wordVariants = {
@@ -251,24 +251,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                     animate={{opacity: 1, y: 0}}
                                     transition={{duration: 0.6, delay: 0.1}}
                                 >
-                                    <RotatingText items={loveItems}/>
-                                    <motion.span
+                                    <RotatingText items={loveItems} textClassName="inline-block"/>
+
+                                    <motion.div
                                         className="absolute left-0 -bottom-1 h-[1px] bg-red-500"
-                                        initial={{width: 0}}
-                                        animate={{width: '103%'}}
-                                        transition={{duration: 0.9, delay: 0.3}}
+                                        layout // enables smooth width transitions
+                                        transition={{type: 'spring', stiffness: 300, damping: 28}}
                                     />
-                                    {/*{loveItems.length > 0 && (*/}
-                                    {/*    <motion.p*/}
-                                    {/*        initial={{opacity: 0}}*/}
-                                    {/*        animate={{opacity: 1}}*/}
-                                    {/*        transition={{duration: 0.8, delay: 1}}*/}
-                                    {/*        className="mt-4 text-xl md:text-2xl text-gray-300 font-light tracking-wide"*/}
-                                    {/*        style={{fontFamily: 'var(--font-codec)'}}>*/}
-
-                                    {/*        I love */}
-                                    {/*    </motion.p>)}*/}
-
                                 </motion.span>
                             </div>
                         </motion.div>
@@ -288,21 +277,28 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                 className="text-white font-bold text-xl md:text-2xl"
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
-                                Denis Kaizer Developer Portfolio
+                                Denis Kaizer. Developer Portfolio
                             </span>
 
                             {availableForHire && showBadge && (
-                                <span className="inline-flex w-fit items-center gap-2 px-3 py-1
-                                                 rounded-full border border-red-500/30 bg-red-500/10 backdrop-blur-md">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="absolute inline-flex h-full w-full rounded-full
-                                                         bg-red-500 opacity-75 animate-ping"/>
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"/>
+                                <motion.div
+                                    initial={{opacity: 0, y: -20}}
+                                    animate={{opacity: 1, y: 0}}
+                                    transition={{delay: 0.4, duration: 0.8}}
+
+                                >
+                                    <span className="inline-flex w-fit items-center gap-2 px-3 py-1
+                                                     rounded-full border border-red-500/30 bg-red-500/10 backdrop-blur-md">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="absolute inline-flex h-full w-full rounded-full
+                                                             bg-red-500 opacity-75 animate-ping"/>
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"/>
+                                        </span>
+                                        <span className="text-xs text-red-400 tracking-[0.2em] uppercase">
+                                            Available for Hire
+                                        </span>
                                     </span>
-                                    <span className="text-xs text-red-400 tracking-[0.2em] uppercase">
-                                        Available for Hire
-                                    </span>
-                                </span>
+                                </motion.div>
                             )}
                         </motion.div>
                     )}
