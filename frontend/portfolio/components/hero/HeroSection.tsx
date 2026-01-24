@@ -110,8 +110,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 <FractalTunnel/>
             </motion.div>
 
-            <div className="absolute inset-0 bg-black/40"/>
-
             <div className="relative z-10 w-full h-full">
 
                 {/* HEY / I'M DENIS */}

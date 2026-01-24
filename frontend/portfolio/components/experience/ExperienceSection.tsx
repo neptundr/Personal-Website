@@ -56,7 +56,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
     if (!items.length) return null;
 
     return (
-        <section className="relative py-32 px-6 md:px-12 lg:px-24 bg-black overflow-hidden">
+        <section className="relative py-32 px-6 md:px-12 lg:px-24 /*bg-black*/ overflow-hidden">
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}
@@ -65,9 +65,9 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                 transition={{duration: 0.6}}
                 className="mb-12"
             >
-        <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
-          Experience
-        </span>
+                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
+                  Experience
+                </span>
                 <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
                     style={{fontFamily: 'var(--font-codec)'}}>
                     What I’ve Built<span className=" text-gray-300" style={{fontFamily: 'var(--font-futura)'}}></span>
