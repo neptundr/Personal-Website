@@ -70,7 +70,7 @@ export default function FractalTunnel() {
                 ctx.rotate(time * 0.03 + layer * 0.05);
 
                 const innerR = radius * 0.4;
-                const thickness = (-0.05 + scale * 35) / radiusScale; // restore thickness
+                const thickness = (-0.045 + scale * 35) / radiusScale; // restore thickness
                 const curves = 12;
 
                 for (let i = 1; i < curves; i++) {
