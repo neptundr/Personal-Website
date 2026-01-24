@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {motion} from 'framer-motion';
+import {motion, AnimatePresence} from 'framer-motion';
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {X} from 'lucide-react';
 import {useQuery} from '@tanstack/react-query';
@@ -65,8 +65,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                 transition={{duration: 0.6}}
                 className="mb-12"
             >
-                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
-                  Experience
+                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium ">
+                    Experience
                 </span>
                 <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
                     style={{fontFamily: 'var(--font-codec)'}}>
@@ -75,40 +75,74 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
             </motion.div>
 
             {/* Filters */}
-            <div className="mb-12 flex items-center gap-3 flex-wrap">
+            <div className="mb-12 flex items-center gap-3 flex-wrap relative">
+                {/* General filter tabs */}
                 <Tabs value={filter} onValueChange={v => setFilter(v as any)}>
-                    <TabsList className="bg-zinc-900/50 border border-zinc-800/50">
+                    <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-zinc-800/50">
                         {['all', 'work', 'project', 'achievement'].map(v => (
                             <TabsTrigger
                                 key={v}
                                 value={v}
-                                className="data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 text-gray-400"
+                                className={`
+                                    text-gray-400
+                                    data-[state=active]:bg-red-500/10
+                                    data-[state=active]:text-red-400
+                                    transition-all duration-200 ease-in-out
+                                    hover:bg-gray-500/20 hover:text-gray-300
+                                `}
                             >
-                                {v === 'all' ? 'All' : ((v ?? "")[0] ?? "").toUpperCase() + v.slice(1)}
+                                {v === 'all'
+                                    ? 'All'
+                                    : ((v ?? "")[0] ?? "").toUpperCase() + v.slice(1)}
                             </TabsTrigger>
                         ))}
                     </TabsList>
                 </Tabs>
 
-                {skillFilter && (
-                    <button
-                        onClick={() => setSkillFilter(null)}
-                        className="px-4 py-2 rounded-full text-sm bg-white/10 text-white border border-white/20 flex items-center gap-2"
-                        style={{fontFamily: 'var(--font-codec)'}}
-                    >
-                        {getSkillIcon(skillFilter) && (
-                            <img
-                                src={getSkillIcon(skillFilter)}
-                                alt={skillFilter}
-                                className="w-4 h-4"
-                            />
+                {/* Skill filter / tip */}
+                <div className="relative h-[36px] flex-1 flex items-center">
+                    <AnimatePresence mode="wait" initial={false}>
+                        {skillFilter ? (
+                            <motion.button
+                                key={skillFilter} // **important:** changing skill changes key so AnimatePresence triggers exit+enter
+                                onClick={() => setSkillFilter(null)}
+                                className="absolute px-4 py-2 backdrop-blur-md rounded-full text-sm bg-white/15 text-white border border-white/20 flex items-center gap-2"
+                                style={{fontFamily: 'var(--font-codec)'}}
+                                initial={{opacity: 0, x: -20}}
+                                animate={{opacity: 1, x: 0}}
+                                exit={{opacity: 0, x: 20}}
+                                transition={{duration: 0.25}}
+                            >
+                                {getSkillIcon(skillFilter) && (
+                                    <img
+                                        src={getSkillIcon(skillFilter)}
+                                        alt={skillFilter}
+                                        className="w-4 h-4"
+                                    />
+                                )}
+                                {skillFilter}
+                                <motion.div
+                                    whileHover={{scale: 1.25}}
+                                    transition={{type: 'spring', stiffness: 300}}
+                                >
+                                    <X className="w-3 h-3"/>
+                                </motion.div>
+                            </motion.button>
+                        ) : (
+                            <motion.div
+                                key="skillTip"
+                                className="absolute px-4 py-2 text-sm text-gray-400 text-center"
+                                style={{fontFamily: 'var(--font-codecLight)'}}
+                                initial={{opacity: 0, x: -20}}
+                                animate={{opacity: 1, x: 0}}
+                                exit={{opacity: 0, x: 20}}
+                                transition={{duration: 0.25}}
+                            >
+                                Tip: click on a skill badge to apply a filter
+                            </motion.div>
                         )}
-                        {skillFilter}
-                        <motion.div whileHover={{scale: 1.25}} transition={{type: "spring", stiffness: 300}}>
-                            <X className="w-3 h-3"/>
-                        </motion.div>
-                    </button>
-                )}
+                    </AnimatePresence>
+                </div>
             </div>
 
             {/* Grid */}
