@@ -50,7 +50,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            currentSkillFilter,
                                                        }) => {
     const [hovered, setHovered] = useState(false);
-
+    const [isStarHovered, setIsStarHovered] = React.useState(false);
     return (
         <motion.div
             // initial={{scale: 0.84}}
@@ -93,11 +93,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 {item.title}
-                                {item.featured && (
-                                    <span className="ml-3 text-xs text-yellow-400 font-normal whitespace-nowrap">
-                                        ★ Featured
-                                    </span>
-                                )}
+                                {/*{item.featured && (*/}
+                                {/*    <span className="ml-3 text-xs text-yellow-400 font-normal whitespace-nowrap">*/}
+                                {/*        ★ Featured*/}
+                                {/*    </span>*/}
+                                {/*)}*/}
                             </h3>
 
                             <div
@@ -119,7 +119,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             (item.end_date || item.is_current) &&
                                             ' — '}
                                         {item.is_current ? (
-                                            <span className="text-red-50 font-medium" style={{fontFamily: 'var(--font-codec)'}}>
+                                            <span className="text-red-50 font-medium"
+                                                  style={{fontFamily: 'var(--font-codec)'}}>
                                                 Present
                                             </span>
                                         ) : (
@@ -155,6 +156,38 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 >
                                     <Github className="w-4 h-4"/>
                                 </motion.a>
+                            )}
+                            {item.featured && (
+                                <motion.div className="relative">
+                                    <motion.a
+                                        href={item.github_url || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        whileHover={{scale: 1.1}}
+                                        whileTap={{scale: 0.95}}
+                                        className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-xs text-yellow-400 font-normal transition-colors flex items-center justify-center relative"
+                                        onMouseEnter={() => setIsStarHovered(true)}
+                                        onMouseLeave={() => setIsStarHovered(false)}
+                                    >
+                                        <span className="w-4 h-4 text-center text-">
+                                             {'★'}
+                                        </span>
+
+                                        {/* Tooltip */}
+                                        {isStarHovered && (
+                                            <div className="
+                                                absolute -left-11 -translate-x-1/2
+                                                bg-black text-white text-xs px-2 py-1 rounded-md
+                                                pointer-events-none
+                                                whitespace-nowrap
+                                                z-10
+                                                text-center
+                                            ">
+                                                Featured <br/> Experience
+                                            </div>
+                                        )}
+                                    </motion.a>
+                                </motion.div>
                             )}
                         </div>
                     </div>

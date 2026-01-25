@@ -61,7 +61,6 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
 
     const hasMore = filteredItems.length > showCount;
 
-    // Scroll to filter row when skillFilter changes
     useEffect(() => {
         if (skillFilter && filterRowRef.current) {
             filterRowRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
