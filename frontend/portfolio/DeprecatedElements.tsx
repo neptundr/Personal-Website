@@ -1,3 +1,7 @@
+import {X} from "lucide-react";
+import {motion} from "framer-motion";
+import React from "react";
+
 {/*{loveItems.length > 0 && (*/
 }
 {/*    <motion.p*/
@@ -20,3 +24,10 @@
 }
 {/*)}*/
 }
+
+<motion.div
+    whileHover={{scale: 1.25}}
+    transition={{type: 'spring', stiffness: 300}}
+>
+    <X className="w-3 h-3"/>
+</motion.div>

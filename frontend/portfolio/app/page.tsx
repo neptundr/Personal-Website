@@ -47,7 +47,6 @@ export default function Home() {
                     availableForHire={settings.available_for_hire ?? true}
                     loveItems={settings.love_items || ['coding']}
                 />
-
                 <ExperienceSection items={items} />
                 <EducationSection education={education} />
                 <ContactSection settings={settings} />

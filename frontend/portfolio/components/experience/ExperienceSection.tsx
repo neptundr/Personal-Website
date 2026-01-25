@@ -1,10 +1,12 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {X} from 'lucide-react';
 import ExperienceCard from "@/components/experience/ExperienceCard";
+import {useQuery} from "@tanstack/react-query";
+import {api} from "@/api/client";
 
 interface ExperienceItem {
     id: number;
@@ -29,36 +31,29 @@ interface ExperienceSectionProps {
 }
 
 const itemVariants = {
-    hidden: {
-        opacity: 0,
-        y: 24,
-    },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.45,
-            ease: [0.22, 1, 0.36, 1],
-        },
-    },
-    exit: {
-        opacity: 0,
-        y: -16,
-        transition: {
-            duration: 0.25,
-            ease: 'easeInOut',
-        },
-    },
+    hidden: {y: 24},
+    visible: {y: 0, transition: {duration: 0.45, ease: [0.22, 1, 0.36, 1]}},
+    exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: 'easeInOut'}},
 };
 
-const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons = []}) => {
+const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
     const [filter, setFilter] = useState<'all' | 'work' | 'project' | 'achievement'>('all');
     const [skillFilter, setSkillFilter] = useState<string | null>(null);
     const [showCount, setShowCount] = useState(15);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
+    const {data: skillIcons = []} = useQuery({
+        queryKey: ['skillIcons'],
+        queryFn: () => api.entities.SkillIcon.list(),
+        initialData: [],
+    });
+    const filterRowRef = useRef<HTMLDivElement>(null);
+
     const getSkillIcon = (skill: string) =>
-        skillIcons.find(s => s.skill_name?.toLowerCase() === skill.toLowerCase())?.icon_url;
+        skillIcons.find(
+            (s: { skill_name: string }) =>
+                s.skill_name?.toLowerCase() === skill.toLowerCase()
+        )?.icon_url;
 
     const filteredItems = items
         .filter(item => filter === 'all' || item.type === filter)
@@ -66,10 +61,17 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
 
     const hasMore = filteredItems.length > showCount;
 
+    // Scroll to filter row when skillFilter changes
+    useEffect(() => {
+        if (skillFilter && filterRowRef.current) {
+            filterRowRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    }, [skillFilter]);
+
     if (!items.length) return null;
 
     return (
-        <section className="relative py-32 px-6 md:px-12 lg:px-24 overflow-hidden">
+        <section className="relative py-32 px-6 md:px-12 lg:px-24 overflow-hidden" ref={filterRowRef}>
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}
@@ -81,10 +83,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                 <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
                     Experience
                 </span>
-                <h2
-                    className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
-                    style={{fontFamily: 'var(--font-codec)'}}
-                >
+                <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
+                    style={{fontFamily: 'var(--font-codec)'}}>
                     What I’ve Built
                 </h2>
             </motion.div>
@@ -105,7 +105,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                     hover:bg-gray-500/20 hover:text-gray-300
                                 "
                             >
-                                {v === 'all' ? 'All' : v[0].toUpperCase() + v.slice(1)}
+                                {v === 'all' ? 'All' : (v[0] ?? "").toUpperCase() + v.slice(1)}
                             </TabsTrigger>
                         ))}
                     </TabsList>
@@ -128,7 +128,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                 transition={{duration: 0.25}}
                             >
                                 {getSkillIcon(skillFilter) && (
-                                    <img src={getSkillIcon(skillFilter)} alt={skillFilter} className="w-4 h-4"/>
+                                    <img
+                                        src={getSkillIcon(skillFilter)}
+                                        alt={skillFilter}
+                                        className="w-5.5 h-5.5"
+                                    />
                                 )}
                                 {skillFilter}
                                 <motion.div
@@ -155,39 +159,44 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
             </div>
 
             {/* Masonry Grid */}
-            <div
-                className="
-                    columns-1
-                    md:columns-2
-                    lg:columns-3
-                    gap-6
-                "
-            >
-                <AnimatePresence mode="popLayout">
-                    {filteredItems.slice(0, showCount).map(item => (
-                        <motion.div
-                            key={item.id}
-                            layout
-                            variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="mb-6 break-inside-avoid"
-                        >
-                            <ExperienceCard
-                                item={item}
-                                index={0}
-                                onSkillClick={(skill) =>
-                                    setSkillFilter(prev => (prev === skill ? null : skill))
-                                }
-                                dimmed={hoveredId !== null && hoveredId !== item.id}
-                                onHover={setHoveredId}
-                                currentSkillFilter={skillFilter}
-                            />
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
+            {filteredItems.length === 0 ? (
+                <motion.div
+                    className="flex justify-center items-center text-gray-400 text-lg h-48"
+                    initial={{y: 40, opacity: 0}}
+                    animate={{y: 0, opacity: 1}}
+                    exit={{y: 20, opacity: 0}}
+                    transition={{duration: 0.25}}
+                >
+                    No items match this filter
+                </motion.div>
+            ) : (
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+                    <AnimatePresence mode="popLayout">
+                        {filteredItems.slice(0, showCount).map(item => (
+                            <motion.div
+                                key={item.id}
+                                layout
+                                variants={itemVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                className="mb-6 break-inside-avoid"
+                            >
+                                <ExperienceCard
+                                    item={item}
+                                    index={0}
+                                    onSkillClick={(skill) =>
+                                        setSkillFilter(prev => (prev === skill ? null : skill))
+                                    }
+                                    dimmed={hoveredId !== null && hoveredId !== item.id}
+                                    onHover={setHoveredId}
+                                    currentSkillFilter={skillFilter}
+                                />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            )}
 
             {/* Show more */}
             {hasMore && (
