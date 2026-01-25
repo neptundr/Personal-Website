@@ -9,6 +9,7 @@ const PARTICLE_CHARS =
 
 export default function FractalTunnel() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
 
     const timeRef = useRef(100);
@@ -16,6 +17,8 @@ export default function FractalTunnel() {
     const introPhaseRef = useRef<IntroPhase>(0);
     const introTimeRef = useRef(0);
     const tunnelOscRef = useRef(0);
+
+    const pendingResizeRef = useRef(true);
 
     const numParticles = 180;
     const particleCharsRef = useRef<string[]>([]);
@@ -45,8 +48,7 @@ export default function FractalTunnel() {
             const viewportRadius = Math.hypot(window.innerWidth, window.innerHeight);
             const radiusScale = viewportRadius / maxRadius;
 
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, width, height);
+            ctx.clearRect(0, 0, width, height);
 
             const numLayers = 90;
 
@@ -56,7 +58,6 @@ export default function FractalTunnel() {
             let fadeIn = 1;
             if (introPhase === 0) fadeIn = Math.min(introTime / 1.5, 1);
 
-            // Tunnel rings
             for (let layer = 0; layer < numLayers; layer++) {
                 const offset = (layer / numLayers + time * speedRef.current) % 1;
                 const scale = Math.pow(offset, 5);
@@ -70,7 +71,7 @@ export default function FractalTunnel() {
                 ctx.rotate(time * 0.03 + layer * 0.05);
 
                 const innerR = radius * 0.4;
-                const thickness = (-0.045 + scale * 35) / radiusScale; // restore thickness
+                const thickness = (-0.045 + scale * 35) / radiusScale;
                 const curves = 12;
 
                 for (let i = 1; i < curves; i++) {
@@ -116,10 +117,9 @@ export default function FractalTunnel() {
                 ctx.restore();
             }
 
-            // Particles
             if (introPhase !== 1) return;
 
-            const ageGrowth = 1 + Math.min(time * 0.02, 0.6); // slow growth over time
+            const ageGrowth = 1 + Math.min(time * 0.02, 0.6);
 
             for (let p = 0; p < numParticles; p++) {
                 const t =
@@ -130,7 +130,7 @@ export default function FractalTunnel() {
                     time * 0.08 +
                     Math.cos(p * 3.14) * 1.2;
 
-                const r = t * viewportRadius * 0.55; // particles viewport-normalized
+                const r = t * viewportRadius * 0.55;
 
                 ctx.save();
                 ctx.translate(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
@@ -157,24 +157,39 @@ export default function FractalTunnel() {
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext('2d')!;
 
-        const resize = () => {
-            const height = Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight
-            );
-            canvas.width = window.innerWidth;
-            canvas.height = height;
+        const buffer = document.createElement('canvas');
+        const bufferCtx = buffer.getContext('2d')!;
+        bufferCanvasRef.current = buffer;
+
+        const requestResize = () => {
+            pendingResizeRef.current = true;
         };
 
-        resize();
-        window.addEventListener('resize', resize);
+        requestResize();
+        window.addEventListener('resize', requestResize);
 
-        const observer = new ResizeObserver(resize);
+        const observer = new ResizeObserver(requestResize);
         observer.observe(document.body);
 
         const animate = () => {
-            introTimeRef.current += 0.016;
+            if (pendingResizeRef.current) {
+                const height = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight
+                );
 
+                buffer.width = canvas.width;
+                buffer.height = canvas.height;
+                bufferCtx.drawImage(canvas, 0, 0);
+
+                canvas.width = window.innerWidth;
+                canvas.height = height;
+
+                ctx.drawImage(buffer, 0, 0);
+                pendingResizeRef.current = false;
+            }
+
+            introTimeRef.current += 0.016;
             if (introPhaseRef.current === 0 && introTimeRef.current >= 1.5) {
                 introPhaseRef.current = 1;
                 introTimeRef.current = 0;
@@ -198,7 +213,7 @@ export default function FractalTunnel() {
 
         return () => {
             observer.disconnect();
-            window.removeEventListener('resize', resize);
+            window.removeEventListener('resize', requestResize);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
     }, [draw]);
@@ -208,10 +223,9 @@ export default function FractalTunnel() {
             <canvas
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full pointer-events-none"
-                style={{background: '#000', zIndex: 0}}
+                style={{zIndex: 0}}
             />
-
-            <div className="absolute inset-0 bg-black/40"/>
+            <div className="absolute inset-0 bg-black/35"/>
         </>
     );
 }
