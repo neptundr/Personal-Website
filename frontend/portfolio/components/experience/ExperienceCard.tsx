@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import {motion} from 'framer-motion';
 import {format} from 'date-fns';
@@ -24,9 +26,10 @@ interface ExperienceItem {
 interface ExperienceCardProps {
     item: ExperienceItem;
     index: number;
-    onSkillClick: (skill: string) => void;
+    onSkillClick: (skill: string | null) => void;
     dimmed: boolean;
     onHover: (id: number | null) => void;
+    currentSkillFilter?: string | null;
 }
 
 const formatDate = (date?: string) => {
@@ -44,62 +47,80 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            onSkillClick,
                                                            dimmed,
                                                            onHover,
+                                                           currentSkillFilter,
                                                        }) => {
-    const handleMouseEnter = () => onHover(item.id);
-    const handleMouseLeave = () => onHover(null);
-
     return (
         <motion.div
-            initial={{opacity: 0, y: 30}}
-            whileInView={{opacity: 1, y: 0}}
-            viewport={{once: true, margin: '-50px'}}
-            transition={{duration: 0.5, delay: index * 0.1}}
-            className="group"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            initial={{scale: 0.84}}
+            animate={{scale: 1}}
+            exit={{y: -50}}
+            transition={{duration: 0.25, ease: 'easeOut'}}
+            className="relative group"
+            onMouseEnter={() => onHover(item.id)}
+            onMouseLeave={() => onHover(null)}
             whileHover={{y: -6}}
         >
-            {/* Base card */}
+             {/* STATIC BLUR LAYER */}
+            {/*<div className="absolute inset-0 rounded-3xl bg-white-950/60 backdrop-blur-xs"/>*/}
+
+            {/* CONTENT */}
             <div
                 className={`
-          relative overflow-hidden rounded-3xl
-          bg-zinc-950/60 backdrop-blur-xl
-          border border-white/10 shadow-2xl
-          p-6 h-full transition-all duration-300
-          hover:border-white/20 hover:shadow-lg hover:shadow-red-500/10
-          ${dimmed ? 'opacity-40' : ''}
-        `}
+                    relative overflow-hidden rounded-3xl
+                    border shadow-2xl
+                    backdrop-blur-2xl
+                    p-6 h-full
+                    transition-[border,box-shadow,opacity] duration-300
+                    hover:border-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:border-2
+                    ${dimmed ? 'opacity-40 border-gray-700' : 'border-gray-400'}
+                `}
             >
-                {/* Inner subtle glow overlay */}
+                {/* Subtle highlight */}
                 <div
                     className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
 
-                {/* ================= CONTENT ================= */}
+                {/* Title & Meta */}
                 <div className="mb-4">
                     <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">
-                            <h3 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors" style={{fontFamily: 'var(--font-codec)'}}>
+                            <h3
+                                className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
+                                style={{fontFamily: 'var(--font-codec)'}}
+                            >
                                 {item.title}
                                 {item.featured && (
                                     <span className="ml-3 text-xs text-yellow-400 font-normal whitespace-nowrap">
-                    ★ Featured
-                  </span>
+                                        ★ Featured
+                                    </span>
                                 )}
                             </h3>
 
-                            <div className="flex flex-wrap items-center gap-3 text-sm" style={{fontFamily: 'var(--font-codecLight)'}}>
-                                {item.company && <span className="text-gray-300 font-normal">{item.company}</span>}
-                                {item.location && <span className="text-gray-500">{item.location}</span>}
+                            <div
+                                className="flex flex-wrap items-center gap-3 text-sm"
+                                style={{fontFamily: 'var(--font-codecLight)'}}
+                            >
+                                {item.company && (
+                                    <span className="text-gray-300 font-normal">
+                                        {item.company}
+                                    </span>
+                                )}
+                                {item.location && (
+                                    <span className="text-gray-500">{item.location}</span>
+                                )}
                                 {(item.start_date || item.end_date || item.is_current) && (
                                     <span className="text-gray-500">
-                    {formatDate(item.start_date)}
-                                        {item.start_date && (item.end_date || item.is_current) && ' — '}
+                                        {formatDate(item.start_date)}
+                                        {item.start_date &&
+                                            (item.end_date || item.is_current) &&
+                                            ' — '}
                                         {item.is_current ? (
-                                            <span className="text-red-400 font-medium">Present</span>
+                                            <span className="text-red-400 font-medium">
+                                                Present
+                                            </span>
                                         ) : (
                                             formatDate(item.end_date)
                                         )}
-                  </span>
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -150,16 +171,29 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
                 {/* Description */}
                 {item.description && (
-                    <p className="text-gray-400 text-sm leading-relaxed mb-4" style={{fontFamily: 'var(--font-codecLight)'}}>{item.description}</p>
+                    <p
+                        className="text-gray-400 text-sm leading-relaxed mb-4"
+                        style={{fontFamily: 'var(--font-codecLight)'}}
+                    >
+                        {item.description}
+                    </p>
                 )}
 
                 {/* Skills */}
                 {item.skills && (
                     <div className="flex flex-wrap gap-2">
                         {item.skills.map((skill) => (
-                            <span key={skill} onClick={() => onSkillClick(skill)}>
-                <SkillBadge skill={skill} size="sm"/>
-              </span>
+                            <SkillBadge
+                                key={skill}
+                                skill={skill}
+                                size="sm"
+                                isActive={currentSkillFilter === skill}
+                                onClick={() =>
+                                    onSkillClick(
+                                        currentSkillFilter === skill ? null : skill
+                                    )
+                                }
+                            />
                         ))}
                     </div>
                 )}

@@ -27,6 +27,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     /* ----------------------------
        SCROLL LOCK
     ---------------------------- */
+
+    useEffect(() => {
+        // Restore scroll to top on page reload / hard refresh
+        if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual'
+        }
+
+        window.scrollTo({top: 0, left: 0, behavior: 'instant' as ScrollBehavior})
+    }, [])
+
     useEffect(() => {
         document.body.style.overflow = 'hidden'
         return () => {

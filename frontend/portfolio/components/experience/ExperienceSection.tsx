@@ -1,11 +1,10 @@
+'use client';
+
 import React, {useState} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {X} from 'lucide-react';
-import {useQuery} from '@tanstack/react-query';
-import {api} from '@/api/client';
 import ExperienceCard from "@/components/experience/ExperienceCard";
-import {Button} from "@/components/ui/button";
 
 interface ExperienceItem {
     id: number;
@@ -26,25 +25,17 @@ interface ExperienceItem {
 
 interface ExperienceSectionProps {
     items: ExperienceItem[];
+    skillIcons?: { skill_name: string; icon_url: string }[];
 }
 
-const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
+const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons = []}) => {
     const [filter, setFilter] = useState<'all' | 'work' | 'project' | 'achievement'>('all');
     const [skillFilter, setSkillFilter] = useState<string | null>(null);
-    const [showCount, setShowCount] = useState(6);
+    const [showCount, setShowCount] = useState(15);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
-    const {data: skillIcons = []} = useQuery({
-        queryKey: ['skillIcons'],
-        queryFn: () => api.entities.SkillIcon.list(),
-        initialData: [],
-    });
-
     const getSkillIcon = (skill: string) =>
-        skillIcons.find(
-            (s: { skill_name: string }) =>
-                s.skill_name?.toLowerCase() === skill.toLowerCase()
-        )?.icon_url;
+        skillIcons.find(s => s.skill_name?.toLowerCase() === skill.toLowerCase())?.icon_url;
 
     const filteredItems = items
         .filter(item => filter === 'all' || item.type === filter)
@@ -56,7 +47,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
     if (!items.length) return null;
 
     return (
-        <section className="relative py-32 px-6 md:px-12 lg:px-24 /*bg-black*/ overflow-hidden">
+        <section className="relative py-32 px-6 md:px-12 lg:px-24 overflow-hidden">
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}
@@ -65,19 +56,20 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                 transition={{duration: 0.6}}
                 className="mb-12"
             >
-                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium ">
+                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
                     Experience
                 </span>
                 <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
                     style={{fontFamily: 'var(--font-codec)'}}>
-                    What I’ve Built<span className=" text-gray-300" style={{fontFamily: 'var(--font-futura)'}}></span>
+                    What I’ve Built
                 </h2>
             </motion.div>
 
-            <div className="mb-12 flex flex-wrap gap-3">
+            {/* Filters */}
+            <div className="mb-12 flex flex-wrap gap-3 items-center">
                 {/* General filter tabs */}
                 <Tabs value={filter} onValueChange={v => setFilter(v as any)} className="flex-shrink-0">
-                    <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-zinc-800/50">
+                    <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-gray-400/40">
                         {['all', 'work', 'project', 'achievement'].map(v => (
                             <TabsTrigger
                                 key={v}
@@ -107,9 +99,9 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                 onClick={() => setSkillFilter(null)}
                                 className={`
                                     px-4 py-2 rounded-full text-sm
-                                    bg-white/15 text-white border border-white/20
+                                    border border-red-500 bg-red-500/20 text-white
                                     flex items-center gap-2
-                                    backdrop-blur-md
+                                    backdrop-blur-2xl
                                     w-auto
                                 `}
                                 style={{fontFamily: 'var(--font-codec)'}}
@@ -150,35 +142,47 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {displayedItems.map((item, index) => (
-                    <ExperienceCard
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        onSkillClick={setSkillFilter}
-                        onHover={setHoveredId}
-                        dimmed={hoveredId !== null && hoveredId !== item.id}
-                    />
-                ))}
-            </div>
+            <AnimatePresence mode="popLayout">
+                {displayedItems.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {displayedItems.map((item, index) => (
+                            <ExperienceCard
+                                key={item.id}
+                                item={item}
+                                index={index}
+                                onSkillClick={(skill) =>
+                                    setSkillFilter(prev => (prev === skill ? null : skill))
+                                }
+                                dimmed={hoveredId !== null && hoveredId !== item.id}
+                                onHover={setHoveredId}
+                                currentSkillFilter={skillFilter}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <motion.div
+                        initial={{opacity: 0}}
+                        animate={{opacity: 1}}
+                        exit={{opacity: 0}}
+                        transition={{duration: 0.25}}
+                        className="flex justify-center items-center w-full h-80 text-gray-400 text-lg font-medium"
+                    >
+                        No items match this filter
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Show more */}
             {hasMore && (
                 <div className="flex justify-center mt-12">
                     <button
-                        onClick={() => setShowCount(c => Math.min(c + 6, filteredItems.length))}
+                        onClick={() => setShowCount(c => Math.min(c + 15, filteredItems.length))}
                         className="px-8 py-3 rounded-full bg-zinc-900/60 text-white/80 border border-zinc-800/50 hover:text-white"
                     >
                         Show More ({Math.min(6, filteredItems.length - showCount)} more)
                     </button>
                 </div>
             )}
-
-            {/* Ambient glow */}
-            <div className="absolute top-1/3 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none"/>
-            <div
-                className="absolute bottom-1/4 left-0 w-72 h-72 bg-red-500/4 rounded-full blur-3xl pointer-events-none"/>
         </section>
     );
 };
