@@ -63,16 +63,16 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm', i
 
     return (
         <motion.span
-            initial={{opacity: 0, scale: 0.8}}
-            animate={{opacity: 1, scale: 1}}
-            transition={{duration: 0.3, delay: index * 0.05}}
-            whileHover={{scale: 1.05}}
+            whileHover={{scale: 1.08}}
             onClick={onClick}
             className={`
-                inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
-                ${isActive ? 'border-red-500 bg-red-500/20 text-white' : 'border-gray-400/45 bg-white/5 text-gray-200'}
-                font-light transition-all duration-300 cursor-pointer backdrop-blur-sm
-            `}
+        inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
+        ${isActive
+                ? 'border-red-500 bg-red-500/20 text-white'
+                : 'border-gray-400/45 bg-white/5 text-gray-200'}
+        font-light transition-all duration-300 cursor-pointer backdrop-blur-sm
+        hover:border-red-500 hover:bg-red-500/55 hover:text-white
+        `}
         >
             {icon}
             <span className="tracking-wide" style={{fontFamily: 'var(--font-codec)'}}>{skill}</span>

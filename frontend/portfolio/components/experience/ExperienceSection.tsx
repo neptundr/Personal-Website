@@ -28,6 +28,29 @@ interface ExperienceSectionProps {
     skillIcons?: { skill_name: string; icon_url: string }[];
 }
 
+const itemVariants = {
+    hidden: {
+        opacity: 0,
+        y: 24,
+    },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.45,
+            ease: [0.22, 1, 0.36, 1],
+        },
+    },
+    exit: {
+        opacity: 0,
+        y: -16,
+        transition: {
+            duration: 0.25,
+            ease: 'easeInOut',
+        },
+    },
+};
+
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons = []}) => {
     const [filter, setFilter] = useState<'all' | 'work' | 'project' | 'achievement'>('all');
     const [skillFilter, setSkillFilter] = useState<string | null>(null);
@@ -41,7 +64,6 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
         .filter(item => filter === 'all' || item.type === filter)
         .filter(item => !skillFilter || item.skills?.includes(skillFilter));
 
-    const displayedItems = filteredItems.slice(0, showCount);
     const hasMore = filteredItems.length > showCount;
 
     if (!items.length) return null;
@@ -59,55 +81,50 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                 <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
                     Experience
                 </span>
-                <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
-                    style={{fontFamily: 'var(--font-codec)'}}>
+                <h2
+                    className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
+                    style={{fontFamily: 'var(--font-codec)'}}
+                >
                     What I’ve Built
                 </h2>
             </motion.div>
 
             {/* Filters */}
             <div className="mb-12 flex flex-wrap gap-3 items-center">
-                {/* General filter tabs */}
-                <Tabs value={filter} onValueChange={v => setFilter(v as any)} className="flex-shrink-0">
+                <Tabs value={filter} onValueChange={v => setFilter(v as any)}>
                     <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-gray-400/40">
                         {['all', 'work', 'project', 'achievement'].map(v => (
                             <TabsTrigger
                                 key={v}
                                 value={v}
-                                className={`
-                                text-gray-400
+                                className="
+                                    text-gray-400
                                     data-[state=active]:bg-red-500/10
                                     data-[state=active]:text-red-400
-                                    transition-all duration-200 ease-in-out
+                                    transition-all
                                     hover:bg-gray-500/20 hover:text-gray-300
-                                `}
+                                "
                             >
-                                {v === 'all'
-                                    ? 'All'
-                                    : ((v ?? "")[0] ?? "").toUpperCase() + v.slice(1)}
+                                {v === 'all' ? 'All' : v[0].toUpperCase() + v.slice(1)}
                             </TabsTrigger>
                         ))}
                     </TabsList>
                 </Tabs>
 
-                {/* Skill filter / tip */}
-                <div className="flex flex-wrap gap-2 justify-start min-w-[200px] max-w-[300px] sm:max-w-[300px]">
+                <div className="flex flex-wrap gap-2 min-w-[200px] max-w-[300px]">
                     <AnimatePresence mode="wait" initial={false}>
                         {skillFilter ? (
                             <motion.button
                                 key={skillFilter}
                                 onClick={() => setSkillFilter(null)}
-                                className={`
+                                className="
                                     px-4 py-2 rounded-full text-sm
                                     border border-red-500 bg-red-500/20 text-white
-                                    flex items-center gap-2
-                                    backdrop-blur-2xl
-                                    w-auto
-                                `}
-                                style={{fontFamily: 'var(--font-codec)'}}
-                                initial={{opacity: 0, x: -20}}
+                                    flex items-center gap-2 backdrop-blur-2xl
+                                "
+                                initial={{opacity: 0, x: -16}}
                                 animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: 20}}
+                                exit={{opacity: 0, x: 16}}
                                 transition={{duration: 0.25}}
                             >
                                 {getSkillIcon(skillFilter) && (
@@ -123,33 +140,43 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                             </motion.button>
                         ) : (
                             <motion.div
-                                key="skillTip"
-                                className={`
-                                    px-4 py-2 text-sm text-gray-400
-                                    text-left w-auto
-                                `}
-                                style={{fontFamily: 'var(--font-codecLight)'}}
-                                initial={{opacity: 0, x: -20}}
+                                key="tip"
+                                className="px-4 py-2 text-sm text-gray-400"
+                                initial={{opacity: 0, x: -16}}
                                 animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: 20}}
+                                exit={{opacity: 0, x: 16}}
                                 transition={{duration: 0.25}}
                             >
-                                Tip: click on a skill badge to apply a filter
+                                Tip: click on a skill badge to filter
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             </div>
 
-            {/* Grid */}
-            <AnimatePresence mode="popLayout">
-                {displayedItems.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {displayedItems.map((item, index) => (
+            {/* Masonry Grid */}
+            <div
+                className="
+                    columns-1
+                    md:columns-2
+                    lg:columns-3
+                    gap-6
+                "
+            >
+                <AnimatePresence mode="popLayout">
+                    {filteredItems.slice(0, showCount).map(item => (
+                        <motion.div
+                            key={item.id}
+                            layout
+                            variants={itemVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="mb-6 break-inside-avoid"
+                        >
                             <ExperienceCard
-                                key={item.id}
                                 item={item}
-                                index={index}
+                                index={0}
                                 onSkillClick={(skill) =>
                                     setSkillFilter(prev => (prev === skill ? null : skill))
                                 }
@@ -157,20 +184,10 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                 onHover={setHoveredId}
                                 currentSkillFilter={skillFilter}
                             />
-                        ))}
-                    </div>
-                ) : (
-                    <motion.div
-                        initial={{opacity: 0}}
-                        animate={{opacity: 1}}
-                        exit={{opacity: 0}}
-                        transition={{duration: 0.25}}
-                        className="flex justify-center items-center w-full h-80 text-gray-400 text-lg font-medium"
-                    >
-                        No items match this filter
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
 
             {/* Show more */}
             {hasMore && (
@@ -179,7 +196,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                         onClick={() => setShowCount(c => Math.min(c + 15, filteredItems.length))}
                         className="px-8 py-3 rounded-full bg-zinc-900/60 text-white/80 border border-zinc-800/50 hover:text-white"
                     >
-                        Show More ({Math.min(6, filteredItems.length - showCount)} more)
+                        Show More
                     </button>
                 </div>
             )}

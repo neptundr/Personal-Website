@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, {useState} from 'react';
 import {motion} from 'framer-motion';
 import {format} from 'date-fns';
 import {ExternalLink, Github} from 'lucide-react';
@@ -49,20 +49,25 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            onHover,
                                                            currentSkillFilter,
                                                        }) => {
+    const [hovered, setHovered] = useState(false);
+
     return (
         <motion.div
-            initial={{scale: 0.84}}
-            animate={{scale: 1}}
-            exit={{y: -50}}
+            // initial={{scale: 0.84}}
+            // animate={{scale: 1}}
+            // exit={{y: -50}}
             transition={{duration: 0.25, ease: 'easeOut'}}
             className="relative group"
-            onMouseEnter={() => onHover(item.id)}
-            onMouseLeave={() => onHover(null)}
+            onMouseEnter={() => {
+                setHovered(true);
+                onHover(item.id);
+            }}
+            onMouseLeave={() => {
+                setHovered(false);
+                onHover(null);
+            }}
             whileHover={{y: -6}}
         >
-             {/* STATIC BLUR LAYER */}
-            {/*<div className="absolute inset-0 rounded-3xl bg-white-950/60 backdrop-blur-xs"/>*/}
-
             {/* CONTENT */}
             <div
                 className={`
@@ -72,7 +77,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     p-6 h-full
                     transition-[border,box-shadow,opacity] duration-300
                     hover:border-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:border-2
-                    ${dimmed ? 'opacity-40 border-gray-700' : 'border-gray-400'}
+                    ${dimmed ? 'opacity-93 border-gray-700' : 'border-gray-400'}
                 `}
             >
                 {/* Subtle highlight */}
@@ -114,7 +119,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             (item.end_date || item.is_current) &&
                                             ' — '}
                                         {item.is_current ? (
-                                            <span className="text-red-400 font-medium">
+                                            <span className="text-red-50 font-medium" style={{fontFamily: 'var(--font-codec)'}}>
                                                 Present
                                             </span>
                                         ) : (
@@ -134,7 +139,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-800/50 text-gray-400 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+                                    className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-gray-400 hover:text-white hover:bg-zinc-500/30 transition-colors"
                                 >
                                     <ExternalLink className="w-4 h-4"/>
                                 </motion.a>
@@ -146,7 +151,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-800/50 text-gray-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                                    className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-gray-400 hover:text-white hover:bg-zinc-500/30 transition-colors"
                                 >
                                     <Github className="w-4 h-4"/>
                                 </motion.a>
@@ -162,8 +167,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             src={item.image_url}
                             alt={item.title}
                             className="w-full h-full object-cover"
-                            whileHover={{scale: 1.05}}
+                            animate={{
+                                filter: hovered
+                                    ? 'grayscale(0%) brightness(1)'
+                                    : 'grayscale(90%) brightness(1.2)',
+                            }}
                             transition={{duration: 0.4}}
+                            style={{transformOrigin: 'center'}}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"/>
                     </div>
