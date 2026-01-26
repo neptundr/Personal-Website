@@ -69,14 +69,15 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
 
     if (!items.length) return null;
 
+    // @ts-ignore
     return (
-        <section className="relative py-32 px-6 md:px-12 lg:px-24 overflow-hidden" ref={filterRowRef}>
+        <section className="relative pt-32 pb-0 px-6 md:px-12 lg:px-24 overflow-hidden" ref={filterRowRef}>
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}
                 whileInView={{opacity: 1, y: 0}}
                 viewport={{once: true}}
-                transition={{duration: 0.6}}
+                transition={{duration: 0.6, delay: 0.7}}
                 className="mb-12"
             >
                 <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
@@ -89,73 +90,81 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
             </motion.div>
 
             {/* Filters */}
-            <div className="mb-12 flex flex-wrap gap-3 items-center">
-                <Tabs value={filter} onValueChange={v => setFilter(v as any)}>
-                    <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-gray-400/40">
-                        {['all', 'work', 'project', 'achievement'].map(v => (
-                            <TabsTrigger
-                                key={v}
-                                value={v}
-                                className="
+            <motion.div
+                initial={{opacity: 0, y: 20}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.6, delay: 1}}
+                className="mb-12"
+            >
+                <div className="mb-12 flex flex-wrap gap-3 items-center">
+                    <Tabs value={filter} onValueChange={v => setFilter(v as any)}>
+                        <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-gray-400/40">
+                            {['all', 'work', 'project', 'achievement'].map(v => (
+                                <TabsTrigger
+                                    key={v}
+                                    value={v}
+                                    className="
                                     text-gray-400
                                     data-[state=active]:bg-red-500/10
                                     data-[state=active]:text-red-400
                                     transition-all
                                     hover:bg-gray-500/20 hover:text-gray-300
                                 "
-                            >
-                                {v === 'all' ? 'All' : (v[0] ?? "").toUpperCase() + v.slice(1)}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
+                                >
+                                    {v === 'all' ? 'All' : (v[0] ?? "").toUpperCase() + v.slice(1)}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
 
-                <div className="flex flex-wrap gap-2 min-w-[200px] max-w-[300px]">
-                    <AnimatePresence mode="wait" initial={false}>
-                        {skillFilter ? (
-                            <motion.button
-                                key={skillFilter}
-                                onClick={() => setSkillFilter(null)}
-                                className="
+                    <div className="flex flex-wrap gap-2 min-w-[200px] max-w-[300px]">
+                        <AnimatePresence mode="wait" initial={false}>
+                            {skillFilter ? (
+                                <motion.button
+                                    key={skillFilter}
+                                    onClick={() => setSkillFilter(null)}
+                                    className="
                                     px-4 py-2 rounded-full text-sm
                                     border border-red-500 bg-red-500/20 text-white
                                     flex items-center gap-2 backdrop-blur-2xl
                                 "
-                                initial={{opacity: 0, x: -16}}
-                                animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: 16}}
-                                transition={{duration: 0.25}}
-                            >
-                                {getSkillIcon(skillFilter) && (
-                                    <img
-                                        src={getSkillIcon(skillFilter)}
-                                        alt={skillFilter}
-                                        className="w-5.5 h-5.5"
-                                    />
-                                )}
-                                {skillFilter}
-                                <motion.div
-                                    whileHover={{scale: 1.25}}
-                                    transition={{type: 'spring', stiffness: 300}}
+                                    initial={{opacity: 0, x: -16}}
+                                    animate={{opacity: 1, x: 0}}
+                                    exit={{opacity: 0, x: 16}}
+                                    transition={{duration: 0.25}}
                                 >
-                                    <X className="w-3 h-3"/>
+                                    {getSkillIcon(skillFilter) && (
+                                        <img
+                                            src={getSkillIcon(skillFilter)}
+                                            alt={skillFilter}
+                                            className="w-5.5 h-5.5"
+                                        />
+                                    )}
+                                    {skillFilter}
+                                    <motion.div
+                                        whileHover={{scale: 1.25}}
+                                        transition={{type: 'spring', stiffness: 300}}
+                                    >
+                                        <X className="w-3 h-3"/>
+                                    </motion.div>
+                                </motion.button>
+                            ) : (
+                                <motion.div
+                                    key="tip"
+                                    className="px-4 py-2 text-sm text-gray-400"
+                                    initial={{opacity: 0, x: -16}}
+                                    animate={{opacity: 1, x: 0}}
+                                    exit={{opacity: 0, x: 16}}
+                                    transition={{duration: 0.25}}
+                                >
+                                    Tip: click on a skill badge to filter
                                 </motion.div>
-                            </motion.button>
-                        ) : (
-                            <motion.div
-                                key="tip"
-                                className="px-4 py-2 text-sm text-gray-400"
-                                initial={{opacity: 0, x: -16}}
-                                animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: 16}}
-                                transition={{duration: 0.25}}
-                            >
-                                Tip: click on a skill badge to filter
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Masonry Grid */}
             {filteredItems.length === 0 ? (

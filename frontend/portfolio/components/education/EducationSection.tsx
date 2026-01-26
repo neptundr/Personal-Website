@@ -14,7 +14,7 @@ class EducationSection extends React.Component<{ education: any }> {
         });
 
         return (
-            <section className="relative py-32 px-6 md:px-12 lg:px-24 /*bg-black*/">
+            <section className="relative pt-32 pb-40 px-6 md:px-12 lg:px-24 /*bg-black*/">
                 {/* Section header */}
                 <motion.div
                     initial={{opacity: 0, y: 20}}
@@ -40,14 +40,11 @@ class EducationSection extends React.Component<{ education: any }> {
                         transition={{duration: 0.6, delay: 0.2}}
                     >
                         Education
-                        <span className=" text-gray-300" style={{fontFamily: 'var(--font-futura)'}}>
-
-                        </span>
                     </motion.h2>
                 </motion.div>
 
                 {/* Education cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
                     {sortedEducation.map((edu, index) => (
                         <EducationCard key={edu.id} education={edu} index={index}/>
                     ))}
