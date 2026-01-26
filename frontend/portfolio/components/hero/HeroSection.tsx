@@ -23,6 +23,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     const [showPortfolioLine, setShowPortfolioLine] = useState(false)
     const [showBadge, setShowBadge] = useState(false)
     const [tunnelVisible, setTunnelVisible] = useState(false)
+    const [showScrollHint, setShowScrollHint] = useState(false)
 
     /* ----------------------------
        SCROLL LOCK
@@ -84,8 +85,20 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             document.body.style.overflow = ''
         }, 6000))
 
+        timers.push(setTimeout(() => {
+            setShowScrollHint(true)
+        }, 11900))
+
         return () => timers.forEach(clearTimeout)
     }, [availableForHire])
+
+    useEffect(() => {
+        const onScroll = () => {
+            setShowScrollHint(false)
+        }
+        window.addEventListener('scroll', onScroll)
+        return () => window.removeEventListener('scroll', onScroll)
+    }, [])
 
     const words = [
         {text: 'Welcome', left: '15vw', top: '70vh'},
@@ -98,7 +111,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             opacity: 1,
             transition: {
                 duration: 0.15,
-                delay: i * (0.25 - 0.025 * i), // stagger ONLY on enter
+                delay: i * (0.25 - 0.02 * i), // stagger ONLY on enter
             },
         }),
         exit: {
@@ -172,7 +185,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                                 stiffness: 290,
                                                 damping: 28,
                                                 mass: 0.85,
-                                                delay: 1.6,
+                                                delay: 1.45,
                                             }}
                                         />
                                     </span>
@@ -312,6 +325,38 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     )}
                 </AnimatePresence>
 
+                {/* SCROLL DOWN HINT */}
+                <AnimatePresence>
+                    {showScrollHint && (
+                        <motion.div
+                            className="pointer-events-none absolute bottom-10 left-1/2 -translate-x-1/2"
+                            initial={{opacity: 0, y: 10}}
+                            animate={{
+                                opacity: 1,
+                                y: [0, -6, 0],
+                            }}
+                            exit={{opacity: 0, y: 10}}
+                            transition={{
+                                opacity: {duration: 0.6},
+                                y: {
+                                    duration: 2.2,
+                                    repeat: Infinity,
+                                    ease: 'easeInOut',
+                                },
+                            }}
+                        >
+                            <span
+                                className="inline-flex items-center gap-2 px-3 py-1
+                                           rounded-full border border-red-500/30
+                                           bg-red-500/10 backdrop-blur-md
+                                           text-xs text-white-400 tracking-[0.2em] uppercase"
+                                style={{fontFamily: 'var(--font-codec)'}}
+                            >
+                                Scroll Down
+                            </span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </section>
     )
