@@ -29,7 +29,7 @@ const contactLinks = [
         key: 'github_url',
         icon: Github,
         label: 'GitHub',
-        color: 'sky',
+        color: 'lime',
         action: 'external',
     },
     {
@@ -50,7 +50,7 @@ const contactLinks = [
         key: 'resume_url',
         icon: FileText,
         label: 'Resume',
-        color: 'red',
+        color: 'purple',
         action: 'download',
     },
 ];
@@ -61,6 +61,8 @@ const colorClasses: Record<string, string> = {
     sky: 'hover:text-sky-400 hover:border-sky-300',
     white: 'hover:text-white hover:border-gray-300',
     yellow: 'hover:text-yellow-400 hover:border-yellow-300',
+    lime: 'hover:text-lime-400 hover:border-lime-300',
+    purple: 'hover:text-purple-400 hover:border-purple-300',
 };
 
 // @ts-ignore
@@ -92,7 +94,6 @@ const ContactSection = ({settings}) => {
                     px-12 lg:px-24
                     border-t border-zinc-900
                     overflow-hidden
-
                 "
             >
                 <div
@@ -238,7 +239,7 @@ const ContactSection = ({settings}) => {
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
-                    transition={{duration: 0.6, delay: 2.5}}
+                    transition={{duration: 0.6, delay: 1}}
                     className="
                         relativetop-1/2
                         mx-auto max-w-4xl

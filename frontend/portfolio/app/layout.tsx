@@ -1,20 +1,42 @@
-'use client';
-
 import type {ReactNode} from 'react';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 // @ts-ignore
 import './globals.css';
-import {futura, codec, codecLight} from './fonts';
+import {codec, codecLight} from './fonts';
+import Providers from './providers';
 
-const queryClient = new QueryClient();
+export const metadata = {
+    title: 'Denis Kaizer · Developer Portfolio',
+    description: 'A showcase of my developer journey and standout projects',
+
+    icons: {
+        icon: [
+            {url: '/favicon.ico'},
+            {url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png'},
+            {url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png'},
+        ],
+        apple: [
+            {url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png'},
+        ],
+        other: [
+            {
+                rel: 'android-chrome',
+                url: '/android-chrome-192x192.png',
+            },
+            {
+                rel: 'android-chrome',
+                url: '/android-chrome-512x512.png',
+            },
+        ],
+    },
+};
 
 export default function RootLayout({children}: { children: ReactNode }) {
     return (
-        <html lang="en" className={`${futura.variable} ${codec.variable} ${codecLight.variable}`}>
+        <html lang="en" className={`${codec.variable} ${codecLight.variable}`}>
         <body>
-        <QueryClientProvider client={queryClient}>
+        <Providers>
             {children}
-        </QueryClientProvider>
+        </Providers>
         </body>
         </html>
     );

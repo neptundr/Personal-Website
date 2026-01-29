@@ -55,10 +55,10 @@ export default function FractalTunnel() {
 
             ctx.clearRect(0, 0, width, height);
 
-            const numLayers = 86;
+            const numLayers = 90;
 
             tunnelOscRef.current += 0.016;
-            const tunnelOsc = 0.85 + 0.4 * Math.sin(tunnelOscRef.current * 0.8);
+            const tunnelOsc = 0.75 + 0.4 * Math.sin(tunnelOscRef.current * 0.8);
 
             let fadeIn = 1;
             if (introPhase === 0) fadeIn = Math.min(introTime / 1.5, 1);
@@ -142,7 +142,7 @@ export default function FractalTunnel() {
                 ctx.scale(1, -1);
                 ctx.rotate(a);
 
-                const alpha = (t + 0.1) * 0.85 * (1 - t * 0.15);
+                const alpha = -0.075 + (t + 0.1) * 0.85 * (1 - t * 0.15);
                 const fontSize = 14 * (1 + t * 0.4) * ageGrowth;
 
                 ctx.fillStyle = `rgba(200,20,25,${alpha})`;
@@ -230,7 +230,7 @@ export default function FractalTunnel() {
                 className="absolute top-0 left-0 w-full pointer-events-none"
                 style={{zIndex: 0}}
             />
-            <div className="absolute inset-0 bg-black/35"/>
+            <div className="absolute inset-0 h-full bg-black/35"/>
         </>
     );
 }
