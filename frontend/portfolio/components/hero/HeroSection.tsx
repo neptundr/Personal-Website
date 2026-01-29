@@ -185,7 +185,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                                 stiffness: 290,
                                                 damping: 28,
                                                 mass: 0.85,
-                                                delay: 1.45,
+                                                delay: 1.5,
                                             }}
                                         />
                                     </span>
@@ -223,9 +223,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 <AnimatePresence>
                     {showPortfolio && (
                         <motion.h1
-                            initial={{opacity: 0, y: 120}}
-                            animate={{opacity: 1, y: 0}}
-                            exit={{opacity: 0, y: -1200}}
+                            initial={{opacity: 0, y: 120, filter: 'blur(1px)'}}
+                            animate={{opacity: 1, y: 0, filter: 'blur(0px)'}}
+                            exit={{opacity: 0, y: -1200, filter: 'blur(2px)'}}
                             transition={{
                                 type: 'spring',
                                 stiffness: 230,
