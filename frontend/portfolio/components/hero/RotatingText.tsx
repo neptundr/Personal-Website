@@ -48,7 +48,7 @@ const RotatingText: React.FC<RotatingTextProps> = ({
     if (!items || items.length === 0) return null;
 
     return (
-        <div className={`relative inline-block ${className} min-w-[200px]`}>
+        <div className={`relative inline-block ${className} min-w-[400px]`}>
             <AnimatePresence mode="wait">
                 <motion.span
                     key={index}

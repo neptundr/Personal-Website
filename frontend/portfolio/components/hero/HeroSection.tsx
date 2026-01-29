@@ -274,7 +274,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                     transition={{duration: 0.6, delay: 0.1}}
                                 >
                                     <RotatingText items={loveItems}
-                                                  textClassName="flex justify-start inline-block left-0"/>
+                                                  textClassName="flex justify-start inline-block"/>
 
                                     <motion.div
                                         className="absolute left-0 -bottom-1 h-[1px] bg-red-500"

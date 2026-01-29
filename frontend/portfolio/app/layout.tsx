@@ -5,7 +5,7 @@ import {codec, codecLight} from './fonts';
 import Providers from './providers';
 
 export const metadata = {
-    title: 'Denis Kaizer · Developer Portfolio',
+    title: 'Denis Kaizer · Portfolio',
     description: 'A showcase of my developer journey and standout projects',
 
     icons: {
