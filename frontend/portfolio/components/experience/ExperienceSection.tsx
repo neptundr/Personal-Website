@@ -32,7 +32,7 @@ interface ExperienceSectionProps {
 
 const itemVariants = {
     hidden: {y: 24},
-    visible: {y: 0, transition: {duration: 0.45, ease: [0.22, 1, 0.36, 1]}},
+    visible: {y: 0, transition: {duration: 0.55, ease: [0.22, 1, 0.36, 1]}},
     exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: 'easeInOut'}},
 };
 
@@ -62,25 +62,41 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
     const hasMore = filteredItems.length > showCount;
 
     useEffect(() => {
-        if (skillFilter && filterRowRef.current) {
-            filterRowRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
-        }
-    }, [skillFilter]);
+        if (!skillFilter || !filterRowRef.current) return;
+
+        const rect = filterRowRef.current.getBoundingClientRect();
+        const buffer = 60; // pixels from top/bottom to tolerate
+
+        const isMostlyInViewport =
+            rect.top >= -buffer && rect.bottom <= window.innerHeight + buffer;
+
+        if (isMostlyInViewport) return; // skip scrolling if element is within buffer
+
+        const handle = requestAnimationFrame(() => {
+            const top = window.scrollY + rect.top - 20; // optional offset
+            window.scrollTo({
+                top,
+                behavior: 'smooth',
+            });
+        });
+
+        return () => cancelAnimationFrame(handle);
+    }, [skillFilter, filteredItems.length]);
 
     if (!items.length) return null;
 
     // @ts-ignore
     return (
-        <section className="relative pt-32 pb-0 px-6 md:px-12 lg:px-24 overflow-hidden" ref={filterRowRef}>
+        <section className="relative pt-32 pb-0 px-6 md:px-12 lg:px-24 overflow-hidden">
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}
                 whileInView={{opacity: 1, y: 0}}
                 viewport={{once: true}}
-                transition={{duration: 0.6, delay: 0.65}}
+                transition={{duration: 0.6, delay: 0.15}}
                 className="mb-12"
             >
-                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
+                <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium" ref={filterRowRef}>
                     Experience
                 </span>
                 <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
@@ -94,7 +110,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                 initial={{opacity: 0, y: 20}}
                 whileInView={{opacity: 1, y: 0}}
                 viewport={{once: true}}
-                transition={{duration: 0.6, delay: 0.85}}
+                transition={{duration: 0.6, delay: 0.25}}
                 className="mb-12"
             >
                 <div className="mb-12 flex flex-wrap gap-3 items-center">
@@ -154,9 +170,20 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                     key="tip"
                                     className="px-4 py-2 text-sm text-gray-400"
                                     initial={{opacity: 0, x: -16}}
-                                    animate={{opacity: 1, x: 0}}
+                                    animate={{
+                                        opacity: 1,
+                                        x: 0,
+                                        color: ["#9ca3af", "#dddddd"], // gray-400 to almost white
+                                    }}
                                     exit={{opacity: 0, x: 16}}
-                                    transition={{duration: 0.25}}
+                                    transition={{
+                                        duration: 0.65,
+                                        repeat: Infinity,
+                                        repeatType: "mirror",
+                                        ease: "easeInOut",
+                                        opacity: {duration: 0.25},
+                                        x: {duration: 0.25},
+                                    }}
                                 >
                                     Tip: click on a skill badge to filter
                                 </motion.div>

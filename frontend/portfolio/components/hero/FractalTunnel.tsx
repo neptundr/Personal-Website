@@ -41,16 +41,21 @@ export default function FractalTunnel() {
             introPhase: IntroPhase,
             introTime: number
         ) => {
-            const cx = width * (2 / 3);
-            const cy = window.innerHeight * 0.5;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
 
-            const maxRadius = Math.hypot(width, height);
-            const viewportRadius = Math.hypot(window.innerWidth, window.innerHeight);
-            const radiusScale = viewportRadius / maxRadius;
+            // center of the tunnel = middle of the viewport, not canvas
+            const cx = viewportWidth * (2/3);
+            const cy = viewportHeight * 0.5;
+            // use viewport diagonal for radius, not full page
+            const viewportRadius = Math.hypot(viewportWidth, viewportHeight);
+
+            const maxRadius = Math.hypot(viewportWidth, viewportHeight);
+            const radiusScale = 1;
 
             ctx.clearRect(0, 0, width, height);
 
-            const numLayers = 90;
+            const numLayers = 85;
 
             tunnelOscRef.current += 0.016;
             const tunnelOsc = 0.85 + 0.4 * Math.sin(tunnelOscRef.current * 0.8);
@@ -183,7 +188,7 @@ export default function FractalTunnel() {
                 bufferCtx.drawImage(canvas, 0, 0);
 
                 canvas.width = window.innerWidth;
-                canvas.height = height;
+                canvas.height = document.documentElement.scrollHeight;
 
                 ctx.drawImage(buffer, 0, 0);
                 pendingResizeRef.current = false;

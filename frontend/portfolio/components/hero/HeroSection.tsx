@@ -11,7 +11,7 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = ({
                                                      name = 'Denis',
-                                                     availableForHire = true,
+                                                     availableForHire = false,
                                                      loveItems = ["Create"]
                                                  }) => {
     const hasStartedRef = useRef(false)
@@ -267,12 +267,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                 </motion.span>
 
                                 <motion.span
-                                    className="relative inline-block"
+                                    className="relative inline-block text-left justify-start"
                                     initial={{opacity: 0, y: 40}}
                                     animate={{opacity: 1, y: 0}}
                                     transition={{duration: 0.6, delay: 0.1}}
                                 >
-                                    <RotatingText items={loveItems} textClassName="inline-block"/>
+                                    <RotatingText items={loveItems} textClassName="flex justify-start inline-block left-0"/>
 
                                     <motion.div
                                         className="absolute left-0 -bottom-1 h-[1px] bg-red-500"
@@ -316,7 +316,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                             <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"/>
                                         </span>
                                         <span className="text-xs text-red-400 tracking-[0.2em] uppercase">
-                                            Available for Hire
+                                            Open to Work
                                         </span>
                                     </span>
                                 </motion.div>

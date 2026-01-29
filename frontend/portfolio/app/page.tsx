@@ -38,7 +38,7 @@ export default function Home() {
     return (
         <div
             id="page"
-            className="relative min-h-screen overflow-hidden"
+            className="relative overflow-hidden"
             style={{ fontFamily: 'var(--font-codecLight)' }}
         >
             {/* Background */}
@@ -48,7 +48,7 @@ export default function Home() {
             <main className="relative z-10">
                 <HeroSection
                     name={settings.hero_name || 'Denis'}
-                    availableForHire={settings.available_for_hire ?? true}
+                    availableForHire={settings.available_for_hire ?? false}
                     loveItems={settings.love_items || ['Create']}
                 />
                 <ExperienceSection items={items} />
