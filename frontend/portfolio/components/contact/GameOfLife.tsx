@@ -7,7 +7,7 @@ const GameOfLife: React.FC = () => {
     const animationRef = useRef<number | null>(null);
     const [key, setKey] = useState<number>(0);
 
-    const cellSize = 20;
+    const cellSize = 10;
 
     let cols = 0;
     let rows = 0;
@@ -203,6 +203,14 @@ const GameOfLife: React.FC = () => {
         };
     }, [key]);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setKey(k => k + 1);
+        }, 45_000); // 45 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <>
             <canvas
@@ -211,7 +219,7 @@ const GameOfLife: React.FC = () => {
             />
             <button
                 onClick={() => setKey(k => k + 1)}
-                className="absolute top-6 left-6 z-10 px-3 py-1.5 rounded-lg bg-zinc-900/80 border border-white/10 text-white/60 hover:text-white hover:bg-zinc-900 transition-colors text-xs font-light tracking-wide backdrop-blur-sm"
+                className="absolute z-20 top-6 left-6 px-3 py-1.5 rounded-lg bg-zinc-900/80 border border-white/10 text-white/60 hover:text-white hover:bg-zinc-900 transition-colors text-xs font-light tracking-wide backdrop-blur-sm"
             >
                 Regenerate
             </button>

@@ -55,7 +55,7 @@ export default function FractalTunnel() {
 
             ctx.clearRect(0, 0, width, height);
 
-            const numLayers = 85;
+            const numLayers = 86;
 
             tunnelOscRef.current += 0.016;
             const tunnelOsc = 0.85 + 0.4 * Math.sin(tunnelOscRef.current * 0.8);
@@ -65,8 +65,8 @@ export default function FractalTunnel() {
 
             for (let layer = 0; layer < numLayers; layer++) {
                 const offset = (layer / numLayers + time * speedRef.current) % 1;
-                const scale = Math.pow(offset, 5);
-                const radius = scale * maxRadius * 0.87;
+                const scale = Math.pow(offset, 4);
+                const radius = scale * maxRadius * 0.7;
                 const opacity = Math.sin(offset * Math.PI) * fadeIn * tunnelOsc;
 
                 if (opacity < 0.01 || radius < 5) continue;

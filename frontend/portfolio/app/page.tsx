@@ -54,7 +54,6 @@ export default function Home() {
                 <ExperienceSection items={items} />
                 <EducationSection education={education} />
                 <ContactSection settings={settings} />
-                <FooterSection />
             </main>
         </div>
     );

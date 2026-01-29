@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import GameOfLife from './GameOfLife';
 import RotatingText from "@/components/hero/RotatingText";
+import FooterSection from "@/components/footer/FooterSection";
 
 const contactLinks = [
     {
@@ -74,185 +75,280 @@ const ContactSection = ({settings}) => {
     };
 
     return (
-        <section className="relative pt-32 pb-8 px-12 lg:px-24 bg-black border-t border-zinc-900 overflow-hidden">
-            <GameOfLife/>
-
-            <motion.div
-                initial={{opacity: 0}}
-                whileInView={{opacity: 1}}
-                viewport={{once: true}}
-                transition={{duration: 0.6, delay: 0.15}}
+        <section
+            className="
+            relative
+            h-screen min-h-screen max-h-screen
+            bg-black
+            border-t border-zinc-900
+            overflow-hidden
+            flex flex-col
+            "
+        >
+            <div
                 className="
-                    relative mx-auto max-w-4xl
-                    rounded-3xl
-                    bg-zinc-950/60
-                    backdrop-blur-xl
-                    border border-white/10
-                    shadow-2xl
-                    px-8 md:px-12 py-14
+                    relative
+                    flex-1 flex flex-col justify-center
+                    px-12 lg:px-24
+                    border-t border-zinc-900
+                    overflow-hidden
                 "
             >
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none
-                    backdrop-blur-2xl h-full border border-gray-400 -z-10"/>
+                <div
+                    className="
+                        pointer-events-none
+                        absolute top-0 left-0
+                        w-full h-15
+                        bg-gradient-to-b
+                        from-black
+                        to-transparent
+                        z-20
+                    "
+                />
+                <GameOfLife/>
 
-                {/* Header */}
-                <div className="text-center mb-10 w-full">
-                    <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
-                        Get in Touch
-                    </span>
+                <motion.div
+                    initial={{opacity: 0}}
+                    whileInView={{opacity: 1}}
+                    viewport={{once: true}}
+                    transition={{duration: 0.6, delay: 0.15}}
+                    className="
+                        z-20
+                        relative mx-auto
+                        w-fit
+                        rounded-3xl
+                        bg-zinc-950/60
+                        backdrop-blur-xl
+                        border border-white/10
+                        shadow-2xl
+                        mt-12
+                        px-8 md:px-12 pt-8 pb-12 md:pt-12 md:pb-12
+                    "
+                >
+                    <div className="
+                        absolute inset-0 rounded-3xl
+                        bg-gradient-to-b from-white/5 to-transparent
+                        pointer-events-none
+                        backdrop-blur-2xl
+                        border border-gray-400
+                        -z-10
+                    "/>
 
-                    <h2
-                        className="mt-4 font-codec text-4xl md:text-5xl lg:text-6xl text-white tracking-tight flex flex-col items-stretch w-full"
-                        style={{fontFamily: 'var(--font-codec)'}}
+                    {/* Header */}
+                    <div className="text-center mb-10">
+                        <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
+                            Get in Touch
+                        </span>
+
+                        <h2
+                            className="mt-4 font-codec text-4xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
+                            style={{fontFamily: 'var(--font-codec)'}}
+                        >
+                            Let's Connect
+                        </h2>
+                    </div>
+
+                    {/* Links */}
+                    <div
+                        className="
+                            relative z-10
+                            grid gap-6
+                            grid-cols-1
+                            sm:grid-cols-2
+                            lg:grid-cols-4
+                            justify-items-center
+                        "
                     >
-                        Let's Connect
-                    </h2>
-                </div>
+                        {contactLinks.map((link, index) => {
+                            if (!settings?.[link.key]) return null;
 
-                {/* Links */}
-                <div className="relative z-10 flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
-                    {contactLinks.map((link, index) => {
-                        if (!settings?.[link.key]) return null;
+                            const Icon = link.icon;
+                            const ActionIcon =
+                                link.action === 'download'
+                                    ? Download
+                                    : link.action === 'copy'
+                                        ? copied ? Check : Copy
+                                        : ExternalLink;
 
-                        const Icon = link.icon;
+                            const content = (
+                                <>
+                                    <Icon className="w-5 h-5"/>
+                                    <span className="font-light tracking-wide">
+                                             {link.action === 'copy' && copied ? 'Copied!' : link.label}
+                                         </span>
+                                    <ActionIcon
+                                        className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"/>
+                                </>
+                            );
 
-                        const ActionIcon =
-                            link.action === 'download'
-                                ? Download
-                                : link.action === 'copy'
-                                    ? copied
-                                        ? Check
-                                        : Copy
-                                    : ExternalLink;
+                            const baseClasses = `
+                                group flex items-center gap-3
+                                px-6 py-4 rounded-xl
+                                w-44
+                                justify-center
+                                bg-zinc-900/50
+                                text-gray-200
+                                transition-all duration-200
+                                backdrop-blur-2xl
+                                border border-gray-400
+                                ${colorClasses[link.color]}
+                            `;
 
-                        const content = (
-                            <>
-                                <Icon className="w-5 h-5"/>
-                                <span className="font-light tracking-wide">
-                                    {link.action === 'copy' && copied
-                                        ? 'Copied!'
-                                        : link.label}
-                                </span>
-                                <ActionIcon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"/>
-                            </>
-                        );
+                            if (link.action === 'copy') {
+                                return (
+                                    <motion.button
+                                        key={link.key}
+                                        type="button"
+                                        onClick={handleCopyEmail}
+                                        initial={{opacity: 0, y: 20}}
+                                        whileInView={{opacity: 1, y: 0}}
+                                        viewport={{once: true}}
+                                        transition={{duration: 0.5, delay: 0.45 + index * 0.15}}
+                                        whileTap={{scale: 0.98}}
+                                        className={baseClasses}
+                                    >
+                                        {content}
+                                    </motion.button>
+                                );
+                            }
 
-                        if (link.action === 'copy') {
                             return (
-                                <motion.button
+                                <motion.a
                                     key={link.key}
-                                    type="button"
-                                    onClick={handleCopyEmail}
+                                    href={settings[link.key]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={link.action === 'download'}
                                     initial={{opacity: 0, y: 20}}
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
                                     transition={{duration: 0.5, delay: 0.45 + index * 0.15}}
-                                    whileHover={{y: -4, scale: 1.02}}
                                     whileTap={{scale: 0.98}}
-                                    className={`
-                                        group flex items-center gap-3
-                                        px-6 py-4 rounded-xl
-                                        w-44 justify-center
-                                        bg-zinc-900/50
-                                        text-gray-200
-                                        transition-all duration-200
-                                        // hover:bg-zinc-900/80
-                                        backdrop-blur-2xl h-full 
-                                        border border-gray-400
-                                        ${colorClasses[link.color]}
-                                    `}
+                                    className={baseClasses}
                                 >
                                     {content}
-                                </motion.button>
+                                </motion.a>
                             );
-                        }
+                        })}
+                    </div>
+                </motion.div>
 
-                        return (
-                            <motion.a
-                                key={link.key}
-                                href={settings[link.key]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download={link.action === 'download'}
-                                initial={{opacity: 0, y: 20}}
-                                whileInView={{opacity: 1, y: 0}}
-                                viewport={{once: true}}
-                                transition={{duration: 0.5, delay: 0.45 + index * 0.15}}
-                                whileHover={{y: -4, scale: 1.02}}
-                                whileTap={{scale: 0.98}}
-                                className={`
-                                    group flex items-center gap-3
-                                    px-6 py-4 rounded-xl
-                                    w-44 justify-center
-                                    bg-zinc-900/50
-                                    text-gray-200
-                                    transition-all duration-200
-                                    // hover:bg-zinc-900/80
-                                    backdrop-blur-2xl h-full 
-                                    border border-gray-400
-                                    ${colorClasses[link.color]}
-                                `}
+                <motion.div
+                    initial={{opacity: 0}}
+                    whileInView={{opacity: 1}}
+                    viewport={{once: true}}
+                    transition={{duration: 0.6, delay: 2.5}}
+                    className="
+                        relativetop-1/2
+                        mx-auto max-w-4xl
+                        pt-10 md:pt-20
+                        bottom-20
+                        z-20
+                    "
+                >
+                    <div className="w-full flex justify-center">
+                        {/* Wrapper defines the central vertical axis */}
+                        <div className="grid grid-cols-2 w-full max-w-5xl">
+
+                            <h2
+                                className="col-span-2 mt-4 font-codec text-white tracking-tight"
+                                style={{fontFamily: 'var(--font-codec)'}}
                             >
-                                {content}
-                            </motion.a>
-                        );
-                    })}
-                </div>
-            </motion.div>
+                                {/* FIRST LINE */}
+                                <div className="grid grid-cols-2 items-center text-3xl md:text-5xl lg:text-6xl">
+                                    {/* Left side — flush to center */}
+                                    <div className="flex justify-end pr-2">
+                                        <span className={"whitespace-nowrap"}>Have a</span>
+                                    </div>
 
-            <motion.div
-                initial={{opacity: 0}}
-                whileInView={{opacity: 1}}
-                viewport={{once: true}}
-                transition={{duration: 0.6, delay: 0.15}}
-                className="
-                    relative mx-auto max-w-4xl
+                                    {/* Right side — flush to center */}
+                                    <div className="flex justify-start pl-2">
+                                        <RotatingText
+                                            items={['truly', 'distinctly', 'deeply', 'remarkably', 'surprisingly', 'highly']}
+                                            showLine={false}
+                                            intervalMs={3500}
+                                            vertical={false}
+                                            altDir={true}
+                                            textClassName="inline-block"
+                                        />
+                                    </div>
+                                </div>
 
-                    shadow-2xl
-                    px-8 md:px-12 pt-16
-                "
-            >
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none
-                    backdrop-blur-2xl h-full border border-gray-400 -z-10"/>
+                                {/* SECOND LINE */}
+                                <div className="grid grid-cols-2 items-center text-3xl md:text-5xl lg:text-6xl mt-2">
+                                    {/* Left side — rotating text hugs center */}
+                                    <div className="flex justify-end pr-2">
+                                        <RotatingText
+                                            items={['unforgettable', 'beautiful', 'mesmerizing', 'meaningful', 'fulfilling', 'well-lived']}
+                                            showLine={false}
+                                            delayMs={250}
+                                            intervalMs={3500}
+                                            vertical={false}
+                                            textClassName="inline-block left-a right-0 text-right"
+                                        />
+                                    </div>
 
-                {/* Header */}
-                <div className="text-center mb-10 w-full">
-
-                    <h2
-                        className="mt-4 font-codec text-white tracking-tight flex flex-col items-stretch w-full"
-                        style={{fontFamily: 'var(--font-codec)'}}
-                    >
-                        {/* First line: left-aligned */}
-                        <div className="flex justify-start w-full text-3xl md:text-5xl lg:text-6xl">
-                            <span className="mr-3 flex-shrink-0">Have a</span>
-                            <RotatingText
-                                items={['truly', 'distinctly', 'deeply', 'remarkably', 'surprisingly', 'richly']}
-                                showLine={false}
-                                intervalMs={4500}
-                                textClassName="left-0 inline-block"
-                            />
+                                    <div className="flex justify-start pl-2">
+                                        <span className={"whitespace-nowrap"}>
+                                            {new Date().toLocaleDateString('en-US', {weekday: 'long'})}
+                                            <motion.span
+                                                className="inline-block ml-1"
+                                                initial={{y: 0, scale: 1}}
+                                                animate={{y: [0, -15, 0], scale: [1, 1.1, 1]}}
+                                                transition={{
+                                                    y: {
+                                                        duration: 0.4345,
+                                                        delay: 1.45,
+                                                        times: [0, 0.35, 1],
+                                                        ease: 'easeInOut',
+                                                        repeat: Infinity,
+                                                        repeatDelay: 3.5 - 0.35,
+                                                    },
+                                                    scale: {
+                                                        duration: 0.4345,
+                                                        delay: 1.45,
+                                                        times: [0, 0.5, 1],
+                                                        ease: 'easeInOut',
+                                                        repeat: Infinity,
+                                                        repeatDelay: 3.5 - 0.35,
+                                                    }
+                                                }}
+                                            >
+                                                !
+                                            </motion.span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </h2>
                         </div>
+                    </div>
+                </motion.div>
 
-                        {/* Second line: right-aligned */}
-                        <div className="flex justify-end w-full text-3xl md:text-5xl lg:text-6xl mt-2">
-                            <RotatingText
-                                items={['unforgettable', 'beautiful', 'mesmerizing', 'meaningful', 'fulfilling', 'well-lived']}
-                                showLine={false}
-                                delayMs={150}
-                                intervalMs={4500}
-                                textClassName="inline-block text-right left-a right-0"
-                            />
-                            <span className="ml-3 flex-shrink-0">
-                                {new Date().toLocaleDateString('en-US', {weekday: 'long'})}
-                            </span>
-                        </div>
-                    </h2>
-                </div>
-            </motion.div>
+                {/* Glow */}
+                <div
+                    className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-400/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                <div
+                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-400/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                <div
+                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[2000px]  bg-gradient-to-b
+                        from-transparent
+                        to-red-400/20 rounded-full backdrop-blur-3xlxl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
 
-            {/* Glow */}
-            <div
-                className="absolute top-0 left-1/2 w-[600px] h-[600px] bg-red-500/3 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2"/>
+                <div
+                    className="
+                        pointer-events-none
+                        absolute bottom-0 left-0
+                        w-full h-15
+                        bg-gradient-to-b
+                        from-transparent
+                        to-black
+                        z-9
+                    "
+                />
+            </div>
+            <div className="relative z-10">
+                <FooterSection/>
+            </div>
         </section>
     );
 };

@@ -6,6 +6,8 @@ interface RotatingTextProps {
     showLine?: boolean;
     delayMs?: number;
     intervalMs?: number;
+    vertical?: boolean;
+    altDir?: boolean;
     className?: string;
     textClassName?: string;
 }
@@ -15,6 +17,8 @@ const RotatingText: React.FC<RotatingTextProps> = ({
     showLine = true,
     delayMs = 0,
     intervalMs = 3000,
+    vertical = true,
+    altDir = false,
     className = '',
     textClassName = '',
 }) => {
@@ -49,9 +53,9 @@ const RotatingText: React.FC<RotatingTextProps> = ({
                 <motion.span
                     key={index}
                     ref={textRef}
-                    initial={{opacity: 0, filter: 'blur(8px)', y: 20}}
-                    animate={{opacity: 1, filter: 'blur(0px)', y: 0}}
-                    exit={{opacity: 0, filter: 'blur(8px)', y: -20}}
+                    initial={{opacity: 0, filter: 'blur(8px)', x: (!vertical? 20 * (altDir ? -1: 1): 0), y: (vertical? 20 * (altDir ? -1: 1): 0)}}
+                    animate={{opacity: 1, filter: 'blur(0px)', x: 0, y: 0}}
+                    exit={{opacity: 0, filter: 'blur(8px)', x: (!vertical? -20 * (altDir ? -1: 1): 0), y: (vertical? -20 * (altDir ? -1: 1): 0)}}
                     transition={{duration: 0.5, ease: 'easeInOut'}}
                     onAnimationComplete={() => {
                         if (textRef.current) {

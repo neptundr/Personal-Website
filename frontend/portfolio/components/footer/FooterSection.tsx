@@ -15,6 +15,7 @@ const FooterSection = () => {
                 border-t border-zinc-900
                 py-6
                 text-center
+                z-20
             "
         >
             <p className="text-gray-500 text-sm font-light">
