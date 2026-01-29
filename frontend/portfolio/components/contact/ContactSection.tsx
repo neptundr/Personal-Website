@@ -29,7 +29,7 @@ const contactLinks = [
         key: 'github_url',
         icon: Github,
         label: 'GitHub',
-        color: 'white',
+        color: 'sky',
         action: 'external',
     },
     {
@@ -92,6 +92,7 @@ const ContactSection = ({settings}) => {
                     px-12 lg:px-24
                     border-t border-zinc-900
                     overflow-hidden
+
                 "
             >
                 <div
@@ -188,9 +189,9 @@ const ContactSection = ({settings}) => {
                                 justify-center
                                 bg-zinc-900/50
                                 text-gray-200
-                                transition-all duration-200
+                                transition-colors duration-200 ease-in-out
                                 backdrop-blur-2xl
-                                border border-gray-400
+                                border border-gray-400                               
                                 ${colorClasses[link.color]}
                             `;
 
@@ -298,7 +299,7 @@ const ContactSection = ({settings}) => {
                                                 transition={{
                                                     y: {
                                                         duration: 0.4345,
-                                                        delay: 1.45,
+                                                        delay: 0.35,
                                                         times: [0, 0.35, 1],
                                                         ease: 'easeInOut',
                                                         repeat: Infinity,
@@ -306,7 +307,7 @@ const ContactSection = ({settings}) => {
                                                     },
                                                     scale: {
                                                         duration: 0.4345,
-                                                        delay: 1.45,
+                                                        delay: 0.35,
                                                         times: [0, 0.5, 1],
                                                         ease: 'easeInOut',
                                                         repeat: Infinity,
@@ -328,11 +329,13 @@ const ContactSection = ({settings}) => {
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-400/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-400/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-500/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                <div
+                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[175px] bg-red-400/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[2000px]  bg-gradient-to-b
                         from-transparent
-                        to-red-400/20 rounded-full backdrop-blur-3xlxl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                        to-red-500/20 rounded-full backdrop-blur-3xlxl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
 
                 <div
                     className="

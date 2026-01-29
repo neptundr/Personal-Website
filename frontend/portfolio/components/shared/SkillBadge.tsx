@@ -70,8 +70,8 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm', i
         ${isActive
                 ? 'border-red-500 bg-red-500/20 text-white'
                 : 'border-gray-400/45 bg-white/5 text-gray-200'}
-        font-light transition-all duration-300 cursor-pointer backdrop-blur-sm
-        hover:border-red-500 hover:bg-red-500/55 hover:text-white
+                font-light transition-all duration-300 cursor-pointer backdrop-blur-sm
+                hover:border-red-500 hover:bg-red-500/55 hover:text-white
         `}
         >
             {icon}

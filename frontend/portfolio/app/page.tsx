@@ -48,7 +48,7 @@ export default function Home() {
             <main className="relative z-10">
                 <HeroSection
                     name={settings.hero_name || 'Denis'}
-                    availableForHire={settings.available_for_hire ?? false}
+                    availableForHire={settings.available_for_hire || true}
                     loveItems={settings.love_items || ['Create']}
                 />
                 <ExperienceSection items={items} />

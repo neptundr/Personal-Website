@@ -206,7 +206,7 @@ const GameOfLife: React.FC = () => {
     useEffect(() => {
         const interval = setInterval(() => {
             setKey(k => k + 1);
-        }, 45_000); // 45 seconds
+        }, 60_000);
 
         return () => clearInterval(interval);
     }, []);
@@ -217,12 +217,30 @@ const GameOfLife: React.FC = () => {
                 ref={canvasRef}
                 className="absolute inset-0 pointer-events-none opacity-40"
             />
-            <button
-                onClick={() => setKey(k => k + 1)}
-                className="absolute z-20 top-6 left-6 px-3 py-1.5 rounded-lg bg-zinc-900/80 border border-white/10 text-white/60 hover:text-white hover:bg-zinc-900 transition-colors text-xs font-light tracking-wide backdrop-blur-sm"
-            >
-                Regenerate
-            </button>
+            <span className="absolute inset-0 pointer-events-none">
+                <div className="absolute z-20 top-6 left-6 flex gap-2 pointer-events-auto">
+                    <button
+                        onClick={() => setKey(k => k + 1)}
+                        className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/10
+                                   text-white/60 hover:text-white hover:bg-zinc-900/80
+                                   transition-colors text-xs font-light tracking-wide backdrop-blur-sm"
+                    >
+                        Regenerate
+                    </button>
+
+                    <a
+                        href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/10
+                                   text-white/60 hover:text-white hover:bg-zinc-900/80
+                                   transition-colors text-xs font-light tracking-wide backdrop-blur-sm
+                                   flex items-center justify-center"
+                    >
+                        ?
+                    </a>
+                </div>
+            </span>
         </>
     );
 };
