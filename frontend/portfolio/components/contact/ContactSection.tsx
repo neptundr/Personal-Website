@@ -29,7 +29,7 @@ const contactLinks = [
         key: 'github_url',
         icon: Github,
         label: 'GitHub',
-        color: 'lime',
+        color: 'purple',
         action: 'external',
     },
     {
@@ -50,7 +50,7 @@ const contactLinks = [
         key: 'resume_url',
         icon: FileText,
         label: 'Resume',
-        color: 'purple',
+        color: 'lime',
         action: 'download',
     },
 ];
