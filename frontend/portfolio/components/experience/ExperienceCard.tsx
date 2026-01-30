@@ -203,7 +203,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             animate={{
                                 filter: hovered
                                     ? 'grayscale(0%) brightness(1)'
-                                    : 'grayscale(90%) brightness(1.2)',
+                                    : (dimmed ? 'grayscale(100%) brightness(0.9)': 'grayscale(80%) brightness(1.2)'),
                             }}
                             transition={{duration: 0.4}}
                             style={{transformOrigin: 'center'}}
@@ -213,18 +213,19 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 )}
 
                 {/* Description */}
-                {item.description && (
+                {item.description && item.description.split('\n').map((para, i) => (
                     <p
-                        className="text-gray-400 text-sm leading-relaxed mb-4"
+                        key={i}
+                        className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
                         style={{fontFamily: 'var(--font-codecLight)'}}
                     >
-                        {item.description}
+                        {para}
                     </p>
-                )}
+                ))}
 
                 {/* Skills */}
                 {item.skills && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap mt-4.5 gap-2">
                         {item.skills.map((skill) => (
                             <SkillBadge
                                 key={skill}
