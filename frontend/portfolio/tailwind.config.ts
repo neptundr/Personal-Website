@@ -9,8 +9,6 @@ const config: Config = {
     theme: {
         extend: {
             fontFamily: {
-                futura: ['var(--font-futura)'],
-                tilda: ['var(--font-tilda)'],
                 codec: ['var(--font-codec)'],
             },
         },
