@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Request, Response, Cookie
 from fastapi.staticfiles import StaticFiles
 import uuid
@@ -32,10 +33,9 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
 VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".avi"}
 DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx"}
 
-origins = [
-    "http://localhost:3000",  # Depends.js dev
-    # "https://your-production-domain.com",  # Add production URL later
-]
+load_dotenv()
+
+origins = os.getenv("FRONTEND_URLS", "http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
