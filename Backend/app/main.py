@@ -257,7 +257,7 @@ def admin_login(data: LoginRequest, response: Response):
 
     return {"ok": True}
 
-@app.post("/logout")
+@app.post("/admin/logout")
 def admin_logout(response: Response):
     response.delete_cookie("admin_token")
     return {"ok": True}

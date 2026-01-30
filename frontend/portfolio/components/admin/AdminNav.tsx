@@ -3,6 +3,8 @@ import {motion} from 'framer-motion';
 import Link from 'next/link';
 import {createPageUrl} from '@/lib/utils';
 import {Home, FolderOpen, Briefcase, GraduationCap, Settings, ArrowLeft, Image} from 'lucide-react';
+import {useRouter} from 'next/navigation';
+
 
 interface NavItem {
     label: string;
@@ -22,6 +24,24 @@ const navItems: NavItem[] = [
 ];
 
 const AdminNav: React.FC<AdminNavProps> = ({currentPage}) => {
+    const router = useRouter();
+
+    async function handleLogout() {
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/admin/logout`,
+            {
+                method: 'POST',
+                credentials: 'include',
+            }
+        );
+
+        if (res.ok) {
+            router.push('/admin/login'); // redirect to login page
+        } else {
+            alert('Logout failed');
+        }
+    }
+
     return (
         <div className="fixed left-0 top-0 bottom-0 w-64 bg-zinc-950 border-r border-white/5 p-6 flex flex-col">
             {/* Header */}
@@ -55,6 +75,13 @@ const AdminNav: React.FC<AdminNavProps> = ({currentPage}) => {
             </nav>
 
             {/* Back to site */}
+            <button
+                onClick={handleLogout}
+                className="px-4 py-2 mb-2 rounded-lg transition-colors bg-red-500/10 text-red-400 border border-red-500/80 hover:bg-red-500/20 hover:text-white"
+            >
+                Logout
+            </button>
+
             <Link href={createPageUrl('Home')}>
                 <motion.div
                     whileHover={{x: 4}}
