@@ -55,16 +55,20 @@ def get_db():
 
 def require_admin(admin_token: str | None = Cookie(default=None)):
     if not admin_token:
-        raise HTTPException(status_code=403)
+        raise HTTPException(status_code=403, detail="Not authenticated")
+
     try:
         payload = jwt.decode(admin_token, SECRET_KEY, algorithms=[ALGORITHM])
-        if payload.get("sub") != "admin":
-            raise HTTPException(status_code=403)
     except JWTError:
-        raise HTTPException(status_code=403)
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if payload.get("sub") != "admin":
+        raise HTTPException(status_code=403, detail="Not admin")
+
+    return payload
 
 # Site Settings
-@app.get("/settings", dependencies=[Depends(require_admin)])
+@app.get("/settings")
 def read_settings(db: Session = Depends(get_db)):
     return db.query(SiteSettings).first()
 
@@ -91,7 +95,7 @@ def update_settings(id: int, settings: SiteSettingsSchema, db: Session = Depends
 
 
 # Projects
-@app.get("/projects", dependencies=[Depends(require_admin)])
+@app.get("/projects")
 def list_projects(db: Session = Depends(get_db)):
     return db.query(Project).order_by(Project.order).all()
 
@@ -128,7 +132,7 @@ def delete_project(id: int, db: Session = Depends(get_db)):
 
 
 # Education
-@app.get("/education", dependencies=[Depends(require_admin)])
+@app.get("/education")
 def list_education(db: Session = Depends(get_db)):
     return db.query(Education).order_by(Education.order).all()
 
@@ -166,7 +170,7 @@ def delete_education(id: int, db: Session = Depends(get_db)):
 
 # Skill Icons
 
-@app.get("/skills", dependencies=[Depends(require_admin)])
+@app.get("/skills")
 def list_skills(db: Session = Depends(get_db)):
     return db.query(SkillIcon).all()
 
@@ -246,8 +250,8 @@ def admin_login(data: LoginRequest, response: Response):
         key="admin_token",
         value=token,
         httponly=True,
+        samesite="none",
         secure=True,
-        samesite="strict",
         path="/",
     )
 

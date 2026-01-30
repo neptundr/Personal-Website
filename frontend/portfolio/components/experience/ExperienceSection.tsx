@@ -55,7 +55,9 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                 s.skill_name?.toLowerCase() === skill.toLowerCase()
         )?.icon_url;
 
-    const filteredItems = items
+    const safeItems = Array.isArray(items) ? items : [];
+
+    const filteredItems = safeItems
         .filter(item => filter === 'all' || item.type === filter)
         .filter(item => !skillFilter || item.skills?.includes(skillFilter));
 

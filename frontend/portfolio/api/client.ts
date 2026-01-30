@@ -1,4 +1,5 @@
-const BASE_URL = "http://127.0.0.1:8000"; // FastAPI backend URL
+// const BASE_URL = "http://127.0.0.1:8000"; // Local FastAPI backend URL
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const api = {
     entities: {
@@ -12,6 +13,7 @@ export const api = {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
@@ -20,6 +22,7 @@ export const api = {
                     method: "PUT",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
@@ -34,6 +37,7 @@ export const api = {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
@@ -42,11 +46,12 @@ export const api = {
                     method: "PUT",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
             delete: async (id: number) => {
-                const res = await fetch(`${BASE_URL}/projects/${id}`, {method: "DELETE"});
+                const res = await fetch(`${BASE_URL}/projects/${id}`, {method: "DELETE", credentials: "include"});
                 return res.ok;
             },
         },
@@ -60,6 +65,7 @@ export const api = {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
@@ -68,11 +74,12 @@ export const api = {
                     method: "PUT",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
             delete: async (id: number) => {
-                const res = await fetch(`${BASE_URL}/education/${id}`, {method: "DELETE"});
+                const res = await fetch(`${BASE_URL}/education/${id}`, {method: "DELETE", credentials: "include"});
                 return res.ok;
             },
         },
@@ -86,11 +93,12 @@ export const api = {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(data),
+                    credentials: "include"
                 });
                 return await res.json();
             },
             delete: async (id: number) => {
-                const res = await fetch(`${BASE_URL}/skills/${id}`, {method: "DELETE"});
+                const res = await fetch(`${BASE_URL}/skills/${id}`, {method: "DELETE", credentials: "include"});
                 return res.ok;
             },
         },
@@ -102,6 +110,7 @@ export const api = {
         const res = await fetch(`${BASE_URL}/upload`, {
             method: "POST",
             body: formData,
+            credentials: "include"
         });
         return await res.json(); // expect {file_url: "..."}
     },
