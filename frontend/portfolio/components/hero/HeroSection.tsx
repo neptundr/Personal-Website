@@ -144,7 +144,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             className="absolute bottom-16 left-6 md:left-12 lg:left-24"
                         >
                             <motion.h1
-                                className="text-7xl md:text-9xl lg:text-[9rem] leading-tight text-white"
+                                className="text-6xl sm:text-7xl md:text-9xl lg:text-[9rem] leading-tight text-white"
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 <motion.span
@@ -255,7 +255,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             transition={{duration: 0.4}}
                         >
                             <div
-                                className="text-7xl md:text-9xl lg:text-[9rem] font-bold text-white leading-tight"
+                                className="text-5xl sm:text-7xl md:text-9xl lg:text-[9rem] font-bold text-white leading-tight"
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 <motion.span

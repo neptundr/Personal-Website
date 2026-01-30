@@ -80,7 +80,7 @@ const ContactSection = ({settings}) => {
         <section
             className="
             relative
-            h-screen min-h-screen max-h-screen
+            min-h-215 max-h-350 md:min-h-220 md:max-h-350 lg:min-h-210 lg:max-h-screen
             bg-black
             border-t border-zinc-900
             overflow-hidden
@@ -92,7 +92,7 @@ const ContactSection = ({settings}) => {
                     relative
                     flex-1 flex flex-col justify-center
                     px-12 lg:px-24
-                    border-t border-zinc-900
+                    border-t border-zinc-800
                     overflow-hidden
                 "
             >
@@ -116,15 +116,15 @@ const ContactSection = ({settings}) => {
                     transition={{duration: 0.6, delay: 0.15}}
                     className="
                         z-20
-                        relative mx-auto
+                        relative left-1/2 -translate-x-1/2
                         w-fit
                         rounded-3xl
                         bg-zinc-950/60
                         backdrop-blur-xl
                         border border-white/10
                         shadow-2xl
-                        mt-12
-                        px-8 md:px-12 pt-8 pb-12 md:pt-12 md:pb-12
+                        mt-19.5 sm:mt-27 md:mt-33
+                        px-8 md:px-12 pt-8 pb-10 md:pt-12 sm:pb-8 md:pb-12
                     "
                 >
                     <div className="
@@ -137,13 +137,13 @@ const ContactSection = ({settings}) => {
                     "/>
 
                     {/* Header */}
-                    <div className="text-center mb-10">
+                    <div className="text-center mb-8">
                         <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
                             Get in Touch
                         </span>
 
                         <h2
-                            className="mt-4 font-codec text-4xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
+                            className="mt-4 font-codec text-3xl sm:text-5xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
                             style={{fontFamily: 'var(--font-codec)'}}
                         >
                             Let's Connect
@@ -239,32 +239,29 @@ const ContactSection = ({settings}) => {
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
-                    transition={{duration: 0.6, delay: 1}}
+                    transition={{duration: 0.6, delay: 0.9}}
                     className="
-                        relativetop-1/2
-                        mx-auto max-w-4xl
-                        pt-10 md:pt-20
-                        bottom-20
+                        relative top-1/2
+                        mx-auto my-auto max-w-4xl
                         z-20
                     "
                 >
                     <div className="w-full flex justify-center">
                         {/* Wrapper defines the central vertical axis */}
-                        <div className="grid grid-cols-2 w-full max-w-5xl">
-
+                        <div className="grid grid-cols-2 w-full max-w-5xl pb-11.5 sm:pb-4.5">
                             <h2
                                 className="col-span-2 mt-4 font-codec text-white tracking-tight"
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 {/* FIRST LINE */}
-                                <div className="grid grid-cols-2 items-center text-3xl md:text-5xl lg:text-6xl">
+                                <div className="grid grid-cols-2 items-center text-3xl sm:text-5xl md:text-5xl lg:text-6xl">
                                     {/* Left side — flush to center */}
-                                    <div className="flex justify-end pr-2">
+                                    <div className="flex justify-end pr-1 sm:pr-2">
                                         <span className={"whitespace-nowrap"}>Have a</span>
                                     </div>
 
                                     {/* Right side — flush to center */}
-                                    <div className="flex justify-start pl-2">
+                                    <div className="flex justify-start pl-1 sm:pl-2">
                                         <RotatingText
                                             items={['truly', 'distinctly', 'deeply', 'remarkably', 'surprisingly', 'highly']}
                                             showLine={false}
@@ -277,9 +274,9 @@ const ContactSection = ({settings}) => {
                                 </div>
 
                                 {/* SECOND LINE */}
-                                <div className="grid grid-cols-2 items-center text-3xl md:text-5xl lg:text-6xl mt-2">
+                                <div className="grid grid-cols-2 items-center text-3xl sm:text-5xl md:text-5xl lg:text-6xl mt-2 mb-6">
                                     {/* Left side — rotating text hugs center */}
-                                    <div className="flex justify-end pr-2">
+                                    <div className="flex justify-end pr-1 sm:pr-2">
                                         <RotatingText
                                             items={['unforgettable', 'beautiful', 'mesmerizing', 'meaningful', 'fulfilling', 'well-lived']}
                                             showLine={false}
@@ -290,7 +287,7 @@ const ContactSection = ({settings}) => {
                                         />
                                     </div>
 
-                                    <div className="flex justify-start pl-2">
+                                    <div className="flex justify-start pl-1 sm:pl-2">
                                         <span className={"whitespace-nowrap"}>
                                             {new Date().toLocaleDateString('en-US', {weekday: 'long'})}
                                             <motion.span
@@ -330,7 +327,7 @@ const ContactSection = ({settings}) => {
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-400/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-500/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-500/25 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[175px] bg-red-400/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
