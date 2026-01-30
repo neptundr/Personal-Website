@@ -1,7 +1,8 @@
 'use client';
 
 import React, {useState, useRef, useEffect} from 'react';
-import {motion, AnimatePresence} from 'framer-motion';
+import {motion, AnimatePresence, cubicBezier} from 'framer-motion';
+import type { Variants } from "framer-motion";
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {X} from 'lucide-react';
 import ExperienceCard from "@/components/experience/ExperienceCard";
@@ -29,11 +30,10 @@ interface ExperienceSectionProps {
     items: ExperienceItem[];
     skillIcons?: { skill_name: string; icon_url: string }[];
 }
-
-const itemVariants = {
+const itemVariants:Variants = {
     hidden: {y: 24},
-    visible: {y: 0, transition: {duration: 0.55, ease: [0.22, 1, 0.36, 1]}},
-    exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: 'easeInOut'}},
+    visible: {y: 0, transition: {duration: 0.25, ease: "easeIn"}},
+    exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: "easeInOut"}},
 };
 
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
