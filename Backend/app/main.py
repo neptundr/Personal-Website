@@ -263,3 +263,7 @@ def admin_login(data: LoginRequest, response: Response):
 def admin_logout(response: Response):
     response.delete_cookie("admin_token")
     return {"ok": True}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
