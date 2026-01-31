@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import uuid
 import os
 import shutil
+from supabase import create_client
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine
@@ -21,6 +22,9 @@ from app.auth import (
     ADMIN_PASSWORD_HASH,
     TOKEN_EXPIRE_MINUTES,
 )
+
+
+DEV = True if os.getenv("DEV").lower() == "true" else False
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -44,6 +48,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 # Dependency
 def get_db():
@@ -195,35 +206,37 @@ def delete_skill(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/upload", dependencies=[Depends(require_admin)])
-async def upload_file(request: Request, file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
     ext = os.path.splitext(file.filename)[1].lower()
-
-    # Decide folder
-    if ext in IMAGE_EXTENSIONS:
-        subdir = "images"
-    elif ext in VIDEO_EXTENSIONS:
-        subdir = "videos"
-    elif ext in DOCUMENT_EXTENSIONS:
-        subdir = "documents"
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type: {ext}"
-        )
-
     filename = f"{uuid.uuid4()}{ext}"
-    file_path = os.path.join("uploads", subdir, filename)
+    file_content = await file.read()
 
-    # Save file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Decide folder path inside bucket
+    if ext in IMAGE_EXTENSIONS:
+        folder = "images"
+    elif ext in VIDEO_EXTENSIONS:
+        folder = "videos"
+    elif ext in DOCUMENT_EXTENSIONS:
+        folder = "documents"
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
+
+    path_in_bucket = f"{folder}/{filename}"
+
+    # Upload
+    try:
+        supabase.storage.from_(SUPABASE_BUCKET).upload(path_in_bucket, file_content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+    public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(path_in_bucket)
 
     return {
-        "file_url": str(request.base_url) + f"uploads/{subdir}/{filename}",
-        "file_type": subdir
+        "file_url": public_url,
+        "file_type": folder
     }
 
 # Auth
@@ -246,16 +259,27 @@ def admin_login(data: LoginRequest, response: Response):
 
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    response.set_cookie(
-        key="admin_token",
-        value=token,
-        httponly=True,
-        samesite="none",
-        secure=True,
-        domain=".deniskaizer.com",
-        path="/",
-        max_age= TOKEN_EXPIRE_MINUTES * 60,
-    )
+    if DEV:
+        response.set_cookie(
+            key="admin_token",
+            value=token,
+            httponly=True,
+            samesite="none",
+            secure=True,
+            path="/",
+            max_age=TOKEN_EXPIRE_MINUTES * 60,
+        )
+    else:
+        response.set_cookie(
+            key="admin_token",
+            value=token,
+            httponly=True,
+            samesite="none",
+            secure=True,
+            domain=".deniskaizer.com",
+            path="/",
+            max_age= TOKEN_EXPIRE_MINUTES * 60,
+        )
 
     return {"ok": True}
 
