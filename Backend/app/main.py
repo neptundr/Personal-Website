@@ -252,7 +252,9 @@ def admin_login(data: LoginRequest, response: Response):
         httponly=True,
         samesite="none",
         secure=True,
+        domain=".deniskaizer.com",
         path="/",
+        max_age= TOKEN_EXPIRE_MINUTES * 60,
     )
 
     return {"ok": True}
