@@ -314,14 +314,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                     className="group inline-flex w-fit items-center gap-2 px-3 py-1
                                         rounded-full border border-red-500/30 bg-red-500/10 backdrop-blur-md
                                         cursor-pointer transition-colors hover:border-red-500 hover:bg-red-500/55 hover:text-white duration-450 {/*hover:scale-105*/}"
-                                        >
+                                >
                                         <span className="relative flex h-2 w-2">
                                             <span className="absolute inline-flex h-full w-full rounded-full
                                                              bg-red-500 group-hover:bg-white opacity-75 animate-ping transition-colors duration-300"/>
                                             <span
                                                 className="relative inline-flex h-2 w-2 rounded-full bg-red-500 group-hover:bg-white transition-colors duration-300"/>
                                         </span>
-                                            <span className="inline-flex items-center text-xs text-red-400 tracking-[0.2em] uppercase gap-1
+                                    <span className="inline-flex items-center text-xs text-red-400 tracking-[0.2em] uppercase gap-1
                                                          transition-colors duration-300 group-hover:text-white">
                                             View Source
                                             <ExternalLink
@@ -329,6 +329,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                         </span>
                                 </motion.a>
                             </div>)}
+
+                            {/* MESSAGE BOX */}
+                            {process.env.NEXT_PUBLIC_MESSAGE &&
+                                process.env.NEXT_PUBLIC_MESSAGE.toLowerCase() !== 'none' && (
+                                    <motion.div
+                                        initial={{opacity: 0, y: 5}}
+                                        animate={{opacity: 1, y: 0}}
+                                        transition={{duration: 0.5, delay: 0.8}}
+                                        className="mt-2 mr-6 px-3 py-1 max-w-90 rounded-md bg-red-500/20 text-white text-xs"
+                                    >
+                                        {process.env.NEXT_PUBLIC_MESSAGE}
+                                    </motion.div>
+                                )}
                         </motion.div>
                     )}
                 </AnimatePresence>
