@@ -113,8 +113,8 @@ export default function AdminSkillIcons() {
                                             className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-white/10 bg-black hover:bg-white/5 transition-colors">
                                             <Upload className="w-4 h-4 text-white/60"/>
                                             <span className="text-white/60 text-sm">
-                        {uploading ? 'Uploading...' : 'Upload Icon'}
-                        </span>
+                                            {uploading ? 'Uploading...' : 'Upload Icon'}
+                                            </span>
                                         </div>
                                         <input
                                             id="icon-upload"

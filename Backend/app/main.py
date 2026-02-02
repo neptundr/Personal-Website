@@ -290,6 +290,7 @@ def admin_logout(response: Response):
     response.delete_cookie("admin_token")
     return {"ok": True}
 
+@app.head("/health")
 @app.get("/health")
 def health():
     return {"status": "ok"}
