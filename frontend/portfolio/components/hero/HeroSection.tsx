@@ -334,7 +334,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             {process.env.NEXT_PUBLIC_MESSAGE &&
                                 process.env.NEXT_PUBLIC_MESSAGE.toLowerCase() !== 'none' && (
                                     <motion.div
-                                        initial={{opacity: 0, y: 5}}
+                                        initial={{opacity: 0, y: -5}}
                                         animate={{opacity: 1, y: 0}}
                                         transition={{duration: 0.5, delay: 0.8}}
                                         className="mt-2 mr-6 px-3 py-1 max-w-90 rounded-md bg-red-500/20 text-white text-xs"

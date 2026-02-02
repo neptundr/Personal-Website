@@ -26,9 +26,11 @@ from app.auth import (
 
 DEV = True if os.getenv("DEV").lower() == "true" else False
 
-models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI(title="Portfolio Backend")
+
+@app.on_event("startup")
+def startup():
+    models.Base.metadata.create_all(bind=engine)
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
