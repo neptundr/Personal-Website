@@ -23,7 +23,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
             initial={{opacity: 0, y: 40}}
             whileInView={{opacity: 1, y: 0}}
             viewport={{once: true, margin: '-50px'}}
-            transition={{duration: 0.6, delay: index * 0.15}}
+            transition={{duration: 0.25, delay: index * 0.15, ease: 'easeOut'}}
             whileHover={{y: -6}}
             className="group relative"
         >
@@ -49,7 +49,10 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                     lg:w-40 lg:h-40
                                     rounded-xl bg-white/90
                                     flex items-center justify-center shrink-0
+                                    hover:opacity-85
+                                    transition-all duration-300
                                 "
+                                // whileHover={{opacity: 0.75}}
                                 style={{aspectRatio: '1 / 1'}}
                             >
                                 <motion.img
@@ -62,7 +65,6 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                         lg:w-30 lg:h-30*/}
                                         object-contain
                                     "
-                                    whileHover={{opacity: 0.75, scale: 1.05}}
                                 />
                             </div>
                         </a>

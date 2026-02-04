@@ -45,7 +45,7 @@ export default function FractalTunnel() {
             const viewportHeight = window.innerHeight;
 
             // center of the tunnel = middle of the viewport, not canvas
-            const cx = viewportWidth * (2/3);
+            const cx = viewportWidth * (2 / 3);
             const cy = viewportHeight * 0.5;
             // use viewport diagonal for radius, not full page
             const viewportRadius = Math.hypot(viewportWidth, viewportHeight);
@@ -176,7 +176,16 @@ export default function FractalTunnel() {
         const observer = new ResizeObserver(requestResize);
         observer.observe(document.body);
 
-        const animate = () => {
+        let lastTimestamp: number | null = null;
+
+        const animate = (timestamp: number) => {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            let delta = ((timestamp - lastTimestamp) / 1000) * 0.4; // seconds
+            lastTimestamp = timestamp;
+
+            // optional: cap delta to avoid big jumps if tab was inactive
+            delta = Math.min(delta, 0.05);
+
             if (pendingResizeRef.current) {
                 const height = Math.max(
                     document.body.scrollHeight,
@@ -194,13 +203,13 @@ export default function FractalTunnel() {
                 pendingResizeRef.current = false;
             }
 
-            introTimeRef.current += 0.016;
+            introTimeRef.current += delta;
             if (introPhaseRef.current === 0 && introTimeRef.current >= 1.5) {
                 introPhaseRef.current = 1;
                 introTimeRef.current = 0;
             }
 
-            timeRef.current += 0.016;
+            timeRef.current += delta;
 
             draw(
                 ctx,
@@ -214,7 +223,9 @@ export default function FractalTunnel() {
             rafRef.current = requestAnimationFrame(animate);
         };
 
-        animate();
+        // start animation
+        rafRef.current = requestAnimationFrame(animate);
+        // animate();
 
         return () => {
             observer.disconnect();
