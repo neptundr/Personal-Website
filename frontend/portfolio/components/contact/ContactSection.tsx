@@ -239,7 +239,7 @@ const ContactSection = ({settings}) => {
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
-                    transition={{duration: 0.6, delay: 0.9}}
+                    transition={{duration: 0.6, delay: 1.3}}
                     className="
                         relative top-1/2
                         mx-auto my-auto max-w-4xl

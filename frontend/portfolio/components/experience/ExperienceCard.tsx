@@ -1,10 +1,11 @@
 'use client';
 
 import React, {useState} from 'react';
-import {motion} from 'framer-motion';
+import {motion, AnimatePresence} from 'framer-motion';
 import {format} from 'date-fns';
 import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
+import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
 
 interface ExperienceItem {
     id: number;
@@ -51,6 +52,58 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                        }) => {
     const [hovered, setHovered] = useState(false);
     const [isStarHovered, setIsStarHovered] = React.useState(false);
+    const [prevImgIndex, setPrevImgIndex] = useState<number | null>(null);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+    const images = React.useMemo(() => {
+        if (!item.image_url) return [];
+        return item.image_url
+            .split(',')
+            .map(u => u.replace(/\s|\n/g, ''))
+            .filter(Boolean);
+    }, [item.image_url]);
+
+    const [imgIndex, setImgIndex] = useState(0);
+    const [imgLoaded, setImgLoaded] = useState(false);
+    const [imageHovered, setImageHovered] = useState(false);
+    const [viewerOpen, setViewerOpen] = useState(false);
+
+    React.useEffect(() => {
+        images.forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+    }, [images]);
+
+    React.useEffect(() => {
+        if (!hovered) {
+            if (imgIndex !== 0) {
+                setPrevImgIndex(imgIndex);
+                setImgLoaded(false);
+                setImgIndex(0);
+            }
+            return;
+        }
+
+        if (images.length <= 1) return;
+
+        const id = setInterval(() => {
+            setPrevImgIndex(imgIndex);
+            setImgLoaded(false);
+            setImgIndex(i => (i + 1) % images.length);
+        }, 2500);
+
+        return () => clearInterval(id);
+    }, [hovered, images.length, imgIndex]);
+
+    React.useEffect(() => {
+        if (!viewerOpen) return;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [viewerOpen]);
+
     return (
         <motion.div
             // initial={{scale: 0.84}}
@@ -140,7 +193,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-gray-400 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                                    className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
                                     <ExternalLink className="w-4 h-4"/>
                                 </motion.a>
@@ -152,7 +205,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-gray-400 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                                    className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
                                     <Github className="w-4 h-4"/>
                                 </motion.a>
@@ -165,7 +218,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         rel="noopener noreferrer"
                                         whileHover={{scale: 1.1}}
                                         whileTap={{scale: 0.95}}
-                                        className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-xs text-yellow-400 font-normal transition-colors flex items-center justify-center relative"
+                                        className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
@@ -194,21 +247,92 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 </div>
 
                 {/* Image */}
-                {item.image_url && (
-                    <div className="relative aspect-video mb-4 rounded-lg overflow-hidden">
+                {images.length > 0 && (
+                    <div
+                        className="relative aspect-video mb-4 rounded-lg overflow-hidden cursor-pointer"
+                        onMouseEnter={() => setImageHovered(true)}
+                        onMouseLeave={() => setImageHovered(false)}
+                        onClick={() => {
+                            setViewerOpen(true);
+                            setImageHovered(false);
+                            setHovered(false)
+                        }}
+                    >
+
+                        {/* Initial loading spinner only once */}
+                        {!hasLoadedOnce && !imgLoaded && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-5">
+                                <div
+                                    className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>
+                            </div>
+                        )}
+
+                        {/* Previous image (background layer) */}
+                        {prevImgIndex !== null && (
+                            <img
+                                src={images[prevImgIndex]}
+                                className="absolute inset-0 w-full h-full object-cover z-9"
+                                draggable={false}
+                            />
+                        )}
+
+                        {/* Current image (animated layer) */}
                         <motion.img
-                            src={item.image_url}
+                            key={imgIndex}
+                            src={images[imgIndex]}
                             alt={item.title}
-                            className="w-full h-full object-cover"
-                            animate={{
-                                filter: hovered
-                                    ? 'grayscale(0%) brightness(1)'
-                                    : (dimmed ? 'grayscale(100%) brightness(0.9)': 'grayscale(80%) brightness(1.2)'),
+                            className="absolute inset-0 w-full h-full object-cover z-10"
+                            draggable={false}
+                            onLoad={() => {
+                                setImgLoaded(true);
+                                setHasLoadedOnce(true);
                             }}
-                            transition={{duration: 0.4}}
-                            style={{transformOrigin: 'center'}}
+                            initial={{opacity: 0, filter: 'blur(3px)'}}
+                            animate={{
+                                opacity: 1,
+                                filter: hovered
+                                    ? 'grayscale(0%) blur(0px) brightness(1)'
+                                    : (dimmed
+                                        ? 'grayscale(100%) blur(2px) brightness(0.9)'
+                                        : 'grayscale(80%) blur(0px) brightness(1.2)')
+                            }}
+                            transition={{duration: 0.35, ease: 'easeIn'}}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"/>
+
+                        <motion.div
+                            className="absolute inset-0 z-20"
+                            onMouseEnter={() => setImageHovered(true)}
+                            onMouseLeave={() => setImageHovered(false)}
+                        >
+                            {/* visual overlay */}
+                            <motion.div
+                                className="absolute inset-0 flex items-center justify-center rounded-lg
+                                bg-black/50 backdrop-blur-md pointer-events-none
+                                will-change-opacity transform-gpu"
+                                animate={{opacity: imageHovered ? 1 : 0}}
+                                transition={{duration: 0.35, ease: 'easeOut'}}
+                            >
+                                <motion.span
+                                    className="text-white text-sm tracking-wide"
+                                    style={{fontFamily: 'var(--font-codecLight)'}}
+                                    animate={{
+                                        opacity: imageHovered ? 1 : 0,
+                                        y: imageHovered ? 0 : 6,
+                                    }}
+                                    transition={{duration: 0.35, ease: 'easeOut'}}
+                                >
+                                    Click to open fullscreen
+                                </motion.span>
+                            </motion.div>
+                        </motion.div>
+
+
+                        <motion.div
+                            className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-15"
+                            initial={{opacity: 1}}
+                            animate={{opacity: hovered ? 0 : 1}}
+                            transition={{duration: 0.5, ease: 'easeOut'}}
+                        />
                     </div>
                 )}
 
@@ -242,6 +366,16 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     </div>
                 )}
             </div>
+
+            <AnimatePresence>
+                {viewerOpen && (
+                    <FullscreenImageViewer
+                        images={images}
+                        startIndex={imgIndex}
+                        onClose={() => setViewerOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
