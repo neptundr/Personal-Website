@@ -52,7 +52,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                        }) => {
     const [hovered, setHovered] = useState(false);
     const [isStarHovered, setIsStarHovered] = React.useState(false);
-    const [prevImgIndex, setPrevImgIndex] = useState<number | null>(null);
+    const [prevImgIndex, setPrevImgIndex] = useState<number>(0);
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
     const images = React.useMemo(() => {
@@ -68,33 +68,41 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const [imageHovered, setImageHovered] = useState(false);
     const [viewerOpen, setViewerOpen] = useState(false);
 
+    // Preload all images and prepare for smooth first transition
     React.useEffect(() => {
-        images.forEach(src => {
+        if (images.length <= 1) return;
+
+        // preload all images
+        images.forEach((src) => {
             const img = new Image();
             img.src = src;
         });
+
+        // set prevImgIndex to last image so first crossfade is smooth
+        setPrevImgIndex(images.length - 1);
     }, [images]);
 
+    // Rotate images smoothly with preloaded next image
     React.useEffect(() => {
-        if (!hovered) {
-            if (imgIndex !== 0) {
-                setPrevImgIndex(imgIndex);
+        if (!hovered || images.length <= 1) return;
+
+        const intervalId = setInterval(() => {
+            setImgIndex((prevIndex) => {
+                const nextIndex = (prevIndex + 1) % images.length;
+
+                // Preload the next image
+                const img = new Image();
+                img.src = images[nextIndex] ?? "";
+
+                setPrevImgIndex(prevIndex); // ensure previous image exists for crossfade
                 setImgLoaded(false);
-                setImgIndex(0);
-            }
-            return;
-        }
 
-        if (images.length <= 1) return;
-
-        const id = setInterval(() => {
-            setPrevImgIndex(imgIndex);
-            setImgLoaded(false);
-            setImgIndex(i => (i + 1) % images.length);
+                return nextIndex;
+            });
         }, 2500);
 
-        return () => clearInterval(id);
-    }, [hovered, images.length, imgIndex]);
+        return () => clearInterval(intervalId);
+    }, [hovered, images]);
 
     React.useEffect(() => {
         if (!viewerOpen) return;
@@ -268,13 +276,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         )}
 
                         {/* Previous image (background layer) */}
-                        {prevImgIndex !== null && (
-                            <img
-                                src={images[prevImgIndex]}
-                                className="absolute inset-0 w-full h-full object-cover z-9"
-                                draggable={false}
-                            />
-                        )}
+                        <img
+                            src={images[prevImgIndex]}
+                            className="absolute inset-0 w-full h-full object-cover z-9"
+                            draggable={false}
+                        />
 
                         {/* Current image (animated layer) */}
                         <motion.img

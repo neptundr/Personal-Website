@@ -263,7 +263,7 @@ const ContactSection = ({settings}) => {
                                     {/* Right side — flush to center */}
                                     <div className="flex justify-start pl-1 sm:pl-2">
                                         <RotatingText
-                                            items={['truly', 'distinctly', 'magically', 'remarkably', 'surprisingly', 'highly']}
+                                            items={['truly', 'magically', 'distinctly', 'remarkably', 'surprisingly', 'highly']}
                                             showLine={false}
                                             intervalMs={3500}
                                             vertical={false}
