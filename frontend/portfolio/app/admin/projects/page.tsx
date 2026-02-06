@@ -71,7 +71,7 @@ const projectFields: FieldConfig[] = [
     {key: 'end_date', label: 'End Date', type: 'date'},
     {key: 'is_current', label: 'Currently Ongoing', type: 'boolean'},
     {key: 'description', label: 'Description', type: 'textarea'},
-    {key: 'image_url', label: 'Image URL', type: 'textarea'},
+    {key: 'image_url', label: 'Image URL (comma-separated)', type: 'textarea'},
     {key: 'skills', label: 'Skills (comma-separated)', type: 'array'},
     {key: 'link', label: 'External Link', type: 'text'},
     {key: 'github_url', label: 'GitHub URL', type: 'text'},
@@ -219,7 +219,7 @@ export default function AdminProjects() {
                                         <div className="flex items-start gap-4">
                                             {project.image_url && (
                                                 <img
-                                                    src={project.image_url}
+                                                    src={project.image_url?.split(',')[0]?.trim()}
                                                     alt={project.title}
                                                     className="w-24 h-16 object-cover rounded-lg"
                                                 />
