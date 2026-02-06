@@ -118,18 +118,31 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             setImgLoaded(false);
         };
         if (imageActive) {
-            // Start interval, only once
-            intervalRef.current = setInterval(() => {
-                if (unmounted) return;
-                nextImage();
-            }, 2500);
+            if (isTouch) {
+                // Random initial delay between 0-600ms, then normal interval
+                const initialDelay = Math.random() * 601;
+                resetTimeoutRef.current = setTimeout(() => {
+                    if (unmounted) return;
+                    nextImage();
+                    intervalRef.current = setInterval(() => {
+                        if (unmounted) return;
+                        nextImage();
+                    }, 2500);
+                }, initialDelay);
+            } else {
+                // Start interval, only once
+                intervalRef.current = setInterval(() => {
+                    if (unmounted) return;
+                    nextImage();
+                }, 2500);
+            }
         } else {
             // On mouse leave, if not at 0, rotate back to 0 after 2.5s
             if (imgIndexRef.current !== 0) {
                 resetTimeoutRef.current = setTimeout(() => {
                     if (unmounted) return;
                     resetToFirst();
-                }, 2500);
+                }, 800);
             }
         }
         return () => {
@@ -137,8 +150,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             if (intervalRef.current) clearInterval(intervalRef.current);
             if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
         };
-    // Only depends on imageActive and images.length
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // Only depends on imageActive and images.length
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [imageActive, images.length]);
 
     // Prevent scroll when viewer open

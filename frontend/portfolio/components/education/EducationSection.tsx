@@ -55,7 +55,7 @@ class EducationSection extends React.Component<{ education: any }> {
 
                 {/* Decorative */}
                 <div
-                    className="absolute bottom-0 left-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none -translate-x-1/2"/>
+                    className="absolute bottom-0 left-1/2 w-1300 h-46 bg-red-500/8 rounded-full blur-3xl pointer-events-none -translate-x-1/2"/>
 
 
                 <div

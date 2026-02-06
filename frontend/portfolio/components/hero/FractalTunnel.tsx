@@ -244,6 +244,7 @@ export default function FractalTunnel() {
 
     return (
         <>
+            <div className="absolute inset-0 h-full bg-black"/>
             <canvas
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full  pointer-events-none"

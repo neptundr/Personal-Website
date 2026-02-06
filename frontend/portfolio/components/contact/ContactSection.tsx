@@ -80,7 +80,7 @@ const ContactSection = ({settings}) => {
         <section
             className="
             relative
-            min-h-screen max-h-350 md:min-h-265 md:max-h-350 lg:min-h-screen lg:max-h-screen
+            min-h-screen max-h-350 md:min-h-245 md:max-h-350 lg:min-h-screen lg:max-h-screen
             bg-black
             border-t border-zinc-900
             overflow-hidden
