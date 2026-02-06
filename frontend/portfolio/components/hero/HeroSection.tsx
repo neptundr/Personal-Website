@@ -122,17 +122,17 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     }
 
     return (
-        <section className="relative w-full h-vh bg-black overflow-hidden">
+        <section className="relative w-full h-vh overflow-hidden">
 
             {/* FRACTAL TUNNEL (fade-in only) */}
             <motion.div
-                className="absolute inset-0"
+                className="absolute inset-0 bg-black"
                 initial={{opacity: 0}}
-                animate={{opacity: tunnelVisible ? 1 : 0}}
-                transition={{duration: 1.2, ease: 'easeOut'}}
-            >
-                <FractalTunnel/>
-            </motion.div>
+                animate={{opacity: tunnelVisible ? 0 : 1}}
+                transition={{
+                    duration: 1.2, ease: 'easeOut'
+                }}
+            />
 
             <div className="relative z-10 w-full h-full">
 

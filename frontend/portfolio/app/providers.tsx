@@ -14,7 +14,7 @@ export function VhSetter() {
         };
 
         setVh();
-        window.addEventListener('resize', setVh);
+        // window.addEventListener('resize', setVh);
         return () => window.removeEventListener('resize', setVh);
     }, []);
 

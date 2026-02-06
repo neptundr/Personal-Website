@@ -268,16 +268,20 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
                                         {/* Tooltip */}
                                         {isStarHovered && (
-                                            <div className="
-                                                absolute -left-11 -translate-x-1/2
-                                                bg-black text-white text-xs px-2 py-1 rounded-md
-                                                pointer-events-none
-                                                whitespace-nowrap
-                                                z-10
-                                                text-center
-                                            ">
+                                            <motion.div
+                                                className="
+                                                    absolute -left-11 -translate-x-1/2
+                                                    bg-black text-white text-xs px-2 py-1 rounded-md
+                                                    pointer-events-none
+                                                    whitespace-nowrap
+                                                    z-10
+                                                    text-center
+                                                "
+                                                initial={{ opacity: 0 }}
+                                                animate={{opacity:1}}
+                                            >
                                                 Featured <br/> Experience
-                                            </div>
+                                            </motion.div>
                                         )}
                                     </motion.a>
                                 </motion.div>

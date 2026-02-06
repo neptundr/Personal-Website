@@ -20,6 +20,10 @@ export default function FractalTunnel() {
 
     const pendingResizeRef = useRef(true);
 
+    const fullHeightRef = useRef<number>(0); // stable full page height
+    const stableViewportHeightRef = useRef<number>(0); // stable viewport height on mount
+    const stableViewportWidthRef = useRef<number>(0); // stable viewport width on mount
+
     const numParticles = 180;
     const particleCharsRef = useRef<string[]>([]);
 
@@ -41,8 +45,8 @@ export default function FractalTunnel() {
             introPhase: IntroPhase,
             introTime: number
         ) => {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+            const viewportWidth = stableViewportWidthRef.current || window.innerWidth;
+            const viewportHeight = stableViewportHeightRef.current || window.innerHeight;
 
             // center of the tunnel = middle of the viewport, not canvas
             const cx = viewportWidth * (2 / 3);
@@ -158,10 +162,22 @@ export default function FractalTunnel() {
         []
     );
 
+    // initialize stable fullHeight and stable viewport dimensions once
+    useEffect(() => {
+        const vh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vh')) * 100;
+        fullHeightRef.current = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight,
+            window.innerHeight,
+            vh
+        );
+        stableViewportHeightRef.current = window.innerHeight;
+        stableViewportWidthRef.current = window.innerWidth;
+    }, []);
+
     useEffect(() => {
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext('2d')!;
-
         const buffer = document.createElement('canvas');
         const bufferCtx = buffer.getContext('2d')!;
         bufferCanvasRef.current = buffer;
@@ -180,24 +196,23 @@ export default function FractalTunnel() {
 
         const animate = (timestamp: number) => {
             if (!lastTimestamp) lastTimestamp = timestamp;
-            let delta = ((timestamp - lastTimestamp) / 1000) * 0.4; // seconds
+            let delta = ((timestamp - lastTimestamp) / 1000) * 0.4;
             lastTimestamp = timestamp;
 
-            // optional: cap delta to avoid big jumps if tab was inactive
             delta = Math.min(delta, 0.05);
 
             if (pendingResizeRef.current) {
-                const height = Math.max(
-                    document.body.scrollHeight,
-                    document.documentElement.scrollHeight
-                );
-
                 buffer.width = canvas.width;
                 buffer.height = canvas.height;
                 bufferCtx.drawImage(canvas, 0, 0);
 
                 canvas.width = window.innerWidth;
-                canvas.height = document.documentElement.scrollHeight;
+                // Set canvas height to full page height
+                canvas.height = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight,
+                    window.innerHeight
+                );
 
                 ctx.drawImage(buffer, 0, 0);
                 pendingResizeRef.current = false;
@@ -223,9 +238,15 @@ export default function FractalTunnel() {
             rafRef.current = requestAnimationFrame(animate);
         };
 
-        // start animation
+        // Set initial canvas size with stable full page height
+        canvas.width = window.innerWidth;
+        canvas.height = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight,
+            window.innerHeight
+        );
+
         rafRef.current = requestAnimationFrame(animate);
-        // animate();
 
         return () => {
             observer.disconnect();
@@ -238,7 +259,7 @@ export default function FractalTunnel() {
         <>
             <canvas
                 ref={canvasRef}
-                className="absolute top-0 left-0 w-full pointer-events-none"
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
                 style={{zIndex: 0}}
             />
             <div className="absolute inset-0 h-full bg-black/35"/>
