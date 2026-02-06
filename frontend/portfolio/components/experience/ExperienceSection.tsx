@@ -1,8 +1,8 @@
 'use client';
 
 import React, {useState, useRef, useEffect} from 'react';
-import {motion, AnimatePresence, cubicBezier} from 'framer-motion';
-import type {Variants} from "framer-motion";
+import {motion, AnimatePresence} from 'framer-motion';
+import type { Variants } from "framer-motion";
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {X} from 'lucide-react';
 import ExperienceCard from "@/components/experience/ExperienceCard";
@@ -30,8 +30,7 @@ interface ExperienceSectionProps {
     items: ExperienceItem[];
     skillIcons?: { skill_name: string; icon_url: string }[];
 }
-
-const itemVariants: Variants = {
+const itemVariants:Variants = {
     hidden: {y: 24},
     visible: {y: 0, transition: {duration: 0.25, ease: "easeIn"}},
     exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: "easeInOut"}},
@@ -208,26 +207,17 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                     No items match this filter
                 </motion.div>
             ) : (
-                <div
-                    className="
-                        grid
-                        grid-cols-1
-                        md:grid-cols-2
-                        lg:grid-cols-3
-                        gap-6
-                        auto-rows-10
-                    "
-                >
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
                     <AnimatePresence mode="popLayout">
                         {filteredItems.slice(0, showCount).map(item => (
                             <motion.div
                                 key={item.id}
-                                // layout
+                                layout
                                 variants={itemVariants}
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                // className="mb-6"
+                                className="mb-6 break-inside-avoid"
                             >
                                 <ExperienceCard
                                     item={item}
