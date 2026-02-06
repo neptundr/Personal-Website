@@ -1,8 +1,8 @@
 // 'use client';
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
-import { ExternalLink, Github } from 'lucide-react';
+import React, {useState, useRef, useEffect, useMemo} from 'react';
+import {motion, AnimatePresence} from 'framer-motion';
+import {format} from 'date-fns';
+import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
 
@@ -42,13 +42,13 @@ const formatDate = (date?: string) => {
 };
 
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
-    item,
-    index,
-    onSkillClick,
-    dimmed,
-    onHover,
-    currentSkillFilter,
-}) => {
+                                                           item,
+                                                           index,
+                                                           onSkillClick,
+                                                           dimmed,
+                                                           onHover,
+                                                           currentSkillFilter,
+                                                       }) => {
     // Touch device detection
     const [isTouch, setIsTouch] = useState(false);
     useEffect(() => {
@@ -163,11 +163,33 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         };
     }, [viewerOpen]);
 
+
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!cardRef.current) return;
+
+        const el = cardRef.current;
+        const resize = () => {
+            const height = el.getBoundingClientRect().height;
+            el.parentElement!.style.gridRowEnd =
+                `span ${Math.ceil(height / 10)}`;
+        };
+
+        resize();
+
+        const ro = new ResizeObserver(resize);
+        ro.observe(el);
+
+        return () => ro.disconnect();
+    }, []);
+
+
     // Grid-friendly outer layout: block, w-full, relative
     return (
         <motion.div
             className="block w-full relative group"
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            transition={{duration: 0.25, ease: 'easeOut'}}
             onMouseEnter={() => {
                 setHovered(true);
                 onHover(item.id);
@@ -176,10 +198,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 setHovered(false);
                 onHover(null);
             }}
-            whileHover={{ y: -6 }}
+            whileHover={{translateY: -6}}
         >
             {/* Card content */}
             <div
+                ref={cardRef}
                 className={`
                     relative overflow-hidden rounded-3xl
                     border shadow-2xl
@@ -191,7 +214,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 `}
             >
                 {/* Subtle highlight */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                <div
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
 
                 {/* Title & Meta */}
                 <div className="mb-4">
@@ -199,13 +223,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         <div className="flex-1">
                             <h3
                                 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
-                                style={{ fontFamily: 'var(--font-codecBold)' }}
+                                style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 {item.title}
                             </h3>
                             <div
                                 className="flex flex-wrap items-center gap-3 text-sm"
-                                style={{ fontFamily: 'var(--font-codecLight)' }}
+                                style={{fontFamily: 'var(--font-codecLight)'}}
                             >
                                 {item.company && (
                                     <span className="text-gray-300 font-normal">
@@ -224,7 +248,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         {item.is_current ? (
                                             <span
                                                 className="text-red-50 font-medium"
-                                                style={{ fontFamily: 'var(--font-codec)' }}
+                                                style={{fontFamily: 'var(--font-codec)'}}
                                             >
                                                 Present
                                             </span>
@@ -242,11 +266,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={{scale: 1.1}}
+                                    whileTap={{scale: 0.95}}
                                     className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
-                                    <ExternalLink className="w-4 h-4" />
+                                    <ExternalLink className="w-4 h-4"/>
                                 </motion.a>
                             )}
                             {item.github_url && (
@@ -254,11 +278,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.github_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={{scale: 1.1}}
+                                    whileTap={{scale: 0.95}}
                                     className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
-                                    <Github className="w-4 h-4" />
+                                    <Github className="w-4 h-4"/>
                                 </motion.a>
                             )}
                             {item.featured && (
@@ -266,8 +290,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     <motion.a
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={{scale: 1.1}}
+                                        whileTap={{scale: 0.95}}
                                         className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
@@ -284,10 +308,10 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                     z-10
                                                     text-center
                                                 "
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
+                                                initial={{opacity: 0}}
+                                                animate={{opacity: 1}}
                                             >
-                                                Featured <br /> Experience
+                                                Featured <br/> Experience
                                             </motion.div>
                                         )}
                                     </motion.a>
@@ -301,7 +325,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {images.length > 0 && (
                     <div
                         className="relative aspect-video mb-4 rounded-lg overflow-hidden cursor-pointer select-none"
-                        style={{ minHeight: 0 }}
+                        style={{minHeight: 0}}
                         onMouseEnter={() => setImageHovered(true)}
                         onMouseLeave={() => setImageHovered(false)}
                         onClick={() => {
@@ -313,7 +337,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         {/* Initial loading spinner only once */}
                         {!hasLoadedOnce && !imgLoaded && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                                <div
+                                    className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>
                             </div>
                         )}
                         {/* Crossfade images: previous and current */}
@@ -332,20 +357,20 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     style={{
                                         zIndex: isCurrent ? 20 : 10,
                                     }}
-                                    initial={{ opacity: isCurrent ? 0 : 1 }}
+                                    initial={{opacity: isCurrent ? 0 : 1}}
                                     animate={{
                                         opacity: isCurrent ? 1 : 0,
                                         filter: isTouch
                                             ? 'grayscale(0%) brightness(1)'
                                             : hovered
-                                            ? 'grayscale(0%) brightness(1)'
-                                            : dimmed
-                                            ? 'grayscale(100%) brightness(0.9)'
-                                            : 'grayscale(60%) brightness(1.2)',
+                                                ? 'grayscale(0%) brightness(1)'
+                                                : dimmed
+                                                    ? 'grayscale(100%) brightness(0.9)'
+                                                    : 'grayscale(60%) brightness(1.2)',
                                     }}
                                     transition={{
-                                        opacity: { duration: 0.4, ease: 'easeInOut' },
-                                        filter: { duration: 0.25, ease: 'easeInOut' },
+                                        opacity: {duration: 0.4, ease: 'easeInOut'},
+                                        filter: {duration: 0.25, ease: 'easeInOut'},
                                     }}
                                     onLoad={() => {
                                         if (isCurrent) {
@@ -366,18 +391,18 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 className="absolute inset-0 flex items-center justify-center rounded-lg
                                 bg-black/50 backdrop-blur-md pointer-events-none
                                 will-change-opacity transform-gpu"
-                                animate={{ opacity: imageHovered ? 1 : 0 }}
-                                transition={{ duration: 0.35, ease: 'easeOut' }}
+                                animate={{opacity: imageHovered ? 1 : 0}}
+                                transition={{duration: 0.35, ease: 'easeOut'}}
                             >
                                 <motion.span
                                     className="text-white text-sm tracking-wide"
-                                    style={{ fontFamily: 'var(--font-codecLight)' }}
-                                    initial={{ opacity: 0 }}
+                                    style={{fontFamily: 'var(--font-codecLight)'}}
+                                    initial={{opacity: 0}}
                                     animate={{
                                         opacity: imageHovered ? 1 : 0,
                                         y: imageHovered ? 0 : 6,
                                     }}
-                                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                                    transition={{duration: 0.35, ease: 'easeOut'}}
                                 >
                                     Click to open fullscreen
                                 </motion.span>
@@ -386,9 +411,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         {/* Gradient overlay for subtle effect */}
                         <motion.div
                             className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-25"
-                            initial={{ opacity: 1 }}
-                            animate={{ opacity: isTouch || hovered ? 0 : 1 }}
-                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            initial={{opacity: 1}}
+                            animate={{opacity: isTouch || hovered ? 0 : 1}}
+                            transition={{duration: 0.5, ease: 'easeOut'}}
                         />
                     </div>
                 )}
@@ -398,7 +423,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     <p
                         key={i}
                         className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
-                        style={{ fontFamily: 'var(--font-codecLight)' }}
+                        style={{fontFamily: 'var(--font-codecLight)'}}
                     >
                         {para}
                     </p>
