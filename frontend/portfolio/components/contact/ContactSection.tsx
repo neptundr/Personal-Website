@@ -139,14 +139,14 @@ const ContactSection = ({settings}) => {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium">
-                            Get in Touch
+                            Cross the line
                         </span>
 
                         <h2
                             className="mt-4 font-codec text-3xl sm:text-5xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
                             style={{fontFamily: 'var(--font-codec)'}}
                         >
-                            Drop a line
+                            Now We Talk
                         </h2>
                     </div>
 

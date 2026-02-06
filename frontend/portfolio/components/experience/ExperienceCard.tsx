@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useState} from 'react';
-import {motion, AnimatePresence} from 'framer-motion';
+import {motion, AnimatePresence, hover} from 'framer-motion';
 import {format} from 'date-fns';
 import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
@@ -68,6 +68,19 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const [imageHovered, setImageHovered] = useState(false);
     const [viewerOpen, setViewerOpen] = useState(false);
 
+    const [isTouch, setIsTouch] = React.useState(false);
+
+    React.useEffect(() => {
+        const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
+        setIsTouch(mq.matches);
+
+        const handler = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    const imageActive = isTouch || hovered;
+
     // Preload all images and prepare for smooth first transition
     React.useEffect(() => {
         if (images.length <= 1) return;
@@ -82,27 +95,52 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         setPrevImgIndex(images.length - 1);
     }, [images]);
 
-    // Rotate images smoothly with preloaded next image
     React.useEffect(() => {
-        if (!hovered || images.length <= 1) return;
+        if (!imageActive || images.length <= 1) return;
 
-        const intervalId = setInterval(() => {
+        let intervalId: ReturnType<typeof setInterval> | null = null;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+        const startInterval = () => {
+            intervalId = setInterval(() => {
+                setImgIndex((prevIndex) => {
+                    const nextIndex = (prevIndex + 1) % images.length;
+
+                    const img = new Image();
+                    img.src = images[nextIndex] ?? "";
+
+                    setPrevImgIndex(prevIndex);
+                    setImgLoaded(false);
+
+                    return nextIndex;
+                });
+            }, 2500);
+        };
+
+        // random delay only before the first change
+        const initialDelay = Math.random() * 600;
+
+        timeoutId = setTimeout(() => {
             setImgIndex((prevIndex) => {
                 const nextIndex = (prevIndex + 1) % images.length;
 
-                // Preload the next image
                 const img = new Image();
                 img.src = images[nextIndex] ?? "";
 
-                setPrevImgIndex(prevIndex); // ensure previous image exists for crossfade
+                setPrevImgIndex(prevIndex);
                 setImgLoaded(false);
 
                 return nextIndex;
             });
-        }, 2500);
 
-        return () => clearInterval(intervalId);
-    }, [hovered, images]);
+            startInterval();
+        }, initialDelay);
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [imageActive, images]);
 
     React.useEffect(() => {
         if (!viewerOpen) return;
@@ -154,11 +192,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 {item.title}
-                                {/*{item.featured && (*/}
-                                {/*    <span className="ml-3 text-xs text-yellow-400 font-normal whitespace-nowrap">*/}
-                                {/*        ★ Featured*/}
-                                {/*    </span>*/}
-                                {/*)}*/}
                             </h3>
 
                             <div
@@ -221,12 +254,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             {item.featured && (
                                 <motion.div className="relative">
                                     <motion.a
-                                        href={item.github_url || '#'}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         whileHover={{scale: 1.1}}
                                         whileTap={{scale: 0.95}}
-                                        className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500"
+                                        className="p-2 rounded-lg bg-zinc-600/10 backdrop-blur-sm text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
@@ -296,11 +328,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             initial={{opacity: 0, filter: 'blur(3px)'}}
                             animate={{
                                 opacity: 1,
-                                filter: hovered
+                                filter: isTouch
                                     ? 'grayscale(0%) blur(0px) brightness(1)'
-                                    : (dimmed
-                                        ? 'grayscale(100%) blur(2px) brightness(0.9)'
-                                        : 'grayscale(80%) blur(0px) brightness(1.2)')
+                                    : hovered
+                                        ? 'grayscale(0%) blur(0px) brightness(1)'
+                                        : dimmed
+                                            ? 'grayscale(100%) blur(0px) brightness(0.9)'
+                                            : 'grayscale(60%) blur(0px) brightness(1.2)',
                             }}
                             transition={{duration: 0.35, ease: 'easeIn'}}
                         />
@@ -321,6 +355,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 <motion.span
                                     className="text-white text-sm tracking-wide"
                                     style={{fontFamily: 'var(--font-codecLight)'}}
+                                    initial={{opacity: 0}}
                                     animate={{
                                         opacity: imageHovered ? 1 : 0,
                                         y: imageHovered ? 0 : 6,
@@ -336,7 +371,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         <motion.div
                             className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-15"
                             initial={{opacity: 1}}
-                            animate={{opacity: hovered ? 0 : 1}}
+                            animate={{opacity: isTouch || hovered ? 0 : 1}}
                             transition={{duration: 0.5, ease: 'easeOut'}}
                         />
                     </div>
