@@ -118,7 +118,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         };
 
         // random delay only before the first change
-        const initialDelay = Math.random() * 600;
+        const initialDelay = Math.random() * 650;
 
         timeoutId = setTimeout(() => {
             setImgIndex((prevIndex) => {

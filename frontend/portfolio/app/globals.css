@@ -32,5 +32,9 @@ body {
 }
 
 html {
-  -webkit-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+.h-vh {
+    height: calc(var(--vh, 1vh) * 100);
 }
