@@ -102,7 +102,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                     Experience
                 </span>
                 <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
-                    style={{fontFamily: 'var(--font-codec)'}}>
+                    style={{fontFamily: 'var(--font-codecBold)'}}>
                     What I’ve Built
                 </h2>
             </motion.div>

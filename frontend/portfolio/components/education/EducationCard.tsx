@@ -79,10 +79,10 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                         rel="noopener noreferrer"
                         className="
                             flex flex-wrap items-baseline
-                            text-lg md:text-3xl font-semibold text-white
+                            text-lg md:text-3xl text-white
                             hover:text-zinc-300 transition-colors duration-300
                         "
-                        style={{fontFamily: 'var(--font-codec)'}}
+                        style={{fontFamily: 'var(--font-codecBold)'}}
                     >
                         <span className="whitespace-nowrap pr-4 ">
                             {education.institution} {" "}

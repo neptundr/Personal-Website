@@ -11,3 +11,9 @@ export const codecLight = localFont({
     variable: "--font-codecLight",
     display: "swap",
 });
+
+export const codecBold = localFont({
+    src: "../public/fonts/codec-600.ttf",
+    variable: "--font-codecBold",
+    display: "swap",
+});

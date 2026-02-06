@@ -207,9 +207,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                className="absolute text-white font-bold text-5xl md:text-7xl"
+                                className="absolute text-white font-codec text-5xl md:text-7xl"
                                 style={{
-                                    fontFamily: 'var(--font-codec)',
+                                    fontFamily: 'var(--font-codecBold)',
                                     left: w.left,
                                     top: w.top,
                                     transform: w.center ? 'translateX(-50%)' : undefined,
@@ -237,8 +237,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             }}
                             className="absolute top-1/2 left-1/2
                                        -translate-x-1/2 -translate-y-1/2
-                                       text-white font-bold text-[clamp(4rem,18vw,12rem)]"
-                            style={{fontFamily: 'var(--font-codec)'}}
+                                       text-white text-[clamp(4rem,18vw,12rem)]"
+                            style={{fontFamily: 'var(--font-codecBold)'}}
                         >
                             Portfolio
                         </motion.h1>
@@ -255,8 +255,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             transition={{duration: 0.4}}
                         >
                             <div
-                                className="text-5xl sm:text-7xl md:text-9xl lg:text-[9rem] font-bold text-white leading-tight"
-                                style={{fontFamily: 'var(--font-codec)'}}
+                                className="text-5xl sm:text-7xl md:text-9xl lg:text-[9rem] text-white leading-tight"
+                                style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 <motion.span
                                     className="block"
@@ -297,8 +297,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             className="absolute top-18 left-6 md:left-12 lg:left-24 flex flex-col gap-3"
                         >
                             <span
-                                className="text-white font-bold text-xl md:text-2xl"
-                                style={{fontFamily: 'var(--font-codec)'}}
+                                className="text-white text-xl md:text-2xl"
+                                style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 Denis Kaizer. Developer Portfolio
                             </span>

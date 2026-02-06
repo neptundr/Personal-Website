@@ -1,9 +1,8 @@
-'use client';
-
-import React, {useState} from 'react';
-import {motion, AnimatePresence, hover} from 'framer-motion';
-import {format} from 'date-fns';
-import {ExternalLink, Github} from 'lucide-react';
+// 'use client';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
+import { ExternalLink, Github } from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
 
@@ -43,19 +42,32 @@ const formatDate = (date?: string) => {
 };
 
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
-                                                           item,
-                                                           index,
-                                                           onSkillClick,
-                                                           dimmed,
-                                                           onHover,
-                                                           currentSkillFilter,
-                                                       }) => {
-    const [hovered, setHovered] = useState(false);
-    const [isStarHovered, setIsStarHovered] = React.useState(false);
-    const [prevImgIndex, setPrevImgIndex] = useState<number>(0);
-    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+    item,
+    index,
+    onSkillClick,
+    dimmed,
+    onHover,
+    currentSkillFilter,
+}) => {
+    // Touch device detection
+    const [isTouch, setIsTouch] = useState(false);
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
+        setIsTouch(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
 
-    const images = React.useMemo(() => {
+    // Hover state
+    const [hovered, setHovered] = useState(false);
+    const [isStarHovered, setIsStarHovered] = useState(false);
+    const [imageHovered, setImageHovered] = useState(false);
+    const [viewerOpen, setViewerOpen] = useState(false);
+
+    // Images
+    const images = useMemo(() => {
         if (!item.image_url) return [];
         return item.image_url
             .split(',')
@@ -63,86 +75,74 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             .filter(Boolean);
     }, [item.image_url]);
 
-    const [imgIndex, setImgIndex] = useState(0);
-    const [imgLoaded, setImgLoaded] = useState(false);
-    const [imageHovered, setImageHovered] = useState(false);
-    const [viewerOpen, setViewerOpen] = useState(false);
-
-    const [isTouch, setIsTouch] = React.useState(false);
-
-    React.useEffect(() => {
-        const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
-        setIsTouch(mq.matches);
-
-        const handler = (e: MediaQueryListEvent) => setIsTouch(e.matches);
-        mq.addEventListener('change', handler);
-        return () => mq.removeEventListener('change', handler);
-    }, []);
-
-    const imageActive = isTouch || hovered;
-
-    // Preload all images and prepare for smooth first transition
-    React.useEffect(() => {
-        if (images.length <= 1) return;
-
-        // preload all images
-        images.forEach((src) => {
-            const img = new Image();
+    // Preload images (once)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        images.forEach(src => {
+            const img = new window.Image();
             img.src = src;
         });
-
-        // set prevImgIndex to last image so first crossfade is smooth
-        setPrevImgIndex(images.length - 1);
     }, [images]);
 
-    React.useEffect(() => {
-        if (!imageActive || images.length <= 1) return;
-
-        let intervalId: ReturnType<typeof setInterval> | null = null;
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-        const startInterval = () => {
-            intervalId = setInterval(() => {
-                setImgIndex((prevIndex) => {
-                    const nextIndex = (prevIndex + 1) % images.length;
-
-                    const img = new Image();
-                    img.src = images[nextIndex] ?? "";
-
-                    setPrevImgIndex(prevIndex);
-                    setImgLoaded(false);
-
-                    return nextIndex;
-                });
-            }, 2500);
-        };
-
-        // random delay only before the first change
-        const initialDelay = Math.random() * 650;
-
-        timeoutId = setTimeout(() => {
-            setImgIndex((prevIndex) => {
-                const nextIndex = (prevIndex + 1) % images.length;
-
-                const img = new Image();
-                img.src = images[nextIndex] ?? "";
-
-                setPrevImgIndex(prevIndex);
-                setImgLoaded(false);
-
-                return nextIndex;
+    // Crossfade state
+    const [imgIndex, setImgIndex] = useState(0);
+    const [prevImgIndex, setPrevImgIndex] = useState(0);
+    const [imgLoaded, setImgLoaded] = useState(false);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const imgIndexRef = useRef(imgIndex);
+    imgIndexRef.current = imgIndex;
+    // Only create interval once, and control with imageActive state
+    const imageActive = isTouch || hovered;
+    // Stable image rotation logic
+    useEffect(() => {
+        if (images.length <= 1) return;
+        let unmounted = false;
+        // Clear any previous timers
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+        // Helper to rotate to next image
+        const nextImage = () => {
+            setPrevImgIndex(imgIndexRef.current);
+            setImgIndex((prev) => {
+                const next = (prev + 1) % images.length;
+                return next;
             });
-
-            startInterval();
-        }, initialDelay);
-
-        return () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            if (intervalId) clearInterval(intervalId);
+            setImgLoaded(false);
         };
-    }, [imageActive, images]);
+        // Helper to reset to index 0
+        const resetToFirst = () => {
+            setPrevImgIndex(imgIndexRef.current);
+            setImgIndex(0);
+            setImgLoaded(false);
+        };
+        if (imageActive) {
+            // Start interval, only once
+            intervalRef.current = setInterval(() => {
+                if (unmounted) return;
+                nextImage();
+            }, 2500);
+        } else {
+            // On mouse leave, if not at 0, rotate back to 0 after 2.5s
+            if (imgIndexRef.current !== 0) {
+                resetTimeoutRef.current = setTimeout(() => {
+                    if (unmounted) return;
+                    resetToFirst();
+                }, 2500);
+            }
+        }
+        return () => {
+            unmounted = true;
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+        };
+    // Only depends on imageActive and images.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [imageActive, images.length]);
 
-    React.useEffect(() => {
+    // Prevent scroll when viewer open
+    useEffect(() => {
         if (!viewerOpen) return;
         document.body.style.overflow = 'hidden';
         return () => {
@@ -150,13 +150,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         };
     }, [viewerOpen]);
 
+    // Grid-friendly outer layout: block, w-full, relative
     return (
         <motion.div
-            // initial={{scale: 0.84}}
-            // animate={{scale: 1}}
-            // exit={{y: -50}}
-            transition={{duration: 0.25, ease: 'easeOut'}}
-            className="relative group"
+            className="block w-full relative group"
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             onMouseEnter={() => {
                 setHovered(true);
                 onHover(item.id);
@@ -165,23 +163,22 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 setHovered(false);
                 onHover(null);
             }}
-            whileHover={{y: -6}}
+            whileHover={{ y: -6 }}
         >
-            {/* CONTENT */}
+            {/* Card content */}
             <div
                 className={`
                     relative overflow-hidden rounded-3xl
                     border shadow-2xl
                     backdrop-blur-2xl
-                    p-6 h-full
+                    p-6
                     transition-[border,box-shadow,opacity] duration-300
                     hover:border-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:border-2
                     ${dimmed ? 'opacity-93 border-gray-700' : 'border-gray-400'}
                 `}
             >
                 {/* Subtle highlight */}
-                <div
-                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
                 {/* Title & Meta */}
                 <div className="mb-4">
@@ -189,14 +186,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         <div className="flex-1">
                             <h3
                                 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
-                                style={{fontFamily: 'var(--font-codec)'}}
+                                style={{ fontFamily: 'var(--font-codecBold)' }}
                             >
                                 {item.title}
                             </h3>
-
                             <div
                                 className="flex flex-wrap items-center gap-3 text-sm"
-                                style={{fontFamily: 'var(--font-codecLight)'}}
+                                style={{ fontFamily: 'var(--font-codecLight)' }}
                             >
                                 {item.company && (
                                     <span className="text-gray-300 font-normal">
@@ -213,8 +209,10 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             (item.end_date || item.is_current) &&
                                             ' — '}
                                         {item.is_current ? (
-                                            <span className="text-red-50 font-medium"
-                                                  style={{fontFamily: 'var(--font-codec)'}}>
+                                            <span
+                                                className="text-red-50 font-medium"
+                                                style={{ fontFamily: 'var(--font-codec)' }}
+                                            >
                                                 Present
                                             </span>
                                         ) : (
@@ -224,7 +222,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 )}
                             </div>
                         </div>
-
                         {/* Links */}
                         <div className="flex items-center gap-2 shrink-0">
                             {item.link && (
@@ -232,11 +229,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    whileHover={{scale: 1.1}}
-                                    whileTap={{scale: 0.95}}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
                                     className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
-                                    <ExternalLink className="w-4 h-4"/>
+                                    <ExternalLink className="w-4 h-4" />
                                 </motion.a>
                             )}
                             {item.github_url && (
@@ -244,11 +241,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.github_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    whileHover={{scale: 1.1}}
-                                    whileTap={{scale: 0.95}}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
                                     className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
-                                    <Github className="w-4 h-4"/>
+                                    <Github className="w-4 h-4" />
                                 </motion.a>
                             )}
                             {item.featured && (
@@ -256,16 +253,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     <motion.a
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        whileHover={{scale: 1.1}}
-                                        whileTap={{scale: 0.95}}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.95 }}
                                         className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
-                                        <span className="w-4 h-4 text-center text-">
-                                             {'★'}
-                                        </span>
-
+                                        <span className="w-4 h-4 text-center">{'★'}</span>
                                         {/* Tooltip */}
                                         {isStarHovered && (
                                             <motion.div
@@ -278,9 +272,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                     text-center
                                                 "
                                                 initial={{ opacity: 0 }}
-                                                animate={{opacity:1}}
+                                                animate={{ opacity: 1 }}
                                             >
-                                                Featured <br/> Experience
+                                                Featured <br /> Experience
                                             </motion.div>
                                         )}
                                     </motion.a>
@@ -290,93 +284,98 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     </div>
                 </div>
 
-                {/* Image */}
+                {/* Images with stable crossfade */}
                 {images.length > 0 && (
                     <div
-                        className="relative aspect-video mb-4 rounded-lg overflow-hidden cursor-pointer"
+                        className="relative aspect-video mb-4 rounded-lg overflow-hidden cursor-pointer select-none"
+                        style={{ minHeight: 0 }}
                         onMouseEnter={() => setImageHovered(true)}
                         onMouseLeave={() => setImageHovered(false)}
                         onClick={() => {
                             setViewerOpen(true);
                             setImageHovered(false);
-                            setHovered(false)
+                            setHovered(false);
                         }}
                     >
-
                         {/* Initial loading spinner only once */}
                         {!hasLoadedOnce && !imgLoaded && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-5">
-                                <div
-                                    className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+                                <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                             </div>
                         )}
-
-                        {/* Previous image (background layer) */}
-                        <img
-                            src={images[prevImgIndex]}
-                            className="absolute inset-0 w-full h-full object-cover z-9"
-                            draggable={false}
-                        />
-
-                        {/* Current image (animated layer) */}
-                        <motion.img
-                            key={imgIndex}
-                            src={images[imgIndex]}
-                            alt={item.title}
-                            className="absolute inset-0 w-full h-full object-cover z-10"
-                            draggable={false}
-                            onLoad={() => {
-                                setImgLoaded(true);
-                                setHasLoadedOnce(true);
-                            }}
-                            initial={{opacity: 0, filter: 'blur(3px)'}}
-                            animate={{
-                                opacity: 1,
-                                filter: isTouch
-                                    ? 'grayscale(0%) blur(0px) brightness(1)'
-                                    : hovered
-                                        ? 'grayscale(0%) blur(0px) brightness(1)'
-                                        : dimmed
-                                            ? 'grayscale(100%) blur(0px) brightness(0.9)'
-                                            : 'grayscale(60%) blur(0px) brightness(1.2)',
-                            }}
-                            transition={{duration: 0.35, ease: 'easeIn'}}
-                        />
-
+                        {/* Crossfade images: previous and current */}
+                        {images.map((src, idx) => {
+                            // Only render prev and current for crossfade, others hidden
+                            const isPrev = idx === prevImgIndex;
+                            const isCurrent = idx === imgIndex;
+                            if (!isPrev && !isCurrent) return null;
+                            return (
+                                <motion.img
+                                    key={idx + '-' + (isPrev ? 'prev' : 'curr')}
+                                    src={src}
+                                    alt={item.title}
+                                    draggable={false}
+                                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                    style={{
+                                        zIndex: isCurrent ? 20 : 10,
+                                    }}
+                                    initial={{ opacity: isCurrent ? 0 : 1 }}
+                                    animate={{
+                                        opacity: isCurrent ? 1 : 0,
+                                        filter: isTouch
+                                            ? 'grayscale(0%) brightness(1)'
+                                            : hovered
+                                            ? 'grayscale(0%) brightness(1)'
+                                            : dimmed
+                                            ? 'grayscale(100%) brightness(0.9)'
+                                            : 'grayscale(60%) brightness(1.2)',
+                                    }}
+                                    transition={{
+                                        opacity: { duration: 0.4, ease: 'easeInOut' },
+                                        filter: { duration: 0.25, ease: 'easeInOut' },
+                                    }}
+                                    onLoad={() => {
+                                        if (isCurrent) {
+                                            setImgLoaded(true);
+                                            setHasLoadedOnce(true);
+                                        }
+                                    }}
+                                />
+                            );
+                        })}
+                        {/* Overlay for click-to-view */}
                         <motion.div
-                            className="absolute inset-0 z-20"
+                            className="absolute inset-0 z-30"
                             onMouseEnter={() => setImageHovered(true)}
                             onMouseLeave={() => setImageHovered(false)}
                         >
-                            {/* visual overlay */}
                             <motion.div
                                 className="absolute inset-0 flex items-center justify-center rounded-lg
                                 bg-black/50 backdrop-blur-md pointer-events-none
                                 will-change-opacity transform-gpu"
-                                animate={{opacity: imageHovered ? 1 : 0}}
-                                transition={{duration: 0.35, ease: 'easeOut'}}
+                                animate={{ opacity: imageHovered ? 1 : 0 }}
+                                transition={{ duration: 0.35, ease: 'easeOut' }}
                             >
                                 <motion.span
                                     className="text-white text-sm tracking-wide"
-                                    style={{fontFamily: 'var(--font-codecLight)'}}
-                                    initial={{opacity: 0}}
+                                    style={{ fontFamily: 'var(--font-codecLight)' }}
+                                    initial={{ opacity: 0 }}
                                     animate={{
                                         opacity: imageHovered ? 1 : 0,
                                         y: imageHovered ? 0 : 6,
                                     }}
-                                    transition={{duration: 0.35, ease: 'easeOut'}}
+                                    transition={{ duration: 0.35, ease: 'easeOut' }}
                                 >
                                     Click to open fullscreen
                                 </motion.span>
                             </motion.div>
                         </motion.div>
-
-
+                        {/* Gradient overlay for subtle effect */}
                         <motion.div
-                            className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-15"
-                            initial={{opacity: 1}}
-                            animate={{opacity: isTouch || hovered ? 0 : 1}}
-                            transition={{duration: 0.5, ease: 'easeOut'}}
+                            className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-25"
+                            initial={{ opacity: 1 }}
+                            animate={{ opacity: isTouch || hovered ? 0 : 1 }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
                         />
                     </div>
                 )}
@@ -386,7 +385,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     <p
                         key={i}
                         className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
-                        style={{fontFamily: 'var(--font-codecLight)'}}
+                        style={{ fontFamily: 'var(--font-codecLight)' }}
                     >
                         {para}
                     </p>
@@ -412,6 +411,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 )}
             </div>
 
+            {/* Fullscreen Image Viewer */}
             <AnimatePresence>
                 {viewerOpen && (
                     <FullscreenImageViewer

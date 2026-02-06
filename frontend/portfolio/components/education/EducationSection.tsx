@@ -36,7 +36,7 @@ class EducationSection extends React.Component<{ education: any }> {
                     </motion.span>
                     <motion.h2
                         className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
-                        style={{fontFamily: 'var(--font-codec)'}}
+                        style={{fontFamily: 'var(--font-codecBold)'}}
                         initial={{opacity: 0, y: 20}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true}}

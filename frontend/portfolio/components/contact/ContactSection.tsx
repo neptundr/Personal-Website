@@ -80,7 +80,7 @@ const ContactSection = ({settings}) => {
         <section
             className="
             relative
-            min-h-215 max-h-350 md:min-h-220 md:max-h-350 lg:min-h-210 lg:max-h-screen
+            min-h-screen max-h-350 md:min-h-265 md:max-h-350 lg:min-h-screen lg:max-h-screen
             bg-black
             border-t border-zinc-900
             overflow-hidden
@@ -144,7 +144,7 @@ const ContactSection = ({settings}) => {
 
                         <h2
                             className="mt-4 font-codec text-3xl sm:text-5xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
-                            style={{fontFamily: 'var(--font-codec)'}}
+                            style={{fontFamily: 'var(--font-codecBold)'}}
                         >
                             Now We Talk
                         </h2>
@@ -156,10 +156,11 @@ const ContactSection = ({settings}) => {
                             relative z-10
                             grid gap-6
                             grid-cols-1
-                            sm:grid-cols-2
+                            md:grid-cols-2
                             lg:grid-cols-4
                             justify-items-center
                         "
+                        style={{fontFamily: 'var(--font-codecBold)'}}
                     >
                         {contactLinks.map((link, index) => {
                             if (!settings?.[link.key]) return null;
@@ -325,7 +326,7 @@ const ContactSection = ({settings}) => {
 
                 {/* Glow */}
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-400/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                    className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-700/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-500/25 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
