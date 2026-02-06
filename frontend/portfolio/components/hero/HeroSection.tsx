@@ -102,9 +102,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     }, [])
 
     const words = [
-        {text: 'Welcome', left: '15vw', top: '70vh'},
-        {text: 'to', left: '47vw', top: '30vh', center: true},
-        {text: 'my', left: '75vw', top: '50vh', center: true},
+        { text: 'Welcome', left: '15vw', top: 'calc(var(--vh, 1vh) * 70)' },
+        { text: 'to', left: '47vw', top: 'calc(var(--vh, 1vh) * 30)', center: true },
+        { text: 'my', left: '75vw', top: 'calc(var(--vh, 1vh) * 50)', center: true },
     ]
     const wordVariants = {
         hidden: {opacity: 0},
@@ -127,7 +127,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             {/* FRACTAL TUNNEL (fade-in only) */}
             <motion.div
                 className="absolute inset-0 bg-black"
-                initial={{opacity: 0}}
+                initial={{opacity: 1}}
                 animate={{opacity: tunnelVisible ? 0 : 1}}
                 transition={{
                     duration: 1.2, ease: 'easeOut'
