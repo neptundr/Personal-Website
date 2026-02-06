@@ -146,7 +146,7 @@ const ContactSection = ({settings}) => {
                             className="mt-4 font-codec text-3xl sm:text-5xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
                             style={{fontFamily: 'var(--font-codec)'}}
                         >
-                            Let's Connect
+                            Drop a line
                         </h2>
                     </div>
 
@@ -220,7 +220,7 @@ const ContactSection = ({settings}) => {
                                     href={settings[link.key]}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    download={link.action === 'download'}
+                                    // download={link.action === 'download'}
                                     initial={{opacity: 0, y: 20}}
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
