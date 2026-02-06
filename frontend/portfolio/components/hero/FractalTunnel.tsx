@@ -8,6 +8,8 @@ const PARTICLE_CHARS =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}<>?/|\\';
 
 export default function FractalTunnel() {
+    const FIXED_CANVAS_HEIGHT = 9000;
+
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
@@ -18,11 +20,12 @@ export default function FractalTunnel() {
     const introTimeRef = useRef(0);
     const tunnelOscRef = useRef(0);
 
-    const pendingResizeRef = useRef(true);
+    const skipClearRef = useRef(true);
 
-    const fullHeightRef = useRef<number>(0); // stable full page height
     const stableViewportHeightRef = useRef<number>(0); // stable viewport height on mount
     const stableViewportWidthRef = useRef<number>(0); // stable viewport width on mount
+
+    const lastCanvasWidthRef = useRef<number>(0);
 
     const numParticles = 180;
     const particleCharsRef = useRef<string[]>([]);
@@ -57,7 +60,9 @@ export default function FractalTunnel() {
             const maxRadius = Math.hypot(viewportWidth, viewportHeight);
             const radiusScale = 1;
 
-            ctx.clearRect(0, 0, width, height);
+            if (!skipClearRef.current) {
+                ctx.clearRect(0, 0, width, height);
+            }
 
             const numLayers = 90;
 
@@ -158,19 +163,14 @@ export default function FractalTunnel() {
 
                 ctx.restore();
             }
+
+            skipClearRef.current = false;
         },
         []
     );
 
-    // initialize stable fullHeight and stable viewport dimensions once
+    // initialize stable viewport dimensions once
     useEffect(() => {
-        const vh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vh')) * 100;
-        fullHeightRef.current = Math.max(
-            document.body.scrollHeight,
-            document.documentElement.scrollHeight,
-            window.innerHeight,
-            vh
-        );
         stableViewportHeightRef.current = window.innerHeight;
         stableViewportWidthRef.current = window.innerWidth;
     }, []);
@@ -183,14 +183,21 @@ export default function FractalTunnel() {
         bufferCanvasRef.current = buffer;
 
         const requestResize = () => {
-            pendingResizeRef.current = true;
+            const newWidth = window.innerWidth;
+            if (newWidth !== lastCanvasWidthRef.current) {
+                canvas.width = newWidth;
+                lastCanvasWidthRef.current = newWidth;
+                skipClearRef.current = true;
+            }
         };
+
+        canvas.width = window.innerWidth;
+        canvas.height = FIXED_CANVAS_HEIGHT;
+        lastCanvasWidthRef.current = canvas.width;
+        skipClearRef.current = true;
 
         requestResize();
         window.addEventListener('resize', requestResize);
-
-        const observer = new ResizeObserver(requestResize);
-        observer.observe(document.body);
 
         let lastTimestamp: number | null = null;
 
@@ -201,21 +208,10 @@ export default function FractalTunnel() {
 
             delta = Math.min(delta, 0.05);
 
-            if (pendingResizeRef.current) {
-                buffer.width = canvas.width;
-                buffer.height = canvas.height;
-                bufferCtx.drawImage(canvas, 0, 0);
-
-                canvas.width = window.innerWidth;
-                // Set canvas height to full page height
-                canvas.height = Math.max(
-                    document.body.scrollHeight,
-                    document.documentElement.scrollHeight,
-                    window.innerHeight
-                );
-
-                ctx.drawImage(buffer, 0, 0);
-                pendingResizeRef.current = false;
+            if (skipClearRef.current) {
+                // skipClearRef.current is set true on resize or init
+            } else {
+                skipClearRef.current = false;
             }
 
             introTimeRef.current += delta;
@@ -238,18 +234,9 @@ export default function FractalTunnel() {
             rafRef.current = requestAnimationFrame(animate);
         };
 
-        // Set initial canvas size with stable full page height
-        canvas.width = window.innerWidth;
-        canvas.height = Math.max(
-            document.body.scrollHeight,
-            document.documentElement.scrollHeight,
-            window.innerHeight
-        );
-
         rafRef.current = requestAnimationFrame(animate);
 
         return () => {
-            observer.disconnect();
             window.removeEventListener('resize', requestResize);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
@@ -259,7 +246,7 @@ export default function FractalTunnel() {
         <>
             <canvas
                 ref={canvasRef}
-                className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                className="absolute top-0 left-0 w-full  pointer-events-none"
                 style={{zIndex: 0}}
             />
             <div className="absolute inset-0 h-full bg-black/35"/>
