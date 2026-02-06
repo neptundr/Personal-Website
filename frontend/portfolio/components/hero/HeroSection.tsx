@@ -122,7 +122,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     }
 
     return (
-        <section className="relative w-full h-screen bg-black overflow-hidden">
+        <section className="relative w-full h-vh bg-black overflow-hidden">
 
             {/* FRACTAL TUNNEL (fade-in only) */}
             <motion.div

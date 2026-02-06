@@ -180,27 +180,24 @@ export default function FractalTunnel() {
 
         const animate = (timestamp: number) => {
             if (!lastTimestamp) lastTimestamp = timestamp;
-            let delta = ((timestamp - lastTimestamp) / 1000) * 0.4;
+            let delta = ((timestamp - lastTimestamp) / 1000) * 0.4; // seconds
             lastTimestamp = timestamp;
 
+            // optional: cap delta to avoid big jumps if tab was inactive
             delta = Math.min(delta, 0.05);
 
             if (pendingResizeRef.current) {
-                // Use the global --vh variable for viewport height
-                const vh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vh')) * 100;
-                const fullHeight = Math.max(
+                const height = Math.max(
                     document.body.scrollHeight,
-                    document.documentElement.scrollHeight,
-                    vh
+                    document.documentElement.scrollHeight
                 );
 
-                canvas.height = fullHeight;
                 buffer.width = canvas.width;
                 buffer.height = canvas.height;
                 bufferCtx.drawImage(canvas, 0, 0);
 
                 canvas.width = window.innerWidth;
-                // canvas.height = vh;
+                canvas.height = document.documentElement.scrollHeight;
 
                 ctx.drawImage(buffer, 0, 0);
                 pendingResizeRef.current = false;
@@ -226,7 +223,9 @@ export default function FractalTunnel() {
             rafRef.current = requestAnimationFrame(animate);
         };
 
+        // start animation
         rafRef.current = requestAnimationFrame(animate);
+        // animate();
 
         return () => {
             observer.disconnect();
