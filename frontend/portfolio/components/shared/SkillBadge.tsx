@@ -52,7 +52,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm', i
 
     const icon = customIcon?.icon_url
         ? <img src={customIcon.icon_url} alt={skill}
-               className={`${size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}/>
+               className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}/>
         : <span className="text-[0.9em]">{getDefaultIcon(skill)}</span>;
 
     const sizeClasses: Record<string, string> = {
