@@ -134,7 +134,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 intervalRef.current = setInterval(() => {
                     if (unmounted) return;
                     nextImage();
-                }, 1400);
+                }, 2000);
             }
         } else {
             // On mouse leave, if not at 0, rotate back to 0 after 2.5s
