@@ -143,7 +143,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                     key={skillFilter}
                                     onClick={() => setSkillFilter(null)}
                                     className="
-                                    px-4 py-2 rounded-full text-sm
+                                    px-3 py-2 rounded-full text-sm
                                     border border-red-500 bg-red-500/20 text-white
                                     flex items-center gap-2 backdrop-blur-2xl
                                 "
@@ -156,7 +156,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                         <img
                                             src={getSkillIcon(skillFilter)}
                                             alt={skillFilter}
-                                            className="w-5.5 h-5.5"
+                                            className="w-4.5 h-4.5 object-contain aspect-square"
                                         />
                                     )}
                                     {skillFilter}
