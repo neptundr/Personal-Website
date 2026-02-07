@@ -35,7 +35,7 @@ def startup():
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 UPLOAD_DIR = "uploads"
-IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
 VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".avi"}
 DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx"}
 
