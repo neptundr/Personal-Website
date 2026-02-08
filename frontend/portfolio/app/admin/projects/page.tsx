@@ -53,7 +53,7 @@ type FieldConfig = {
 };
 
 const projectFields: FieldConfig[] = [
-    {key: 'title', label: 'Title', type: 'text', placeholder: 'Title'},
+    {key: 'title', label: 'Title ("-v" for a vertical image frame; "-s" for special display)', type: 'text', placeholder: 'Title'},
     {
         key: 'type',
         label: 'Type',
@@ -62,12 +62,12 @@ const projectFields: FieldConfig[] = [
         options: [
             {value: 'work', label: 'Work Experience'},
             {value: 'project', label: 'Project'},
-            {value: 'achievement', label: 'Achievement'},
+            {value: 'achievement', label: 'Side Quest'},
         ],
     },
     {key: 'company', label: 'Company/Organization', type: 'text'},
     {key: 'location', label: 'Location', type: 'text'},
-    {key: 'start_date', label: 'Start Date', type: 'date'},
+    {key: 'start_date', label: 'Start Date (Enter 01.01.0001 to hide date from the card)', type: 'date'},
     {key: 'end_date', label: 'End Date', type: 'date'},
     {key: 'is_current', label: 'Currently Ongoing', type: 'boolean'},
     {key: 'description', label: 'Description', type: 'textarea'},

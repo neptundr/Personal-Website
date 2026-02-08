@@ -23,15 +23,15 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
             initial={{opacity: 0, y: 40}}
             whileInView={{opacity: 1, y: 0}}
             viewport={{once: true, margin: '-50px'}}
-            transition={{duration: 0.25, delay: index * 0.15, ease: 'easeOut'}}
+            transition={{duration: 0.25, ease: 'easeOut'}}
             whileHover={{y: -6}}
             className="group relative"
         >
             <div
-                className="relative flex overflow-hidden border shadow-2xl
+                className="relative flex overflow-hidden outline-1 shadow-2xl
                 backdrop-blur-2xl rounded-3xl h-full
-                transition-[border,box-shadow,opacity] duration-300 border-gray-400
-                hover:border-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:border-2"
+                transition-all duration-300 outline-gray-400
+                hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:outline-4"
             >
                 {/* LEFT COLUMN */}
                 <div className="p-3 sm:p-3 md:p-3 flex flex-col items-start">

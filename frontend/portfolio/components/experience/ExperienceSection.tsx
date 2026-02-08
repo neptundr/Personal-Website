@@ -88,9 +88,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
 
     if (!items.length) return null;
 
-    // @ts-ignore
     return (
-        <section className="relative pt-32 pb-0 px-6 md:px-12 lg:px-24 overflow-hidden">
+        <section className="relative pt-32 pb-1 px-6 md:px-12 lg:px-24 overflow-hidden">
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}
@@ -159,6 +158,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                     animate={{opacity: 1, x: 0}}
                                     exit={{opacity: 0, x: 16}}
                                     transition={{duration: 0.25}}
+                                    style={{fontFamily: 'var(--font-codecBold)'}}
                                 >
                                     {getSkillIcon(skillFilter) && (
                                         <img

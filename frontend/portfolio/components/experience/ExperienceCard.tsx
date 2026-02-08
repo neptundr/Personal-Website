@@ -189,7 +189,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     return (
         <motion.div
             className="block w-full relative group"
-            transition={{duration: 0.25, ease: 'easeOut'}}
+            transition={{duration: 0.25, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
             onMouseEnter={() => {
                 setHovered(true);
                 onHover(item.id);
@@ -205,13 +205,14 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 ref={cardRef}
                 className={`
                     relative overflow-hidden rounded-3xl
-                    border shadow-2xl
+                    outline-1 outline-gray-400 shadow-2xl
                     backdrop-blur-2xl
                     p-6
-                    transition-[border,box-shadow,opacity] duration-300
-                    hover:border-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:border-2
-                    ${dimmed ? 'opacity-93 border-gray-700' : 'border-gray-400'}
-                `}
+                    transition-all duration-300
+                    ${item.title.includes(" -s") ? 'outline-dashed outline-4' : ''}
+                    hover:outline-4 hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10
+                    ${dimmed ? 'opacity-93 outline-gray-700' : ''}
+              `}
             >
                 {/* Subtle highlight */}
                 <div
@@ -225,7 +226,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
                                 style={{fontFamily: 'var(--font-codecBold)'}}
                             >
-                                {item.title}
+                                {item.title.replace(" -v", "").replace(" -s", "")}
                             </h3>
                             <div
                                 className="flex flex-wrap items-center gap-3 text-sm"
@@ -239,7 +240,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 {item.location && (
                                     <span className="text-gray-500">{item.location}</span>
                                 )}
-                                {(item.start_date || item.end_date || item.is_current) && (
+                                {((item.start_date || item.end_date || item.is_current) && (formatDate(item.start_date) !== 'Jan 0001')) && (
                                     <span className="text-gray-500">
                                         {formatDate(item.start_date)}
                                         {item.start_date &&
@@ -324,7 +325,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {/* Images with stable crossfade */}
                 {images.length > 0 && (
                     <div
-                        className="relative aspect-video mb-4 rounded-lg overflow-hidden cursor-pointer select-none"
+                        className={`relative mb-4 rounded-lg overflow-hidden cursor-pointer select-none
+                            ${item.title.includes(" -v") ? "aspect-[9/12]" : "aspect-video"}
+                        `}
                         style={{minHeight: 0}}
                         onMouseEnter={() => setImageHovered(true)}
                         onMouseLeave={() => setImageHovered(false)}
