@@ -467,6 +467,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 index={index}
                                 size="sm"
                                 isActive={currentSkillFilter === skill}
+                                dimmed={dimmed}
+                                hovered={hovered}
                                 onClick={() =>
                                     onSkillClick(
                                         currentSkillFilter === skill ? null : skill
