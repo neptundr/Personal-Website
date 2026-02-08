@@ -172,15 +172,8 @@ export default function FractalTunnel() {
 
     // initialize and update stable viewport dimensions on mount and resize
     useEffect(() => {
-        const updateViewportDims = () => {
-            stableViewportHeightRef.current = window.innerHeight;
-            stableViewportWidthRef.current = window.innerWidth;
-        };
-        updateViewportDims(); // set on mount
-        // window.addEventListener('resize', updateViewportDims);
-        return () => {
-            window.removeEventListener('resize', updateViewportDims);
-        };
+        stableViewportHeightRef.current = window.innerHeight;
+        stableViewportWidthRef.current = window.innerWidth;
     }, []);
 
     useEffect(() => {

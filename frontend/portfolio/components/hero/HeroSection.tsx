@@ -387,7 +387,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     {showScrollHint && (
                         <motion.div
                             className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2"
-                            initial={{opacity: 0, y: 10}}
+                            initial={{opacity: 0, y: 15}}
                             animate={{
                                 opacity: 1,
                                 y: [0, -6, 0],
