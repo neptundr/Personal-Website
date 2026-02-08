@@ -7,28 +7,18 @@ const GameOfLife: React.FC = () => {
     const animationRef = useRef<number | null>(null);
     const [key, setKey] = useState<number>(0);
 
+    const cellSize = 10;
+
     const canvasWidth = 2500;
     const canvasHeight = 1000;
 
-    // Determine if mobile based on window width once on mount
-    const [isMobile] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return window.innerWidth <= 768;
-        }
-        return false;
-    });
-
-    // Set cell size based on device type
-    const cellSize = isMobile ? 12 : 10;
-
-    const cols = Math.floor(canvasWidth / cellSize);
-    const rows = Math.floor(canvasHeight / cellSize);
+    let cols = Math.floor(canvasWidth / cellSize);
+    let rows = Math.floor(canvasHeight / cellSize);
     let grid: Grid;
     let nextGrid: Grid;
     let displayGrid: Grid;
 
-    // Reduce updates per second on mobile for performance
-    const updatesPerSecond = isMobile ? 0.5 : 1;
+    const updatesPerSecond = 1;
     const updateInterval = 1000 / updatesPerSecond;
 
     useEffect(() => {
@@ -63,11 +53,16 @@ const GameOfLife: React.FC = () => {
         const createEmptyGrid = (): Grid =>
             Array.from({length: cols}, () => Array(rows).fill(0));
 
+        const createEmptyGridFloat = (): Grid =>
+            Array.from({length: cols}, () => Array(rows).fill(0));
+
         const randomizeGrid = () => {
             for (let i = 0; i < cols; i++) {
                 for (let j = 0; j < rows; j++) {
                     // @ts-ignore
                     grid[i][j] = Math.random() > 0.85 ? 1 : 0;
+                    // @ts-ignore
+                    displayGrid[i][j] = grid[i][j];
                 }
             }
         };
@@ -78,7 +73,7 @@ const GameOfLife: React.FC = () => {
 
         grid = createEmptyGrid();
         nextGrid = createEmptyGrid();
-        displayGrid = createEmptyGrid();
+        displayGrid = createEmptyGridFloat();
 
         randomizeGrid();
 
@@ -113,59 +108,59 @@ const GameOfLife: React.FC = () => {
             [grid, nextGrid] = [nextGrid, grid];
         };
 
+        const updateDisplayGrid = () => {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    // @ts-ignore
+                    const target = grid[i][j];
+                    // @ts-ignore
+                    displayGrid[i][j] += target === 1 ? (target - displayGrid[i][j]) * 0.15 : (target - displayGrid[i][j]) * 0.1;
+                }
+            }
+        };
+
         const draw = () => {
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (!isMobile) {
-                for (let i = 0; i <= cols; i++) {
-                    const x = i * cellSize;
-                    ctx.strokeStyle = 'rgba(64,64,64,0.15)';
-                    ctx.lineWidth = 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, canvas.height);
-                    ctx.stroke();
-                }
+            for (let i = 0; i <= cols; i++) {
+                const x = i * cellSize;
+                ctx.strokeStyle = 'rgba(64,64,64,0.15)';
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
 
-                for (let j = 0; j <= rows; j++) {
-                    const y = j * cellSize;
-                    ctx.strokeStyle = 'rgba(64,64,64,0.15)';
-                    ctx.lineWidth = 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(canvas.width, y);
-                    ctx.stroke();
-                }
+            for (let j = 0; j <= rows; j++) {
+                const y = j * cellSize;
+                ctx.strokeStyle = 'rgba(64,64,64,0.15)';
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
             }
 
             for (let i = 0; i < cols; i++) {
                 for (let j = 0; j < rows; j++) {
                     // @ts-ignore
-                    const alpha: number = grid[i][j];
-                    if (alpha === 1) {
+                    const alpha: number = displayGrid[i][j];
+                    if (alpha > 0.01) {
                         const v = 255;
-                        ctx.fillStyle = `rgba(${v},${v},${v},1)`;
+                        ctx.fillStyle = `rgba(${v},${v},${v},${alpha ** 2})`;
 
-                        if (isMobile) {
-                            ctx.fillRect(
-                                i * cellSize,
-                                j * cellSize,
-                                cellSize,
-                                cellSize
-                            );
-                        } else {
-                            // draw with rounded corners
-                            const radius = 6; // adjust corner radius
-                            fillRoundedRect(
-                                ctx,
-                                i * cellSize + 1,
-                                j * cellSize + 1,
-                                cellSize - 2,
-                                cellSize - 2,
-                                radius
-                            );
-                        }
+                        // draw with rounded corners
+                        const radius = 6; // adjust corner radius
+                        fillRoundedRect(
+                            ctx,
+                            i * cellSize + 1,
+                            j * cellSize + 1,
+                            cellSize - 2,
+                            cellSize - 2,
+                            radius
+                        );
                     }
                 }
             }
@@ -189,6 +184,7 @@ const GameOfLife: React.FC = () => {
                 lastUpdateTime = time;
             }
 
+            updateDisplayGrid();
             draw();
 
             animationRef.current = requestAnimationFrame(animate);
@@ -201,7 +197,7 @@ const GameOfLife: React.FC = () => {
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [key, cellSize, cols, rows, updateInterval, isMobile]);
+    }, [key]);
 
     useEffect(() => {
         const interval = setInterval(() => {
