@@ -358,12 +358,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         }}
                     >
                         {/* Initial loading spinner only once */}
-                        {!hasLoadedOnce && !imgLoaded && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div
-                                    className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>
-                            </div>
-                        )}
+                        {/*{!hasLoadedOnce && !imgLoaded && (*/}
+                        {/*    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">*/}
+                        {/*        <div*/}
+                        {/*            className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>*/}
+                        {/*    </div>*/}
+                        {/*)}*/}
                         {/* Crossfade images: previous and current */}
                         {images.map((src, idx) => {
                             // Only render prev and current for crossfade, others hidden
@@ -380,16 +380,16 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     style={{
                                         zIndex: isCurrent ? 20 : 10,
                                     }}
-                                    initial={{opacity: isCurrent ? 0 : 1}}
+                                    initial={{ opacity: isCurrent? 0: 1 }}
                                     animate={{
-                                        opacity: isCurrent ? 1 : 0,
+                                        opacity: isCurrent && imgLoaded ? 1 : 0,
                                         filter: isTouch
                                             ? 'grayscale(0%) brightness(1)'
                                             : hovered
                                                 ? 'grayscale(0%) brightness(1)'
                                                 : dimmed
-                                                    ? 'grayscale(100%) brightness(0.9)'
-                                                    : 'grayscale(60%) brightness(1.2)',
+                                                    ? 'grayscale(90%) brightness(0.9)'
+                                                    : 'grayscale(50%) brightness(1.15)',
                                     }}
                                     transition={{
                                         opacity: {duration: 0.4, ease: 'easeInOut'},
@@ -456,10 +456,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {/* Skills */}
                 {item.skills && (
                     <div className="flex flex-wrap mt-4.5 gap-2">
-                        {item.skills.map((skill) => (
+                        {item.skills.map((skill, index) => (
                             <SkillBadge
                                 key={skill}
                                 skill={skill}
+                                index={index}
                                 size="sm"
                                 isActive={currentSkillFilter === skill}
                                 onClick={() =>

@@ -230,9 +230,10 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                 <ExperienceCard
                                     item={item}
                                     index={0}
-                                    onSkillClick={(skill) =>
-                                        setSkillFilter(prev => (prev === skill ? null : skill))
-                                    }
+                                    onSkillClick={(skill) => {
+                                        setSkillFilter(prev => (prev === skill ? null : skill));
+                                        setFilter('all');
+                                    }}
                                     dimmed={hoveredId !== null && hoveredId !== item.id}
                                     onHover={setHoveredId}
                                     currentSkillFilter={skillFilter}

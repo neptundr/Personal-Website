@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {motion} from 'framer-motion';
 import {useQuery} from '@tanstack/react-query';
 import {api} from '@/api/client';
@@ -50,9 +50,24 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm', i
 
     const customIcon = customIcons.find(s => s.skill_name?.toLowerCase() === skill.toLowerCase());
 
+    React.useEffect(() => {
+        setImgLoaded(false);
+    }, [customIcon?.icon_url]);
+
+    const [imgLoaded, setImgLoaded] = useState(false);
+
     const icon = customIcon?.icon_url
-        ? <img src={customIcon.icon_url} alt={skill}
-               className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}/>
+        ? (
+            <motion.img
+                src={customIcon.icon_url}
+                alt={skill}
+                onLoad={() => setImgLoaded(true)}
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={imgLoaded ? { scale: 1, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125*index}}
+                className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
+            />
+        )
         : <span className="text-[0.9em]">{getDefaultIcon(skill)}</span>;
 
     const sizeClasses: Record<string, string> = {
