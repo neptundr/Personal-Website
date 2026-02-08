@@ -23,8 +23,12 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
             initial={{opacity: 0, y: 40}}
             whileInView={{opacity: 1, y: 0}}
             viewport={{once: true, margin: '-50px'}}
-            transition={{duration: 0.25, ease: 'easeOut'}}
-            whileHover={{y: -6}}
+            transition={{duration: 0.25, delay: 0.15*index, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
+            whileHover={{
+                y: -6,
+                boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
+                borderRadius: '1.5rem'
+            }}
             className="group relative"
         >
             <div

@@ -89,7 +89,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
     if (!items.length) return null;
 
     return (
-        <section className="relative pt-32 pb-1 px-6 md:px-12 lg:px-24 overflow-hidden">
+        <section className="relative pt-32 pb-30 px-6 md:px-12 lg:px-24 overflow-hidden">
             {/* Header */}
             <motion.div
                 initial={{opacity: 0, y: 20}}

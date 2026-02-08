@@ -65,6 +65,17 @@ const colorClasses: Record<string, string> = {
     purple: 'hover:text-purple-400 hover:border-purple-300',
 };
 
+// Glow colors for hover box-shadow
+const hoverGlowColors: Record<string, string> = {
+    red: 'rgba(248, 113, 113, 0.4)',
+    blue: 'rgba(96, 165, 250, 0.4)',
+    sky: 'rgba(14, 165, 233, 0.4)',
+    white: 'rgba(255,255,255,0.4)',
+    yellow: 'rgba(252, 211, 77,0.4)',
+    lime: 'rgba(132, 204, 22,0.4)',
+    purple: 'rgba(168,85,247,0.4)',
+};
+
 // @ts-ignore
 const ContactSection = ({settings}) => {
     const [copied, setCopied] = useState(false);
@@ -206,8 +217,13 @@ const ContactSection = ({settings}) => {
                                         initial={{opacity: 0, y: 20}}
                                         whileInView={{opacity: 1, y: 0}}
                                         viewport={{once: true}}
-                                        transition={{duration: 0.5, delay: 0.45 + index * 0.15}}
+                                        transition={{duration: 0.35, delay: index * 0.05, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
+                                        // transition={{duration: 0.35, /*delay: 0.45 + index * 0.15*/}}
                                         whileTap={{scale: 0.98}}
+                                        whileHover={{
+                                            scale: 1.03,
+                                            boxShadow: `0 0 20px 5px ${hoverGlowColors[link.color] || 'rgba(255,255,255,0.3)'}`
+                                        }}
                                         className={baseClasses}
                                     >
                                         {content}
@@ -225,8 +241,13 @@ const ContactSection = ({settings}) => {
                                     initial={{opacity: 0, y: 20}}
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
-                                    transition={{duration: 0.5, delay: 0.45 + index * 0.15}}
+                                    transition={{duration: 0.35, delay: index * 0.05, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
+                                    // transition={{duration: 0.35, /*delay: 0.45 + index * 0.15*/}}
                                     whileTap={{scale: 0.98}}
+                                    whileHover={{
+                                        scale: 1.03,
+                                        boxShadow: `0 0 20px 5px ${hoverGlowColors[link.color] || 'rgba(255,255,255,0.3)'}`
+                                    }}
                                     className={baseClasses}
                                 >
                                     {content}
@@ -240,7 +261,7 @@ const ContactSection = ({settings}) => {
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
-                    transition={{duration: 0.6, delay: 1.3}}
+                    transition={{duration: 0.6, delay: 0.8}}
                     className="
                         relative top-1/2
                         mx-auto my-auto max-w-4xl
@@ -255,7 +276,8 @@ const ContactSection = ({settings}) => {
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 {/* FIRST LINE */}
-                                <div className="grid grid-cols-2 items-center text-3xl sm:text-5xl md:text-5xl lg:text-6xl">
+                                <div
+                                    className="grid grid-cols-2 items-center text-3xl sm:text-5xl md:text-5xl lg:text-6xl">
                                     {/* Left side — flush to center */}
                                     <div className="flex justify-end pr-1 sm:pr-2">
                                         <span className={"whitespace-nowrap"}>Have a</span>
@@ -275,7 +297,8 @@ const ContactSection = ({settings}) => {
                                 </div>
 
                                 {/* SECOND LINE */}
-                                <div className="grid grid-cols-2 items-center text-3xl sm:text-5xl md:text-5xl lg:text-6xl mt-2 mb-6">
+                                <div
+                                    className="grid grid-cols-2 items-center text-3xl sm:text-5xl md:text-5xl lg:text-6xl mt-2 mb-6">
                                     {/* Left side — rotating text hugs center */}
                                     <div className="flex justify-end pr-1 sm:pr-2">
                                         <RotatingText

@@ -16,7 +16,7 @@ class EducationSection extends React.Component<{ education: any }> {
         });
 
         return (
-            <section className="relative pt-32 pb-40 px-6 md:px-12 lg:px-24 /*bg-black*/">
+            <section className="relative pt-1 pb-40 px-6 md:px-12 lg:px-24 /*bg-black*/">
                 {/* Section header */}
                 <motion.div
                     initial={{opacity: 0, y: 20}}

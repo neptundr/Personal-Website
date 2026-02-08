@@ -218,7 +218,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 setHovered(false);
                 onHover(null);
             }}
-            whileHover={{translateY: -6}}
+            whileHover={{
+                translateY: -6,
+                boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
+                borderRadius: '1.5rem'
+            }}
         >
             {/* Card content */}
             <div

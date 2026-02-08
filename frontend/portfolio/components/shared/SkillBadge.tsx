@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {motion} from 'framer-motion';
 import {useQuery} from '@tanstack/react-query';
 import {api} from '@/api/client';
@@ -62,9 +62,9 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm', i
                 src={customIcon.icon_url}
                 alt={skill}
                 onLoad={() => setImgLoaded(true)}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={imgLoaded ? { scale: 1, opacity: 1 } : {}}
-                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125*index}}
+                initial={{scale: 0.6, opacity: 0}}
+                animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
+                transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * index}}
                 className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
             />
         )
@@ -81,16 +81,18 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({skill, index = 0, size = 'sm', i
             whileHover={{scale: 1.08}}
             onClick={onClick}
             className={`
-        inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
-        ${isActive
+                inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
+                ${isActive
                 ? 'border-red-500 bg-red-500/20 text-white'
                 : 'border-gray-400/45 bg-white/5 text-gray-200'}
-                font-light transition-all duration-300 cursor-pointer md:backdrop-blur-sm
-                hover:border-red-500 hover:bg-red-500/55 hover:text-white
-        `}
+                        font-light transition-all duration-300 cursor-pointer md:backdrop-blur-sm
+                        hover:border-red-500 hover:bg-red-500/55 hover:text-white
+            `}
         >
             {icon}
-            <span className="tracking-wide" style={{fontFamily: 'var(--font-codec)'}}>{skill}</span>
+            <motion.span className="tracking-wide" style={{fontFamily: 'var(--font-codec)'}}>
+                {skill}
+            </motion.span>
         </motion.span>
     );
 };
