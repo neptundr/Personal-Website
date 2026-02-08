@@ -172,7 +172,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                         whileHover={{scale: 1.25}}
                                         transition={{type: 'spring', stiffness: 300}}
                                     >
-                                        <X className="w-3 h-3"/>
+                                        <X className="w-3 h-3 mr-1"/>
                                     </motion.div>
                                 </motion.button>
                             ) : (

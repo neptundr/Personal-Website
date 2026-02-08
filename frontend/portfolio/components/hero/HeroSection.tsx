@@ -1,6 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react'
 import {motion, AnimatePresence} from 'framer-motion'
-import FractalTunnel from '@/components/hero/FractalTunnel'
 import RotatingText from "@/components/hero/RotatingText";
 import {ExternalLink} from "lucide-react";
 
@@ -387,7 +386,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 <AnimatePresence>
                     {showScrollHint && (
                         <motion.div
-                            className="pointer-events-none absolute bottom-10 left-1/2 -translate-x-1/2"
+                            className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2"
                             initial={{opacity: 0, y: 10}}
                             animate={{
                                 opacity: 1,

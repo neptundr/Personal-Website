@@ -9,10 +9,9 @@ const GameOfLife: React.FC = () => {
 
     const cellSize = 10;
 
-    const canvasWidth = 2500;
     const canvasHeight = 1000;
 
-    let cols = Math.floor(canvasWidth / cellSize);
+    let cols = 0;
     let rows = Math.floor(canvasHeight / cellSize);
     let grid: Grid;
     let nextGrid: Grid;
@@ -68,7 +67,9 @@ const GameOfLife: React.FC = () => {
         };
 
         // Initialize canvas size and grids once
-        canvas.width = canvasWidth;
+        canvas.width = window.innerWidth;
+        cols = Math.floor(canvas.width / cellSize);
+
         canvas.height = canvasHeight;
 
         grid = createEmptyGrid();
@@ -211,7 +212,6 @@ const GameOfLife: React.FC = () => {
         <>
             <canvas
                 ref={canvasRef}
-                width={canvasWidth}
                 height={canvasHeight}
                 className="absolute inset-0 pointer-events-none opacity-40"
             />

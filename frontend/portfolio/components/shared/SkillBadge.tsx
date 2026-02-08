@@ -62,14 +62,14 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', 
     useEffect(() => {
         let timeout: NodeJS.Timeout;
         const triggerPop = () => {
-            const randomTime = hovered ? (Math.random() * 10000 + 3000): (Math.random() * 15000 + 7000);
+            const randomTime = hovered ? (Math.random() * 7000 + 3000): (Math.random() * 15000 + 7000);
             timeout = setTimeout(() => {
-                setPopScale(1.25);
+                setPopScale(1.13);
                 setTimeout(() => setPopScale(1), 200); // quick pop back to normal
                 triggerPop();
             }, randomTime);
         };
-        triggerPop();
+        if (Math.random() * 10 > 8) triggerPop();
         return () => clearTimeout(timeout);
     }, []);
 
@@ -97,14 +97,14 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', 
         <motion.span
             whileHover={{ scale: 1.08 }}
             animate={{ scale: dimmed ? 1 : popScale }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.1 }}
             onClick={onClick}
             className={`
                 inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
                 ${isActive
                     ? 'border-red-500 bg-red-500/20 text-white'
-                    : `border-gray-400/45 bg-white/5 text-gray-200`}
-                font-light transition-all duration-300 cursor-pointer md:backdrop-blur-sm
+                    : `border-gray-400/45 bg-white/8 text-gray-200`}
+                font-light transition-all duration-300 cursor-pointer 
                 hover:border-red-500 hover:bg-red-500/55 hover:text-white
             `}
         >

@@ -142,7 +142,6 @@ const ContactSection = ({settings}) => {
                         absolute inset-0 rounded-3xl
                         bg-gradient-to-b from-white/5 to-transparent
                         pointer-events-none
-                        backdrop-blur-2xl
                         border border-gray-400
                         -z-10
                     "/>
@@ -351,13 +350,13 @@ const ContactSection = ({settings}) => {
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-700/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[300px] bg-red-500/25 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[300px] bg-red-500/25 blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                {/*<div*/}
+                {/*    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[175px] bg-red-400/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>*/}
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[175px] bg-red-400/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
-                <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[2000px]  bg-gradient-to-b
+                    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[2000px]  bg-gradient-to-b
                         from-transparent
-                        to-red-500/20 rounded-full backdrop-blur-3xlxl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                        to-red-600/20 pointer-events-none -translate-x-1/2 translate-y-1/2"/>
 
                 <div
                     className="

@@ -221,7 +221,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             whileHover={{
                 translateY: -6,
                 boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
-                borderRadius: '1.5rem'
+                borderRadius: '2rem'
             }}
         >
             {/* Card content */}
@@ -293,7 +293,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
+                                    className="p-2 rounded-lg bg-zinc-600/20  text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
                                     <ExternalLink className="w-4 h-4"/>
                                 </motion.a>
@@ -305,7 +305,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
+                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
                                 >
                                     <Github className="w-4 h-4"/>
                                 </motion.a>
@@ -317,7 +317,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         rel="noopener noreferrer"
                                         whileHover={{scale: 1.1}}
                                         whileTap={{scale: 0.95}}
-                                        className="p-2 rounded-lg bg-zinc-600/10 md:backdrop-blur-sm text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
+                                        className="p-2 rounded-lg bg-zinc-600/20 text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
@@ -416,9 +416,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             onMouseLeave={() => setImageHovered(false)}
                         >
                             <motion.div
-                                className="absolute inset-0 flex items-center justify-center rounded-lg
-                                bg-black/50 backdrop-blur-md pointer-events-none
-                                will-change-opacity transform-gpu"
+                                className={`absolute inset-0 flex items-center justify-center rounded-lg
+                                bg-black/27 pointer-events-none
+                                will-change-opacity transform-gpu ${imageHovered ? "backdrop-blur-md" : ""}`}
                                 animate={{opacity: imageHovered ? 1 : 0}}
                                 transition={{duration: 0.35, ease: 'easeOut'}}
                             >

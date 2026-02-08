@@ -8,10 +8,10 @@ const PARTICLE_CHARS =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}<>?/|\\';
 
 export default function FractalTunnel() {
-    const FIXED_CANVAS_HEIGHT = 9000;
+    const FIXED_CANVAS_HEIGHT = 4500;
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    // const bufferCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
 
     const timeRef = useRef(100);
@@ -170,18 +170,25 @@ export default function FractalTunnel() {
         []
     );
 
-    // initialize stable viewport dimensions once
+    // initialize and update stable viewport dimensions on mount and resize
     useEffect(() => {
-        stableViewportHeightRef.current = window.innerHeight;
-        stableViewportWidthRef.current = window.innerWidth;
+        const updateViewportDims = () => {
+            stableViewportHeightRef.current = window.innerHeight;
+            stableViewportWidthRef.current = window.innerWidth;
+        };
+        updateViewportDims(); // set on mount
+        window.addEventListener('resize', updateViewportDims);
+        return () => {
+            window.removeEventListener('resize', updateViewportDims);
+        };
     }, []);
 
     useEffect(() => {
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext('2d')!;
-        const buffer = document.createElement('canvas');
-        const bufferCtx = buffer.getContext('2d')!;
-        bufferCanvasRef.current = buffer;
+        // const buffer = document.createElement('canvas');
+        // const bufferCtx = buffer.getContext('2d')!;
+        // bufferCanvasRef.current = buffer;
 
         const requestResize = () => {
             const newWidth = window.innerWidth;
