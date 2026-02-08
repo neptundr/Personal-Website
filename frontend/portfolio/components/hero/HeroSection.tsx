@@ -163,7 +163,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                 }}>
                         <button
                             className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/40
-                                text-white/90 hover:text-white hover:bg-zinc-900/80
+                                text-white/90 hover:text-white hover:bg-zinc-700/80
                                 transition-colors text-sm font-light tracking-wide backdrop-blur-sm"
                             onClick={handleSkip}
                             style={{fontFamily:"var(--font-codecBold)"}}

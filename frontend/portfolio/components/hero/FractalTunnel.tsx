@@ -20,7 +20,7 @@ export default function FractalTunnel() {
     const introTimeRef = useRef(0);
     const tunnelOscRef = useRef(0);
 
-    const skipClearRef = useRef(true);
+    // const skipClearRef = useRef(false);
 
     const stableViewportHeightRef = useRef<number>(0); // stable viewport height on mount
     const stableViewportWidthRef = useRef<number>(0); // stable viewport width on mount
@@ -60,9 +60,9 @@ export default function FractalTunnel() {
             const maxRadius = Math.hypot(viewportWidth, viewportHeight);
             const radiusScale = 1;
 
-            if (!skipClearRef.current) {
-                ctx.clearRect(0, 0, width, height);
-            }
+            // if (!skipClearRef.current) {
+            ctx.clearRect(0, 0, width, height);
+            // }
 
             const numLayers = 90;
 
@@ -85,7 +85,8 @@ export default function FractalTunnel() {
                 ctx.rotate(time * 0.03 + layer * 0.05);
 
                 const innerR = radius * 0.4;
-                const thickness = (-0.045 + scale * 35) / radiusScale;
+                const isSmallScreen = stableViewportWidthRef.current <= 768;
+                const thickness = (-0.045 + scale * 35) / radiusScale * (isSmallScreen ? 0.7 : 1);
                 const curves = 12;
 
                 for (let i = 1; i < curves; i++) {
@@ -164,7 +165,7 @@ export default function FractalTunnel() {
                 ctx.restore();
             }
 
-            skipClearRef.current = false;
+            // skipClearRef.current = false;
         },
         []
     );
@@ -187,14 +188,14 @@ export default function FractalTunnel() {
             if (newWidth !== lastCanvasWidthRef.current) {
                 canvas.width = newWidth;
                 lastCanvasWidthRef.current = newWidth;
-                skipClearRef.current = true;
+                // skipClearRef.current = true;
             }
         };
 
         canvas.width = window.innerWidth;
         canvas.height = FIXED_CANVAS_HEIGHT;
         lastCanvasWidthRef.current = canvas.width;
-        skipClearRef.current = true;
+        // skipClearRef.current = true;
 
         requestResize();
         window.addEventListener('resize', requestResize);
@@ -208,11 +209,11 @@ export default function FractalTunnel() {
 
             delta = Math.min(delta, 0.05);
 
-            if (skipClearRef.current) {
-                // skipClearRef.current is set true on resize or init
-            } else {
-                skipClearRef.current = false;
-            }
+            // if (skipClearRef.current) {
+            //     // skipClearRef.current is set true on resize or init
+            // } else {
+            //     skipClearRef.current = false;
+            // }
 
             introTimeRef.current += delta;
             if (introPhaseRef.current === 0 && introTimeRef.current >= 1.5) {
