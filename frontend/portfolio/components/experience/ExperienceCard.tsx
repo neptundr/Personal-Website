@@ -93,9 +93,27 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const imgIndexRef = useRef(imgIndex);
     imgIndexRef.current = imgIndex;
+    const decodedRef = useRef<Set<string>>(new Set());
     // Only create interval once, and control with imageActive state
     const imageActive = isTouch || hovered;
     // Stable image rotation logic
+    const ensureDecoded = async (src: string) => {
+        if (decodedRef.current.has(src)) return;
+        await new Promise<void>((resolve) => {
+            const img = new Image();
+            img.src = src;
+            if ('decode' in img) {
+                // @ts-ignore
+                img.decode().then(resolve).catch(resolve);
+            } else {
+                // @ts-ignore
+                img.onload = () => resolve();
+                // @ts-ignore
+                img.onerror = () => resolve();
+            }
+        });
+        decodedRef.current.add(src);
+    };
     useEffect(() => {
         if (images.length <= 1) return;
         let unmounted = false;
@@ -103,16 +121,18 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
         // Helper to rotate to next image
-        const nextImage = () => {
+        const nextImage = async () => {
+            const next = (imgIndexRef.current + 1) % images.length;
+            // @ts-ignore
+            await ensureDecoded(images[next]);
             setPrevImgIndex(imgIndexRef.current);
-            setImgIndex((prev) => {
-                const next = (prev + 1) % images.length;
-                return next;
-            });
+            setImgIndex(next);
             setImgLoaded(false);
         };
         // Helper to reset to index 0
-        const resetToFirst = () => {
+        const resetToFirst = async () => {
+            // @ts-ignore
+            await ensureDecoded(images[0]);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(0);
             setImgLoaded(false);
@@ -376,6 +396,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         filter: {duration: 0.25, ease: 'easeInOut'},
                                     }}
                                     onLoad={() => {
+                                        decodedRef.current.add(src);
                                         if (isCurrent) {
                                             setImgLoaded(true);
                                             setHasLoadedOnce(true);
