@@ -27,7 +27,7 @@ export default function FractalTunnel() {
 
     const lastCanvasWidthRef = useRef<number>(0);
 
-    const numParticles = 180;
+    const numParticles = 100;
     const particleCharsRef = useRef<string[]>([]);
 
     if (particleCharsRef.current.length === 0) {
