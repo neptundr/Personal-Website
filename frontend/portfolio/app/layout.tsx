@@ -3,6 +3,7 @@ import type {ReactNode} from 'react';
 import './globals.css';
 import {codec, codecBold, codecLight} from './fonts';
 import Providers from './providers';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata = {
     title: 'Denis Kaizer · Portfolio',
@@ -33,11 +34,12 @@ export const metadata = {
 export default function RootLayout({children}: { children: ReactNode }) {
     return (
         <html lang="en" className={`${codec.variable} ${codecLight.variable} ${codecBold.variable}`}>
-        <body>
-        <Providers>
-            {children}
-        </Providers>
-        </body>
+            <body>
+                <Providers>
+                    {children}
+                </Providers>
+                <Analytics />
+            </body>
         </html>
     );
 }
