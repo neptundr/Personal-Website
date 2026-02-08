@@ -80,7 +80,7 @@ const ContactSection = ({settings}) => {
         <section
             className="
             relative
-            min-h-screen max-h-350 md:min-h-245 md:max-h-350 lg:min-h-screen lg:max-h-screen
+            min-h-screen max-h-350 md:min-h-245 md:max-h-350 lg:min-h-200 lg:max-h-screen
             bg-black
             border-t border-zinc-900
             overflow-hidden
@@ -328,9 +328,9 @@ const ContactSection = ({settings}) => {
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[600px] h-[600px] bg-red-700/30 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[300px] bg-red-500/25 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[300px] bg-red-500/25 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
-                    className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[175px] bg-red-400/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
+                    className="absolute z-8 bottom-0 left-1/2 w-[3000px] h-[175px] bg-red-400/15 rounded-full blur-3xl pointer-events-none -translate-x-1/2 translate-y-1/2"/>
                 <div
                     className="absolute z-8 bottom-0 left-1/2 w-[2000px] h-[2000px]  bg-gradient-to-b
                         from-transparent
