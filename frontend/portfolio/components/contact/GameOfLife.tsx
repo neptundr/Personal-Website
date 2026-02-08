@@ -9,8 +9,11 @@ const GameOfLife: React.FC = () => {
 
     const cellSize = 10;
 
-    let cols = 0;
-    let rows = 0;
+    const canvasWidth = 2500;
+    const canvasHeight = 1000;
+
+    let cols = Math.floor(canvasWidth / cellSize);
+    let rows = Math.floor(canvasHeight / cellSize);
     let grid: Grid;
     let nextGrid: Grid;
     let displayGrid: Grid;
@@ -64,19 +67,15 @@ const GameOfLife: React.FC = () => {
             }
         };
 
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        // Initialize canvas size and grids once
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
 
-            cols = Math.floor(canvas.width / cellSize);
-            rows = Math.floor(canvas.height / cellSize);
+        grid = createEmptyGrid();
+        nextGrid = createEmptyGrid();
+        displayGrid = createEmptyGridFloat();
 
-            grid = createEmptyGrid();
-            nextGrid = createEmptyGrid();
-            displayGrid = createEmptyGridFloat();
-
-            randomizeGrid();
-        };
+        randomizeGrid();
 
         const countNeighbors = (x: number, y: number): number => {
             let count = 0;
@@ -191,12 +190,9 @@ const GameOfLife: React.FC = () => {
             animationRef.current = requestAnimationFrame(animate);
         };
 
-        resize();
-        window.addEventListener('resize', resize);
         animationRef.current = requestAnimationFrame(animate);
 
         return () => {
-            window.removeEventListener('resize', resize);
             if (animationRef.current !== null) {
                 cancelAnimationFrame(animationRef.current);
             }
@@ -215,6 +211,8 @@ const GameOfLife: React.FC = () => {
         <>
             <canvas
                 ref={canvasRef}
+                width={canvasWidth}
+                height={canvasHeight}
                 className="absolute inset-0 pointer-events-none opacity-40"
             />
             <span className="absolute inset-0 pointer-events-none">
