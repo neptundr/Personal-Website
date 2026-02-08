@@ -25,6 +25,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     const [showBadge, setShowBadge] = useState(false)
     const [tunnelVisible, setTunnelVisible] = useState(false)
     const [showScrollHint, setShowScrollHint] = useState(false)
+    const [skipIntro, setSkipIntro] = useState(false)
+    const [showSkipButton, setShowSkipButton] = useState(true)
+
 
     /* ----------------------------
        SCROLL LOCK
@@ -49,9 +52,25 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     /* ----------------------------
        INTRO SEQUENCE
     ---------------------------- */
+
+    const handleSkip = () => {
+        setSkipIntro(true)
+        setShowMain(false)
+        setShowWords(false)
+        setShowPortfolio(false)
+        setTunnelVisible(true)
+        setShowFinal(true)
+        setShowPortfolioLine(true)
+        if (availableForHire) setShowBadge(true)
+        setShowScrollHint(true)
+        document.body.style.overflow = ''
+    }
+
     useEffect(() => {
         if (hasStartedRef.current) return
         hasStartedRef.current = true
+
+        if (skipIntro) return
 
         const timers: NodeJS.Timeout[] = []
 
@@ -70,6 +89,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         timers.push(setTimeout(() => {
             setShowPortfolio(true)
             setTunnelVisible(true)
+            setShowSkipButton(false)
         }, 4600))
 
         timers.push(setTimeout(() => {
@@ -79,12 +99,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
         timers.push(setTimeout(() => {
             setShowPortfolioLine(true)
-        }, 8600))
+
+        }, 8400))
 
         timers.push(setTimeout(() => {
             if (availableForHire) setShowBadge(true)
             document.body.style.overflow = ''
-        }, 6000))
+        }, 5000))
 
         timers.push(setTimeout(() => {
             setShowScrollHint(true)
@@ -102,9 +123,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     }, [])
 
     const words = [
-        { text: 'Welcome', left: '15vw', top: 'calc(var(--vh, 1vh) * 70)' },
-        { text: 'to', left: '47vw', top: 'calc(var(--vh, 1vh) * 30)', center: true },
-        { text: 'my', left: '75vw', top: 'calc(var(--vh, 1vh) * 50)', center: true },
+        {text: 'Welcome', left: '15vw', top: 'calc(var(--vh, 1vh) * 70)'},
+        {text: 'to', left: '47vw', top: 'calc(var(--vh, 1vh) * 30)', center: true},
+        {text: 'my', left: '75vw', top: 'calc(var(--vh, 1vh) * 50)', center: true},
     ]
     const wordVariants = {
         hidden: {opacity: 0},
@@ -135,10 +156,26 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             />
 
             <div className="relative z-10 w-full h-full">
+                {!skipIntro && !showPortfolioLine && (
+                    <motion.div className="absolute top-6 right-6 z-50" initial={{opacity: 1}} animate={{opacity: showSkipButton? 1: 0}}
+                                transition={{
+                                    duration: 1.2, ease: 'easeOut'
+                                }}>
+                        <button
+                            className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/40
+                                text-white/90 hover:text-white hover:bg-zinc-900/80
+                                transition-colors text-sm font-light tracking-wide backdrop-blur-sm"
+                            onClick={handleSkip}
+                            style={{fontFamily:"var(--font-codecBold)"}}
+                        >
+                            Skip Intro
+                        </button>
+                    </motion.div>
+                )}
 
                 {/* HEY / I'M DENIS */}
                 <AnimatePresence>
-                    {showMain && (
+                    {!skipIntro && showMain && (
                         <motion.div
                             exit={{opacity: 0}}
                             className="absolute bottom-16 left-6 md:left-12 lg:left-24"
@@ -198,7 +235,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
                 {/* WELCOME / TO / MY */}
                 <AnimatePresence>
-                    {showWords &&
+                    {!skipIntro && showWords &&
                         words.map((w, i) => (
                             <motion.span
                                 key={w.text}
@@ -222,7 +259,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
                 {/* PORTFOLIO */}
                 <AnimatePresence>
-                    {showPortfolio && (
+                    {!skipIntro && showPortfolio && (
                         <motion.h1
                             initial={{opacity: 0, y: 120, filter: 'blur(1px)'}}
                             animate={{opacity: 1, y: 0, filter: 'blur(0px)'}}
