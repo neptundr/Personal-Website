@@ -8,7 +8,7 @@ const FooterSection = () => {
             initial={{opacity: 0}}
             whileInView={{opacity: 1}}
             viewport={{once: true}}
-            transition={{duration: 0.6, delay: 0.6}}
+            transition={{duration: 0.4, delay: 1.2}}
             className="
                 w-full
                 bg-black

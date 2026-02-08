@@ -177,7 +177,7 @@ export default function FractalTunnel() {
             stableViewportWidthRef.current = window.innerWidth;
         };
         updateViewportDims(); // set on mount
-        window.addEventListener('resize', updateViewportDims);
+        // window.addEventListener('resize', updateViewportDims);
         return () => {
             window.removeEventListener('resize', updateViewportDims);
         };
