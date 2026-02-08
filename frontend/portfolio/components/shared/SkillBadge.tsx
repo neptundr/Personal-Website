@@ -69,7 +69,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', 
                 triggerPop();
             }, randomTime);
         };
-        if (Math.random() * 10 > 8) triggerPop();
+        /*if (Math.random() * 10 > 7) */triggerPop();
         return () => clearTimeout(timeout);
     }, []);
 

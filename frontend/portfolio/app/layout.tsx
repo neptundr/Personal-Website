@@ -4,6 +4,7 @@ import './globals.css';
 import {codec, codecBold, codecLight} from './fonts';
 import Providers from './providers';
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata = {
     title: 'Denis Kaizer · Portfolio',
@@ -39,6 +40,7 @@ export default function RootLayout({children}: { children: ReactNode }) {
                     {children}
                 </Providers>
                 <Analytics />
+                <SpeedInsights />
             </body>
         </html>
     );
