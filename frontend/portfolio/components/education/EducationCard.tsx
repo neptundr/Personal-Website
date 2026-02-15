@@ -33,7 +33,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
         >
             <div
                 className="relative flex overflow-hidden outline-1 shadow-2xl
-                backdrop-blur-2xl rounded-3xl h-full
+                bg-zinc-950 rounded-3xl h-full
                 transition-all duration-300 outline-gray-400
                 hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:outline-4"
             >

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import React, {useState, useEffect} from 'react';
+import {motion} from 'framer-motion';
+import {useQuery} from '@tanstack/react-query';
+import {api} from '@/api/client';
 
 type SkillIconType = {
     id: number;
@@ -13,7 +13,8 @@ type SkillIconType = {
 
 type SkillBadgeProps = {
     skill: string;
-    index?: number;
+    badgeIndex?: number;
+    cardIndex?: number;
     size?: 'sm' | 'md' | 'lg';
     isActive?: boolean;
     dimmed?: boolean;
@@ -43,8 +44,17 @@ const getDefaultIcon = (skill: string) => {
     return skillIconsMap.default;
 };
 
-const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', isActive = false, dimmed = false, hovered = false, onClick }) => {
-    const { data: customIcons = [] } = useQuery<SkillIconType[]>({
+const SkillBadge: React.FC<SkillBadgeProps> = ({
+                                                   skill,
+                                                   badgeIndex = 0,
+                                                   cardIndex = 0,
+                                                   size = 'sm',
+                                                   isActive = false,
+                                                   dimmed = false,
+                                                   hovered = false,
+                                                   onClick
+                                               }) => {
+    const {data: customIcons = []} = useQuery<SkillIconType[]>({
         queryKey: ['skillIcons'],
         queryFn: () => api.entities.SkillIcon.list(),
         initialData: [],
@@ -61,15 +71,16 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', 
 
     useEffect(() => {
         let timeout: NodeJS.Timeout;
-        const triggerPop = () => {
-            const randomTime = hovered ? (Math.random() * 7000 + 3000): (Math.random() * 15000 + 7000);
-            timeout = setTimeout(() => {
-                setPopScale(1.13);
-                setTimeout(() => setPopScale(1), 200); // quick pop back to normal
-                triggerPop();
-            }, randomTime);
+
+        const pop = () => {
+            setPopScale(1.07);
+            setTimeout(() => setPopScale(1), 200);
+
+            timeout = setTimeout(pop, 10000); // fixed interval forever
         };
-        /*if (Math.random() * 10 > 7) */triggerPop();
+
+        timeout = setTimeout(pop, cardIndex * 1500 + Math.pow(badgeIndex, 0.6) * 150);
+
         return () => clearTimeout(timeout);
     }, []);
 
@@ -79,9 +90,9 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', 
                 src={customIcon.icon_url}
                 alt={skill}
                 onLoad={() => setImgLoaded(true)}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={imgLoaded ? { scale: 1, opacity: 1 } : {}}
-                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * index }}
+                initial={{scale: 0.6, opacity: 0}}
+                animate={imgLoaded ? {/*filter: dimmed? 'grayscale(70%)' : 'grayscale(0%)',*/ scale: 1, opacity: 1} : {}}
+                transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
                 className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
             />
         )
@@ -95,21 +106,21 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skill, index = 0, size = 'sm', 
 
     return (
         <motion.span
-            whileHover={{ scale: 1.08 }}
-            animate={{ scale: dimmed ? 1 : popScale }}
-            transition={{ duration: 0.1 }}
+            whileHover={{scale: 1.08}}
+            animate={{scale: dimmed ? 1 : popScale}}
+            transition={{duration: 0.05, ease: "easeInOut", type: 'spring'}}
             onClick={onClick}
             className={`
                 inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
                 ${isActive
-                    ? 'border-red-500 bg-red-500/20 text-white'
-                    : `border-gray-400/45 bg-white/8 text-gray-200`}
+                ? 'border-red-500 bg-red-500/20 text-white'
+                : `border-gray-400/45 bg-white/8 text-gray-200`}
                 font-light transition-all duration-300 cursor-pointer 
                 hover:border-red-500 hover:bg-red-500/55 hover:text-white
             `}
         >
             {icon}
-            <motion.span className="tracking-wide" style={{ fontFamily: 'var(--font-codec)' }}>
+            <motion.span className="tracking-wide" style={{fontFamily: 'var(--font-codec)'}}>
                 {skill}
             </motion.span>
         </motion.span>

@@ -32,8 +32,8 @@ interface ExperienceSectionProps {
 }
 
 const itemVariants: Variants = {
-    hidden: {y: 24},
-    visible: {y: 0, transition: {duration: 0.25, ease: "easeIn"}},
+    hidden: {opacity: 0, y: 24},
+    visible: {opacity: 1, y: 0, transition: {duration: 0.25, ease: "easeIn"}},
     exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: "easeInOut"}},
 };
 
@@ -217,7 +217,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
             ) : (
                 <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
                     <AnimatePresence mode="popLayout">
-                        {filteredItems.slice(0, showCount).map(item => (
+                        {filteredItems.slice(0, showCount).map((item, index) => (
                             <motion.div
                                 key={item.id}
                                 layout
@@ -229,7 +229,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                             >
                                 <ExperienceCard
                                     item={item}
-                                    index={0}
+                                    index={index}
                                     onSkillClick={(skill) => {
                                         setSkillFilter(prev => (prev === skill ? null : skill));
                                         setFilter('all');

@@ -230,7 +230,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 className={`
                     relative overflow-hidden rounded-3xl
                     outline-1 outline-gray-400 shadow-2xl
-                    backdrop-blur-2xl
+                    bg-zinc-950 
                     p-6
                     transition-all duration-300
                     ${item.title.includes(" -s") ? 'outline-dashed outline-4' : ''}
@@ -460,11 +460,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {/* Skills */}
                 {item.skills && (
                     <div className="flex flex-wrap mt-4.5 gap-2">
-                        {item.skills.map((skill, index) => (
+                        {item.skills.map((skill, badgeIndex) => (
                             <SkillBadge
                                 key={skill}
                                 skill={skill}
-                                index={index}
+                                badgeIndex={badgeIndex}
+                                cardIndex={index}
                                 size="sm"
                                 isActive={currentSkillFilter === skill}
                                 dimmed={dimmed}
