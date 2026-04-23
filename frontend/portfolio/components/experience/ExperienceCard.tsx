@@ -1,4 +1,5 @@
-// 'use client';
+'use client';
+
 import React, {useState, useRef, useEffect, useMemo} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {format} from 'date-fns';
@@ -30,6 +31,7 @@ interface ExperienceCardProps {
     dimmed: boolean;
     onHover: (id: number | null) => void;
     currentSkillFilter?: string | null;
+    skillIcons?: { skill_name: string; icon_url: string }[];
 }
 
 const formatDate = (date?: string) => {
@@ -48,6 +50,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            dimmed,
                                                            onHover,
                                                            currentSkillFilter,
+                                                           skillIcons = [],
                                                        }) => {
     // Touch device detection
     const [isTouch, setIsTouch] = useState(false);
@@ -460,23 +463,26 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {/* Skills */}
                 {item.skills && (
                     <div className="flex flex-wrap mt-4.5 gap-2">
-                        {item.skills.map((skill, badgeIndex) => (
-                            <SkillBadge
-                                key={skill}
-                                skill={skill}
-                                badgeIndex={badgeIndex}
-                                cardIndex={index}
-                                size="sm"
-                                isActive={currentSkillFilter === skill}
-                                dimmed={dimmed}
-                                hovered={hovered}
-                                onClick={() =>
+                        {item.skills.map((skill, badgeIndex) => {
+                            const iconUrl = skillIcons.find(
+                                s => s.skill_name?.toLowerCase() === skill.toLowerCase()
+                            )?.icon_url;
+                            const badgeProps: React.ComponentProps<typeof SkillBadge> = {
+                                skill,
+                                badgeIndex,
+                                cardIndex: index,
+                                size: 'sm',
+                                isActive: currentSkillFilter === skill,
+                                dimmed,
+                                hovered,
+                                onClick: () =>
                                     onSkillClick(
                                         currentSkillFilter === skill ? null : skill
-                                    )
-                                }
-                            />
-                        ))}
+                                    ),
+                            };
+                            if (iconUrl) badgeProps.iconUrl = iconUrl;
+                            return <SkillBadge key={skill} {...badgeProps} />;
+                        })}
                     </div>
                 )}
             </div>

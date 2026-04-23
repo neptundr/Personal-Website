@@ -2,17 +2,11 @@
 
 import React, {useState, useEffect} from 'react';
 import {motion} from 'framer-motion';
-import {useQuery} from '@tanstack/react-query';
-import {api} from '@/api/client';
-
-type SkillIconType = {
-    id: number;
-    skill_name: string;
-    icon_url?: string;
-};
 
 type SkillBadgeProps = {
     skill: string;
+    /** Optional custom icon URL sourced from parent (Supabase skill_icons). */
+    iconUrl?: string;
     badgeIndex?: number;
     cardIndex?: number;
     size?: 'sm' | 'md' | 'lg';
@@ -46,6 +40,7 @@ const getDefaultIcon = (skill: string) => {
 
 const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    skill,
+                                                   iconUrl,
                                                    badgeIndex = 0,
                                                    cardIndex = 0,
                                                    size = 'sm',
@@ -54,23 +49,15 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    hovered = false,
                                                    onClick
                                                }) => {
-    const {data: customIcons = []} = useQuery<SkillIconType[]>({
-        queryKey: ['skillIcons'],
-        queryFn: () => api.entities.SkillIcon.list(),
-        initialData: [],
-    });
-
-    const customIcon = customIcons.find(s => s.skill_name?.toLowerCase() === skill.toLowerCase());
-
     const [imgLoaded, setImgLoaded] = useState(false);
     const [popScale, setPopScale] = useState(1);
 
     useEffect(() => {
         setImgLoaded(false);
-    }, [customIcon?.icon_url]);
+    }, [iconUrl]);
 
     useEffect(() => {
-        let timeout: NodeJS.Timeout;
+        let timeout: ReturnType<typeof setTimeout>;
 
         const pop = () => {
             setPopScale(1.07);
@@ -82,16 +69,17 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         timeout = setTimeout(pop, cardIndex * 1500 + Math.pow(badgeIndex, 0.6) * 150);
 
         return () => clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const icon = customIcon?.icon_url
+    const icon = iconUrl
         ? (
             <motion.img
-                src={customIcon.icon_url}
+                src={iconUrl}
                 alt={skill}
                 onLoad={() => setImgLoaded(true)}
                 initial={{scale: 0.6, opacity: 0}}
-                animate={imgLoaded ? {/*filter: dimmed? 'grayscale(70%)' : 'grayscale(0%)',*/ scale: 1, opacity: 1} : {}}
+                animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
                 transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
                 className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
             />
@@ -115,7 +103,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                 ${isActive
                 ? 'border-red-500 bg-red-500/20 text-white'
                 : `border-gray-400/45 bg-white/8 text-gray-200`}
-                font-light transition-all duration-300 cursor-pointer 
+                font-light transition-all duration-300 cursor-pointer
                 hover:border-red-500 hover:bg-red-500/55 hover:text-white
             `}
         >
