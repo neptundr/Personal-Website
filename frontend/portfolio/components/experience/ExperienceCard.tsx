@@ -403,17 +403,25 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             setHovered(false);
                         }}
                     >
-                        {/* Shimmer placeholder — visible until the first image loads,
-                            then faded out and removed from the DOM (animation stops). */}
+                        {/* Shimmer placeholder — shown until the first image loads,
+                            then faded out and removed so the animation fully stops. */}
                         <AnimatePresence>
                             {!hasLoadedOnce && (
                                 <motion.div
                                     key="img-ph"
-                                    className="ph-shimmer absolute inset-0 pointer-events-none"
-                                    style={{zIndex: 1}}
+                                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                                    style={{zIndex: 1, background: 'rgba(255,255,255,0.045)', borderRadius: 'inherit'}}
                                     exit={{opacity: 0}}
                                     transition={{duration: 0.5, ease: 'easeOut'}}
-                                />
+                                >
+                                    <div
+                                        className="absolute inset-0"
+                                        style={{
+                                            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.13) 50%, transparent 75%)',
+                                            animation: 'ph-sweep 2s linear infinite',
+                                        }}
+                                    />
+                                </motion.div>
                             )}
                         </AnimatePresence>
                         {/* Crossfade images: previous and current */}

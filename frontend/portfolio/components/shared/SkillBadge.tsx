@@ -52,6 +52,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    onClick
                                                }) => {
     const [imgLoaded, setImgLoaded] = useState(false);
+    const [showCircleShimmer, setShowCircleShimmer] = useState(true);
     const [popScale, setPopScale] = useState(1);
 
     // Delay src on first page load only. Once fired, the flag stays true
@@ -85,8 +86,16 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         ? (retrySuffix ? `${iconUrl}?_r=${retrySuffix}` : iconUrl)
         : undefined;
 
+    // Remove shimmer from DOM after the fade so the animation stops.
+    useEffect(() => {
+        if (!imgLoaded) return;
+        const t = setTimeout(() => setShowCircleShimmer(false), 400);
+        return () => clearTimeout(t);
+    }, [imgLoaded]);
+
     useEffect(() => {
         setImgLoaded(false);
+        setShowCircleShimmer(true);
         setRetrySuffix(0);
     }, [iconUrl]);
 
@@ -110,17 +119,27 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
 
     const icon = resolvedIconSrc
         ? (
-            // Wrapper gives the circle placeholder something to fill.
-            // Using CSS opacity transition instead of Framer Motion here
-            // keeps overhead low when many badges are rendered at once.
             <span className={`relative inline-flex shrink-0 ${iconSizeClass}`}>
-                <span
-                    className="ph-shimmer-circle absolute inset-0 pointer-events-none"
-                    style={{
-                        opacity: imgLoaded ? 0 : 1,
-                        transition: 'opacity 0.35s ease',
-                    }}
-                />
+                {/* Circle shimmer — real element so it's reliably clipped/animated.
+                    Fades via CSS transition then unmounts to stop the animation. */}
+                {showCircleShimmer && (
+                    <span
+                        className="absolute inset-0 rounded-full overflow-hidden pointer-events-none"
+                        style={{
+                            background: 'rgba(255,255,255,0.09)',
+                            opacity: imgLoaded ? 0 : 1,
+                            transition: 'opacity 0.35s ease',
+                        }}
+                    >
+                        <span
+                            className="absolute inset-0"
+                            style={{
+                                background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%)',
+                                animation: 'ph-sweep 2s linear infinite',
+                            }}
+                        />
+                    </span>
+                )}
                 <motion.img
                     key={retrySuffix}
                     src={isReadyToLoad ? resolvedIconSrc : undefined}
