@@ -106,19 +106,33 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const iconSizeClass = size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
+
     const icon = resolvedIconSrc
         ? (
-            <motion.img
-                key={retrySuffix}
-                src={isReadyToLoad ? resolvedIconSrc : undefined}
-                alt={skill}
-                onLoad={() => setImgLoaded(true)}
-                onError={handleImgError}
-                initial={{scale: 0.6, opacity: 0}}
-                animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
-                transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
-                className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
-            />
+            // Wrapper gives the circle placeholder something to fill.
+            // Using CSS opacity transition instead of Framer Motion here
+            // keeps overhead low when many badges are rendered at once.
+            <span className={`relative inline-flex shrink-0 ${iconSizeClass}`}>
+                <span
+                    className="ph-shimmer-circle absolute inset-0 pointer-events-none"
+                    style={{
+                        opacity: imgLoaded ? 0 : 1,
+                        transition: 'opacity 0.35s ease',
+                    }}
+                />
+                <motion.img
+                    key={retrySuffix}
+                    src={isReadyToLoad ? resolvedIconSrc : undefined}
+                    alt={skill}
+                    onLoad={() => setImgLoaded(true)}
+                    onError={handleImgError}
+                    initial={{scale: 0.6, opacity: 0}}
+                    animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
+                    transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
+                    className={`${iconSizeClass} object-contain`}
+                />
+            </span>
         )
         : <span className="text-[0.9em]">{getDefaultIcon(skill)}</span>;
 

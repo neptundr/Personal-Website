@@ -38,3 +38,45 @@ html {
 .h-vh {
     height: calc(var(--vh, 1vh) * 100);
 }
+
+/* ─── Placeholder shimmer ─────────────────────────────────────────────────── */
+/*
+ * Single keyframe shared by all variants.
+ * Only `transform` is animated — runs entirely on the GPU compositor,
+ * no layout or paint cost.
+ */
+@keyframes ph-sweep {
+    from { transform: translateX(-180%); }
+    to   { transform: translateX(380%); }
+}
+
+/* Rectangular variant — experience card images */
+.ph-shimmer {
+    background: rgba(255, 255, 255, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Circular variant — skill badge icons */
+.ph-shimmer-circle {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ph-shimmer::after,
+.ph-shimmer-circle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Angled gradient so the sweep reads as a diagonal highlight */
+    background: linear-gradient(
+        105deg,
+        transparent        30%,
+        rgba(255,255,255,0.11) 50%,
+        transparent        70%
+    );
+    animation: ph-sweep 2.2s linear infinite;
+    will-change: transform;
+}

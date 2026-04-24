@@ -403,13 +403,19 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             setHovered(false);
                         }}
                     >
-                        {/* Initial loading spinner only once */}
-                        {/*{!hasLoadedOnce && !imgLoaded && (*/}
-                        {/*    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">*/}
-                        {/*        <div*/}
-                        {/*            className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>*/}
-                        {/*    </div>*/}
-                        {/*)}*/}
+                        {/* Shimmer placeholder — visible until the first image loads,
+                            then faded out and removed from the DOM (animation stops). */}
+                        <AnimatePresence>
+                            {!hasLoadedOnce && (
+                                <motion.div
+                                    key="img-ph"
+                                    className="ph-shimmer absolute inset-0 pointer-events-none"
+                                    style={{zIndex: 1}}
+                                    exit={{opacity: 0}}
+                                    transition={{duration: 0.5, ease: 'easeOut'}}
+                                />
+                            )}
+                        </AnimatePresence>
                         {/* Crossfade images: previous and current */}
                         {images.map((src, idx) => {
                             // Only render prev and current for crossfade, others hidden
