@@ -78,14 +78,44 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             .filter(Boolean);
     }, [item.image_url]);
 
-    // Preload images (once)
+    // Delay src assignment so all cards don't fire simultaneously on mount.
+    // Card 0 waits 1s, each subsequent card adds 120ms.
+    const [isReadyToLoad, setIsReadyToLoad] = useState(false);
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        const t = setTimeout(() => setIsReadyToLoad(true), 1000 + index * 120);
+        return () => clearTimeout(t);
+    }, [index]);
+
+    // Per-image retry: on error, re-queue a cache-busted src after 2 s.
+    const [retrySuffixes, setRetrySuffixes] = useState<Record<string, number>>({});
+    const retryTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+    const handleImgError = (src: string) => {
+        if (retryTimers.current[src]) return; // already scheduled
+        retryTimers.current[src] = setTimeout(() => {
+            delete retryTimers.current[src];
+            setRetrySuffixes(prev => ({ ...prev, [src]: Date.now() }));
+        }, 2000);
+    };
+
+    useEffect(() => {
+        const timers = retryTimers.current;
+        return () => { Object.values(timers).forEach(clearTimeout); };
+    }, []);
+
+    const resolvedSrc = (src: string) => {
+        const suffix = retrySuffixes[src];
+        return suffix ? `${src}?_r=${suffix}` : src;
+    };
+
+    // Preload images only after the load delay kicks in.
+    useEffect(() => {
+        if (!isReadyToLoad || typeof window === 'undefined') return;
         images.forEach(src => {
             const img = new window.Image();
             img.src = src;
         });
-    }, [images]);
+    }, [isReadyToLoad, images]);
 
     // Crossfade state
     const [imgIndex, setImgIndex] = useState(0);
@@ -377,17 +407,18 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             const isPrev = idx === prevImgIndex;
                             const isCurrent = idx === imgIndex;
                             if (!isPrev && !isCurrent) return null;
+                            const rSrc = resolvedSrc(src);
                             return (
                                 <motion.img
-                                    key={idx + '-' + (isPrev ? 'prev' : 'curr')}
-                                    src={src}
+                                    key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
+                                    src={isReadyToLoad ? rSrc : undefined}
                                     alt={item.title}
                                     draggable={false}
                                     className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                                     style={{
                                         zIndex: isCurrent ? 20 : 10,
                                     }}
-                                    initial={{ opacity: isCurrent? 0: 1 }}
+                                    initial={{ opacity: isCurrent ? 0 : 1 }}
                                     animate={{
                                         opacity: isCurrent && imgLoaded ? 1 : 0,
                                         filter: isTouch
@@ -409,6 +440,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             setHasLoadedOnce(true);
                                         }
                                     }}
+                                    onError={() => handleImgError(src)}
                                 />
                             );
                         })}

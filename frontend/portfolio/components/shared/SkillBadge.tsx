@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {motion} from 'framer-motion';
 
 type SkillBadgeProps = {
@@ -52,8 +52,39 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
     const [imgLoaded, setImgLoaded] = useState(false);
     const [popScale, setPopScale] = useState(1);
 
+    // Delay src so badges don't all fire at the same instant as cards load.
+    // Base 1.2 s + slight stagger by position.
+    const [isReadyToLoad, setIsReadyToLoad] = useState(false);
+    useEffect(() => {
+        const t = setTimeout(
+            () => setIsReadyToLoad(true),
+            1200 + cardIndex * 80 + badgeIndex * 30,
+        );
+        return () => clearTimeout(t);
+    }, [cardIndex, badgeIndex]);
+
+    // Retry failed icon loads every 2 s (cache-bust via timestamp).
+    const [retrySuffix, setRetrySuffix] = useState(0);
+    const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleImgError = () => {
+        if (retryTimer.current) return;
+        retryTimer.current = setTimeout(() => {
+            retryTimer.current = null;
+            setRetrySuffix(Date.now());
+            setImgLoaded(false);
+        }, 2000);
+    };
+
+    useEffect(() => () => { if (retryTimer.current) clearTimeout(retryTimer.current); }, []);
+
+    const resolvedIconSrc = iconUrl
+        ? (retrySuffix ? `${iconUrl}?_r=${retrySuffix}` : iconUrl)
+        : undefined;
+
     useEffect(() => {
         setImgLoaded(false);
+        setRetrySuffix(0);
     }, [iconUrl]);
 
     useEffect(() => {
@@ -72,12 +103,14 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const icon = iconUrl
+    const icon = resolvedIconSrc
         ? (
             <motion.img
-                src={iconUrl}
+                key={retrySuffix}
+                src={isReadyToLoad ? resolvedIconSrc : undefined}
                 alt={skill}
                 onLoad={() => setImgLoaded(true)}
+                onError={handleImgError}
                 initial={{scale: 0.6, opacity: 0}}
                 animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
                 transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
