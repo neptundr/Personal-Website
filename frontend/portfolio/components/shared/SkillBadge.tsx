@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {motion} from 'framer-motion';
 
 type SkillBadgeProps = {
@@ -38,6 +38,8 @@ const getDefaultIcon = (skill: string) => {
     return skillIconsMap.default;
 };
 
+let initialBadgeLoadDone = false;
+
 const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    skill,
                                                    iconUrl,
@@ -50,10 +52,51 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    onClick
                                                }) => {
     const [imgLoaded, setImgLoaded] = useState(false);
+    const [showCircleShimmer, setShowCircleShimmer] = useState(true);
     const [popScale, setPopScale] = useState(1);
+
+    // Delay src on first page load only. Once fired, the flag stays true
+    // so re-mounts (filter toggles) skip the wait.
+    const [isReadyToLoad, setIsReadyToLoad] = useState(initialBadgeLoadDone);
+    useEffect(() => {
+        if (initialBadgeLoadDone) return;
+        const t = setTimeout(() => {
+            initialBadgeLoadDone = true;
+            setIsReadyToLoad(true);
+        }, 1200 + cardIndex * 80 + badgeIndex * 30);
+        return () => clearTimeout(t);
+    }, [cardIndex, badgeIndex]);
+
+    // Retry failed icon loads every 2 s (cache-bust via timestamp).
+    const [retrySuffix, setRetrySuffix] = useState(0);
+    const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleImgError = () => {
+        if (retryTimer.current) return;
+        retryTimer.current = setTimeout(() => {
+            retryTimer.current = null;
+            setRetrySuffix(Date.now());
+            setImgLoaded(false);
+        }, 2000);
+    };
+
+    useEffect(() => () => { if (retryTimer.current) clearTimeout(retryTimer.current); }, []);
+
+    const resolvedIconSrc = iconUrl
+        ? (retrySuffix ? `${iconUrl}?_r=${retrySuffix}` : iconUrl)
+        : undefined;
+
+    // Remove shimmer from DOM after the fade so the animation stops.
+    useEffect(() => {
+        if (!imgLoaded) return;
+        const t = setTimeout(() => setShowCircleShimmer(false), 400);
+        return () => clearTimeout(t);
+    }, [imgLoaded]);
 
     useEffect(() => {
         setImgLoaded(false);
+        setShowCircleShimmer(true);
+        setRetrySuffix(0);
     }, [iconUrl]);
 
     useEffect(() => {
@@ -72,17 +115,43 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const icon = iconUrl
+    const iconSizeClass = size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
+
+    const icon = resolvedIconSrc
         ? (
-            <motion.img
-                src={iconUrl}
-                alt={skill}
-                onLoad={() => setImgLoaded(true)}
-                initial={{scale: 0.6, opacity: 0}}
-                animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
-                transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
-                className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
-            />
+            <span className={`relative inline-flex shrink-0 ${iconSizeClass}`}>
+                {/* Circle shimmer — real element so it's reliably clipped/animated.
+                    Fades via CSS transition then unmounts to stop the animation. */}
+                {showCircleShimmer && (
+                    <span
+                        className="absolute inset-0 rounded-full overflow-hidden pointer-events-none"
+                        style={{
+                            background: 'rgba(255,255,255,0.09)',
+                            opacity: imgLoaded ? 0 : 1,
+                            transition: 'opacity 0.35s ease',
+                        }}
+                    >
+                        <span
+                            className="absolute inset-0"
+                            style={{
+                                background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%)',
+                                animation: 'ph-sweep 2s linear infinite',
+                            }}
+                        />
+                    </span>
+                )}
+                <motion.img
+                    key={retrySuffix}
+                    src={isReadyToLoad ? resolvedIconSrc : undefined}
+                    alt={skill}
+                    onLoad={() => setImgLoaded(true)}
+                    onError={handleImgError}
+                    initial={{scale: 0.6, opacity: 0}}
+                    animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
+                    transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
+                    className={`${iconSizeClass} object-contain`}
+                />
+            </span>
         )
         : <span className="text-[0.9em]">{getDefaultIcon(skill)}</span>;
 

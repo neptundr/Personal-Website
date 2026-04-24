@@ -38,3 +38,15 @@ html {
 .h-vh {
     height: calc(var(--vh, 1vh) * 100);
 }
+
+/* ─── Placeholder shimmer ─────────────────────────────────────────────────── */
+/*
+ * Only the keyframe lives here. The animated element is a real DOM node
+ * (not ::after) so there are no pseudo-element specificity surprises and
+ * no will-change compositing layer bloat.
+ * Only `transform` is animated — GPU compositor, zero main-thread cost.
+ */
+@keyframes ph-sweep {
+    from { transform: translateX(-180%); }
+    to   { transform: translateX(380%); }
+}

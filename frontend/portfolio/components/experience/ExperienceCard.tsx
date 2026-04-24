@@ -43,6 +43,10 @@ const formatDate = (date?: string) => {
     }
 };
 
+// Tracks whether the initial staggered load delay has already passed.
+// Module-level so it survives re-mounts (filter toggles, etc.).
+let initialPageLoadDone = false;
+
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            item,
                                                            index,
@@ -78,14 +82,49 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             .filter(Boolean);
     }, [item.image_url]);
 
-    // Preload images (once)
+    // Delay src assignment so all cards don't fire simultaneously on the very
+    // first page load. Once any card's timer fires, the flag stays true for the
+    // rest of the session — re-mounts (e.g. filter toggle) load instantly.
+    const [isReadyToLoad, setIsReadyToLoad] = useState(initialPageLoadDone);
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        if (initialPageLoadDone) return;
+        const t = setTimeout(() => {
+            initialPageLoadDone = true;
+            setIsReadyToLoad(true);
+        }, 1000 + index * 120);
+        return () => clearTimeout(t);
+    }, [index]);
+
+    // Per-image retry: on error, re-queue a cache-busted src after 2 s.
+    const [retrySuffixes, setRetrySuffixes] = useState<Record<string, number>>({});
+    const retryTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+    const handleImgError = (src: string) => {
+        if (retryTimers.current[src]) return; // already scheduled
+        retryTimers.current[src] = setTimeout(() => {
+            delete retryTimers.current[src];
+            setRetrySuffixes(prev => ({ ...prev, [src]: Date.now() }));
+        }, 2000);
+    };
+
+    useEffect(() => {
+        const timers = retryTimers.current;
+        return () => { Object.values(timers).forEach(clearTimeout); };
+    }, []);
+
+    const resolvedSrc = (src: string) => {
+        const suffix = retrySuffixes[src];
+        return suffix ? `${src}?_r=${suffix}` : src;
+    };
+
+    // Preload images only after the load delay kicks in.
+    useEffect(() => {
+        if (!isReadyToLoad || typeof window === 'undefined') return;
         images.forEach(src => {
             const img = new window.Image();
             img.src = src;
         });
-    }, [images]);
+    }, [isReadyToLoad, images]);
 
     // Crossfade state
     const [imgIndex, setImgIndex] = useState(0);
@@ -364,30 +403,45 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             setHovered(false);
                         }}
                     >
-                        {/* Initial loading spinner only once */}
-                        {/*{!hasLoadedOnce && !imgLoaded && (*/}
-                        {/*    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">*/}
-                        {/*        <div*/}
-                        {/*            className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>*/}
-                        {/*    </div>*/}
-                        {/*)}*/}
+                        {/* Shimmer placeholder — shown until the first image loads,
+                            then faded out and removed so the animation fully stops. */}
+                        <AnimatePresence>
+                            {!hasLoadedOnce && (
+                                <motion.div
+                                    key="img-ph"
+                                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                                    style={{zIndex: 1, background: 'rgba(255,255,255,0.045)', borderRadius: 'inherit'}}
+                                    exit={{opacity: 0}}
+                                    transition={{duration: 0.5, ease: 'easeOut'}}
+                                >
+                                    <div
+                                        className="absolute inset-0"
+                                        style={{
+                                            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.13) 50%, transparent 75%)',
+                                            animation: 'ph-sweep 2s linear infinite',
+                                        }}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         {/* Crossfade images: previous and current */}
                         {images.map((src, idx) => {
                             // Only render prev and current for crossfade, others hidden
                             const isPrev = idx === prevImgIndex;
                             const isCurrent = idx === imgIndex;
                             if (!isPrev && !isCurrent) return null;
+                            const rSrc = resolvedSrc(src);
                             return (
                                 <motion.img
-                                    key={idx + '-' + (isPrev ? 'prev' : 'curr')}
-                                    src={src}
+                                    key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
+                                    src={isReadyToLoad ? rSrc : undefined}
                                     alt={item.title}
                                     draggable={false}
                                     className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                                     style={{
                                         zIndex: isCurrent ? 20 : 10,
                                     }}
-                                    initial={{ opacity: isCurrent? 0: 1 }}
+                                    initial={{ opacity: isCurrent ? 0 : 1 }}
                                     animate={{
                                         opacity: isCurrent && imgLoaded ? 1 : 0,
                                         filter: isTouch
@@ -409,6 +463,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             setHasLoadedOnce(true);
                                         }
                                     }}
+                                    onError={() => handleImgError(src)}
                                 />
                             );
                         })}
