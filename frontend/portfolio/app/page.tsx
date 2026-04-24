@@ -21,12 +21,16 @@ interface SkillIcon {
     icon_url: string;
 }
 
-async function loadHomeData(): Promise<{
+interface LoadResult {
     settings: SiteSettings;
     projects: Project[];
     education: Education[];
     skillIcons: SkillIcon[];
-}> {
+    /** Non-empty only when one or more queries failed. Visible in non-production. */
+    errors: string[];
+}
+
+async function loadHomeData(): Promise<LoadResult> {
     const client = supabasePublic();
 
     // Fire all four queries in parallel
@@ -37,16 +41,34 @@ async function loadHomeData(): Promise<{
         client.from(TABLES.skills).select('*'),
     ]);
 
+    // Collect errors — they show in Vercel Function logs and in the preview banner
+    const errors: string[] = [];
+    for (const [label, res] of [
+        ['site_settings', settingsRes],
+        ['projects', projectsRes],
+        ['education', educationRes],
+        ['skill_icons', skillsRes],
+    ] as [string, { error: { message: string } | null }][]) {
+        if (res.error) {
+            const msg = `[${label}] ${res.error.message}`;
+            console.error('[loadHomeData]', msg);
+            errors.push(msg);
+        }
+    }
+
     return {
         settings: (settingsRes.data ?? {}) as SiteSettings,
         projects: (projectsRes.data ?? []) as Project[],
         education: (educationRes.data ?? []) as Education[],
         skillIcons: (skillsRes.data ?? []) as SkillIcon[],
+        errors,
     };
 }
 
 export default async function Home() {
-    const { settings, projects, education, skillIcons } = await loadHomeData();
+    const { settings, projects, education, skillIcons, errors } = await loadHomeData();
+
+    const isDev = process.env.NODE_ENV !== 'production';
 
     return (
         <div
@@ -54,6 +76,19 @@ export default async function Home() {
             className="relative overflow-hidden"
             style={{ fontFamily: 'var(--font-codecLight)' }}
         >
+            {/* Debug banner — only rendered outside production */}
+            {isDev && errors.length > 0 && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+                    background: '#7f1d1d', color: '#fef2f2', padding: '12px 16px',
+                    fontFamily: 'monospace', fontSize: '13px', lineHeight: 1.5,
+                }}>
+                    <strong>⚠ Supabase errors (remove /api/debug + this banner after fixing):</strong>
+                    <ul style={{ margin: '4px 0 0', paddingLeft: '20px' }}>
+                        {errors.map((e, i) => <li key={i}>{e}</li>)}
+                    </ul>
+                </div>
+            )}
             {/* Background */}
             <FractalTunnel />
 
