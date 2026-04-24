@@ -50,12 +50,10 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    onClick
                                                }) => {
     const [imgLoaded, setImgLoaded] = useState(false);
-    const [imgError, setImgError] = useState(false);
     const [popScale, setPopScale] = useState(1);
 
     useEffect(() => {
         setImgLoaded(false);
-        setImgError(false);
     }, [iconUrl]);
 
     useEffect(() => {
@@ -74,22 +72,38 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const icon = iconUrl && !imgError
+    const sizeClass = size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
+
+    const icon = iconUrl
         ? (
-            <motion.img
-                src={iconUrl}
-                alt={skill}
-                onLoad={() => setImgLoaded(true)}
-                onError={() => setImgError(true)}
-                initial={{scale: 0.6, opacity: 0}}
-                animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
-                transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
-                className={`${size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-4 h-4' : 'w-5 h-5'} object-contain`}
-            />
+            // Placeholder + image stacked; placeholder pulses radially, fades out on load
+            <span className={`relative inline-flex shrink-0 ${sizeClass}`}>
+                <motion.span
+                    className={`absolute inset-0 rounded-full ${sizeClass}`}
+                    style={{ background: 'radial-gradient(circle, #52525b 0%, #3f3f46 100%)' }}
+                    animate={imgLoaded
+                        ? { opacity: 0, scale: 1 }
+                        : { opacity: [0.35, 0.8, 0.35], scale: [0.65, 1, 0.65] }
+                    }
+                    transition={imgLoaded
+                        ? { duration: 0.35, ease: 'easeOut' }
+                        : { duration: 1.4, repeat: Infinity, ease: 'easeInOut' }
+                    }
+                />
+                <motion.img
+                    src={iconUrl}
+                    alt={skill}
+                    onLoad={() => setImgLoaded(true)}
+                    className={`absolute inset-0 w-full h-full object-contain`}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={imgLoaded ? { scale: 1, opacity: 1 } : { scale: 0.6, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex }}
+                />
+            </span>
         )
         : <span className="text-[0.9em]">{getDefaultIcon(skill)}</span>;
 
-    const sizeClasses: Record<string, string> = {
+    const sizePadding: Record<string, string> = {
         sm: 'text-xs px-2.5 py-1',
         md: 'text-sm px-3 py-1.5',
         lg: 'text-base px-4 py-2',
@@ -102,7 +116,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
             transition={{duration: 0.05, ease: "easeInOut", type: 'spring'}}
             onClick={onClick}
             className={`
-                inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
+                inline-flex items-center gap-1.5 ${sizePadding[size]} rounded-full border
                 ${isActive
                 ? 'border-red-500 bg-red-500/20 text-white'
                 : `border-gray-400/45 bg-white/8 text-gray-200`}

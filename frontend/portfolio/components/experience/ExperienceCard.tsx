@@ -384,13 +384,23 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             setHovered(false);
                         }}
                     >
-                        {/* Initial loading spinner only once */}
-                        {/*{!hasLoadedOnce && !imgLoaded && (*/}
-                        {/*    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">*/}
-                        {/*        <div*/}
-                        {/*            className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin"/>*/}
-                        {/*    </div>*/}
-                        {/*)}*/}
+                        {/* Skeleton shimmer — visible until the first image loads, then fades out */}
+                        <AnimatePresence>
+                            {!hasLoadedOnce && (
+                                <motion.div
+                                    className="absolute inset-0 z-[5] overflow-hidden bg-zinc-900 rounded-lg"
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                >
+                                    <div
+                                        className="skeleton-shimmer absolute inset-0"
+                                        style={{
+                                            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)',
+                                        }}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         {/* Crossfade images: previous and current */}
                         {images.map((src, idx) => {
                             // Only render prev and current for crossfade, others hidden
