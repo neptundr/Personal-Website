@@ -33,13 +33,10 @@ const AdminNav: React.FC<AdminNavProps> = ({currentPage}) => {
     const [uploading, setUploading] = useState(false);
 
     async function handleLogout() {
-        const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/admin/logout`,
-            {
-                method: 'POST',
-                credentials: 'include',
-            }
-        );
+        const res = await fetch('/api/admin/logout', {
+            method: 'POST',
+            credentials: 'include',
+        });
 
         if (res.ok) {
             router.push('/admin/login'); // redirect to login page

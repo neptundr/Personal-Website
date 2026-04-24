@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import {motion} from 'framer-motion';
+import Image from 'next/image';
 
 interface Education {
     type: 'university' | 'school';
@@ -59,16 +62,13 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                 // whileHover={{opacity: 0.75}}
                                 style={{aspectRatio: '1 / 1'}}
                             >
-                                <motion.img
+                                <Image
                                     src={education.logo_url}
                                     alt={education.institution}
-                                    className="
-                                        w-20 h-20
-                                        {/*sm:w-24 sm:h-24
-                                        md:w-24 md:h-24
-                                        lg:w-30 lg:h-30*/}
-                                        object-contain
-                                    "
+                                    width={80}
+                                    height={80}
+                                    className="w-20 h-20 object-contain"
+                                    unoptimized={education.logo_url.endsWith('.svg')}
                                 />
                             </div>
                         </a>

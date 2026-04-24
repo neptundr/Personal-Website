@@ -1,3 +1,5 @@
+'use client';
+
 import React, {useRef, useState, useEffect} from 'react'
 import {motion, AnimatePresence} from 'framer-motion'
 import RotatingText from "@/components/hero/RotatingText";

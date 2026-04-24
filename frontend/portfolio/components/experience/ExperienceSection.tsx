@@ -6,8 +6,6 @@ import type {Variants} from "framer-motion";
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {X} from 'lucide-react';
 import ExperienceCard from "@/components/experience/ExperienceCard";
-import {useQuery} from "@tanstack/react-query";
-import {api} from "@/api/client";
 
 interface ExperienceItem {
     id: number;
@@ -37,17 +35,12 @@ const itemVariants: Variants = {
     exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: "easeInOut"}},
 };
 
-const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
+const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons = []}) => {
     const [filter, setFilter] = useState<'all' | 'work' | 'project' | 'achievement'>('all');
     const [skillFilter, setSkillFilter] = useState<string | null>(null);
     const [showCount, setShowCount] = useState(50);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
-    const {data: skillIcons = []} = useQuery({
-        queryKey: ['skillIcons'],
-        queryFn: () => api.entities.SkillIcon.list(),
-        initialData: [],
-    });
     const filterRowRef = useRef<HTMLDivElement>(null);
 
     const getSkillIcon = (skill: string) =>
@@ -237,6 +230,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items}) => {
                                     dimmed={hoveredId !== null && hoveredId !== item.id}
                                     onHover={setHoveredId}
                                     currentSkillFilter={skillFilter}
+                                    skillIcons={skillIcons}
                                 />
                             </motion.div>
                         ))}

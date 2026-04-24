@@ -2,6 +2,7 @@
 
 import React, {useState} from 'react';
 import {motion} from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
     Github,
     Linkedin,
@@ -13,9 +14,12 @@ import {
     Copy,
     Check,
 } from 'lucide-react';
-import GameOfLife from './GameOfLife';
 import RotatingText from "@/components/hero/RotatingText";
 import FooterSection from "@/components/footer/FooterSection";
+
+// Client-only canvas simulation — defer its JS chunk so it never blocks
+// the contact section above the fold.
+const GameOfLife = dynamic(() => import('./GameOfLife'), {ssr: false});
 
 const contactLinks = [
     {

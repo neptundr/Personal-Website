@@ -1,39 +1,47 @@
-'use client';
-
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/api/client';
 
 import HeroSection from '../components/hero/HeroSection';
 import ExperienceSection from '../components/experience/ExperienceSection';
 import EducationSection from '../components/education/EducationSection';
 import ContactSection from '../components/contact/ContactSection';
-import FooterSection from '../components/footer/FooterSection';
-import FractalTunnel from '@/components/hero/FractalTunnel';
+// FractalTunnel is a client-only canvas; this thin wrapper lazily loads it
+// (ssr: false) from inside a Client Component.
+import FractalTunnel from '@/components/hero/FractalTunnelLazy';
 
+import { supabasePublic, TABLES } from '@/lib/supabase';
 import type { Project, Education, SiteSettings } from '@/types/types';
 
-export default function Home() {
-    const { data: settings } = useQuery<SiteSettings>({
-        queryKey: ['siteSettings'],
-        queryFn: async () => {
-            const list = await api.entities.SiteSettings.list();
-            return list[0] || {};
-        },
-        initialData: {} as SiteSettings,
-    });
+// ISR: re-fetch from Supabase at most once per hour. Content is always present
+// in the HTML on first byte.
+export const revalidate = 3600;
 
-    const { data: items } = useQuery<Project[]>({
-        queryKey: ['projects'],
-        queryFn: () => api.entities.Project.list(),
-        initialData: [] as Project[],
-    });
+interface SkillIcon {
+    id: number;
+    skill_name: string;
+    icon_url: string;
+}
 
-    const { data: education } = useQuery<Education[]>({
-        queryKey: ['education'],
-        queryFn: () => api.entities.Education.list(),
-        initialData: [] as Education[],
-    });
+async function loadHomeData() {
+    const client = supabasePublic();
+
+    // Fire all four queries in parallel
+    const [settingsRes, projectsRes, educationRes, skillsRes] = await Promise.all([
+        client.from(TABLES.settings).select('*').limit(1).maybeSingle(),
+        client.from(TABLES.projects).select('*').order('order', { ascending: true }),
+        client.from(TABLES.education).select('*').order('order', { ascending: true }),
+        client.from(TABLES.skills).select('*'),
+    ]);
+
+    return {
+        settings: (settingsRes.data ?? {}) as SiteSettings,
+        projects: (projectsRes.data ?? []) as Project[],
+        education: (educationRes.data ?? []) as Education[],
+        skillIcons: (skillsRes.data ?? []) as SkillIcon[],
+    };
+}
+
+export default async function Home() {
+    const { settings, projects, education, skillIcons } = await loadHomeData();
 
     return (
         <div
@@ -48,10 +56,10 @@ export default function Home() {
             <main className="relative z-10">
                 <HeroSection
                     name={settings.hero_name || 'Denis'}
-                    availableForHire={settings.available_for_hire || true}
+                    availableForHire={settings.available_for_hire ?? true}
                     loveItems={settings.love_items || ['Create']}
                 />
-                <ExperienceSection items={items} />
+                <ExperienceSection items={projects} skillIcons={skillIcons} />
                 <EducationSection education={education} />
                 <ContactSection settings={settings} />
             </main>
