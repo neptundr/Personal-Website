@@ -43,6 +43,10 @@ const formatDate = (date?: string) => {
     }
 };
 
+// Tracks whether the initial staggered load delay has already passed.
+// Module-level so it survives re-mounts (filter toggles, etc.).
+let initialPageLoadDone = false;
+
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            item,
                                                            index,
@@ -78,11 +82,16 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             .filter(Boolean);
     }, [item.image_url]);
 
-    // Delay src assignment so all cards don't fire simultaneously on mount.
-    // Card 0 waits 1s, each subsequent card adds 120ms.
-    const [isReadyToLoad, setIsReadyToLoad] = useState(false);
+    // Delay src assignment so all cards don't fire simultaneously on the very
+    // first page load. Once any card's timer fires, the flag stays true for the
+    // rest of the session — re-mounts (e.g. filter toggle) load instantly.
+    const [isReadyToLoad, setIsReadyToLoad] = useState(initialPageLoadDone);
     useEffect(() => {
-        const t = setTimeout(() => setIsReadyToLoad(true), 1000 + index * 120);
+        if (initialPageLoadDone) return;
+        const t = setTimeout(() => {
+            initialPageLoadDone = true;
+            setIsReadyToLoad(true);
+        }, 1000 + index * 120);
         return () => clearTimeout(t);
     }, [index]);
 

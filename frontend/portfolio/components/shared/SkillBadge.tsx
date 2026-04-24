@@ -38,6 +38,8 @@ const getDefaultIcon = (skill: string) => {
     return skillIconsMap.default;
 };
 
+let initialBadgeLoadDone = false;
+
 const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    skill,
                                                    iconUrl,
@@ -52,14 +54,15 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
     const [imgLoaded, setImgLoaded] = useState(false);
     const [popScale, setPopScale] = useState(1);
 
-    // Delay src so badges don't all fire at the same instant as cards load.
-    // Base 1.2 s + slight stagger by position.
-    const [isReadyToLoad, setIsReadyToLoad] = useState(false);
+    // Delay src on first page load only. Once fired, the flag stays true
+    // so re-mounts (filter toggles) skip the wait.
+    const [isReadyToLoad, setIsReadyToLoad] = useState(initialBadgeLoadDone);
     useEffect(() => {
-        const t = setTimeout(
-            () => setIsReadyToLoad(true),
-            1200 + cardIndex * 80 + badgeIndex * 30,
-        );
+        if (initialBadgeLoadDone) return;
+        const t = setTimeout(() => {
+            initialBadgeLoadDone = true;
+            setIsReadyToLoad(true);
+        }, 1200 + cardIndex * 80 + badgeIndex * 30);
         return () => clearTimeout(t);
     }, [cardIndex, badgeIndex]);
 
