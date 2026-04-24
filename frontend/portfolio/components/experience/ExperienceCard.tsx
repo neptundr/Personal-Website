@@ -78,6 +78,26 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             .filter(Boolean);
     }, [item.image_url]);
 
+    // Per-URL retry: on load failure retry up to 2× with exponential back-off
+    const [retrySuffixes, setRetrySuffixes] = useState<Record<string, number>>({});
+    const retryCountsRef = useRef<Record<string, number>>({});
+
+    const handleImgError = (src: string) => {
+        const count = retryCountsRef.current[src] ?? 0;
+        if (count >= 2) return; // give up after 2 retries
+        retryCountsRef.current[src] = count + 1;
+        // Back-off: 1.5 s then 3 s
+        setTimeout(() => {
+            setRetrySuffixes(prev => ({ ...prev, [src]: Date.now() }));
+        }, 1500 * (count + 1));
+    };
+
+    const resolvedSrc = (src: string) => {
+        const bust = retrySuffixes[src];
+        if (!bust) return src;
+        return src.includes('?') ? `${src}&_retry=${bust}` : `${src}?_retry=${bust}`;
+    };
+
     // Preload images (once)
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -379,8 +399,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             if (!isPrev && !isCurrent) return null;
                             return (
                                 <motion.img
-                                    key={idx + '-' + (isPrev ? 'prev' : 'curr')}
-                                    src={src}
+                                    key={idx + '-' + (isPrev ? 'prev' : 'curr') + (retrySuffixes[src] ?? '')}
+                                    src={resolvedSrc(src)}
                                     alt={item.title}
                                     draggable={false}
                                     className="absolute inset-0 w-full h-full object-cover pointer-events-none"
@@ -409,6 +429,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             setHasLoadedOnce(true);
                                         }
                                     }}
+                                    onError={() => handleImgError(src)}
                                 />
                             );
                         })}

@@ -50,10 +50,12 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    onClick
                                                }) => {
     const [imgLoaded, setImgLoaded] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const [popScale, setPopScale] = useState(1);
 
     useEffect(() => {
         setImgLoaded(false);
+        setImgError(false);
     }, [iconUrl]);
 
     useEffect(() => {
@@ -72,12 +74,13 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const icon = iconUrl
+    const icon = iconUrl && !imgError
         ? (
             <motion.img
                 src={iconUrl}
                 alt={skill}
                 onLoad={() => setImgLoaded(true)}
+                onError={() => setImgError(true)}
                 initial={{scale: 0.6, opacity: 0}}
                 animate={imgLoaded ? {scale: 1, opacity: 1} : {}}
                 transition={{type: 'spring', stiffness: 260, damping: 20, delay: 0.15 + 0.125 * badgeIndex}}
