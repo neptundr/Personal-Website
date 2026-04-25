@@ -168,9 +168,10 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
             transition={{duration: 0.05, ease: "easeInOut", type: 'spring'}}
             onClick={onClick}
             className={`
+                skill-badge
                 inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
                 ${isActive
-                ? 'border-red-500 bg-red-500/20 text-white'
+                ? 'skill-badge-active border-red-500 bg-red-500/20 text-white'
                 : `border-[color-mix(in_oklab,var(--ink)_30%,transparent)] bg-[color-mix(in_oklab,var(--ink)_8%,transparent)] text-[var(--ink-soft)]`}
                 font-light transition-all duration-300 cursor-pointer
                 hover:border-red-500 hover:bg-red-500/55 hover:text-white

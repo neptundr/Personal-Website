@@ -3,6 +3,7 @@
 import React from 'react';
 import {motion} from 'framer-motion';
 import Image from 'next/image';
+import {useTheme} from '@/components/theme/ThemeProvider';
 
 interface Education {
     type: 'university' | 'school';
@@ -21,6 +22,11 @@ interface EducationCardProps {
 }
 
 const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
+    const {theme} = useTheme();
+    const hoverShadow = theme === 'dark'
+        ? '0 0 40px 5px rgba(255,255,255,0.5)'
+        : '0 0 30px 8px rgba(20,24,33,0.10)';
+
     return (
         <motion.div
             initial={{opacity: 0, y: 40}}
@@ -29,16 +35,16 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
             transition={{duration: 0.25, delay: 0.15*index, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
             whileHover={{
                 y: -6,
-                boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
+                boxShadow: hoverShadow,
                 borderRadius: '1.5rem'
             }}
             className="group relative"
         >
             <div
                 className="relative flex overflow-hidden outline-1 shadow-2xl
-                bg-[color-mix(in_oklab,var(--surface)_92%,var(--ink))] rounded-3xl h-full
-                transition-all duration-300 outline-[color-mix(in_oklab,var(--ink)_25%,transparent)]
-                hover:outline-[color-mix(in_oklab,var(--ink)_60%,transparent)] hover:shadow-lg hover:shadow-red-500/10 hover:outline-4"
+                bg-[var(--card-bg)] rounded-3xl h-full
+                transition-all duration-300 outline-[var(--card-outline)]
+                hover:outline-[var(--card-hover-outline)] hover:shadow-lg hover:shadow-red-500/10 hover:outline-4"
             >
                 {/* LEFT COLUMN */}
                 <div className="p-3 sm:p-3 md:p-3 flex flex-col items-start">
@@ -50,24 +56,23 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                         >
                             <div
                                 className="
-                                    w-25 h-25
-                                    sm:w-24 sm:h-24
-                                    md:w-28 md:h-28
-                                    lg:w-40 lg:h-40
-                                    rounded-xl bg-[color-mix(in_oklab,var(--surface)_92%,var(--ink))]
+                                    w-36 h-36
+                                    sm:w-36 sm:h-36
+                                    md:w-42 md:h-42
+                                    lg:w-60 lg:h-60
+                                    rounded-xl bg-white
                                     flex items-center justify-center shrink-0
                                     hover:opacity-85
                                     transition-all duration-300
                                 "
-                                // whileHover={{opacity: 0.75}}
                                 style={{aspectRatio: '1 / 1'}}
                             >
                                 <Image
                                     src={education.logo_url}
                                     alt={education.institution}
-                                    width={80}
-                                    height={80}
-                                    className="w-20 h-20 object-contain"
+                                    width={120}
+                                    height={120}
+                                    className="w-28 h-28 md:w-32 md:h-32 lg:w-44 lg:h-44 object-contain"
                                     unoptimized={education.logo_url.endsWith('.svg')}
                                 />
                             </div>
@@ -83,8 +88,8 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                         rel="noopener noreferrer"
                         className="
                             flex flex-wrap items-baseline
-                            text-lg md:text-3xl text-[var(--ink)]
-                            hover:text-[var(--ink-soft)] transition-colors duration-300
+                            text-lg md:text-3xl text-[var(--card-text)]
+                            hover:text-[var(--card-text-sub)] transition-colors duration-300
                         "
                         style={{fontFamily: 'var(--font-codecBold)'}}
                     >
@@ -92,15 +97,15 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                             {education.institution} {" "}
                         </span>
 
-                        <span className="text-gray-400 whitespace-nowrap pr-5">
+                        <span className="text-[var(--card-text-muted)] whitespace-nowrap pr-5">
                             {education.start_year} — {education.end_year || 'Present'}
                         </span>
                     </a>
 
-                    <div className="border-t border-zinc-700/90 my-3"/>
+                    <div className="border-t border-[var(--card-divider)] my-3"/>
 
                     {education.description && (
-                        <p className="text-gray-400 text-sm leading-relaxed pb-3 pr-5">
+                        <p className="text-[var(--card-text-muted)] text-sm leading-relaxed pb-3 pr-5">
                             {education.description}
                         </p>
                     )}
@@ -108,7 +113,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
 
                 {/* Subtle glow */}
                 <div
-                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-[var(--card-glow-from)] to-transparent pointer-events-none"/>
             </div>
         </motion.div>
     );

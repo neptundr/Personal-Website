@@ -6,6 +6,7 @@ import {format} from 'date-fns';
 import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
+import {useTheme} from '@/components/theme/ThemeProvider';
 
 interface ExperienceItem {
     id: number;
@@ -56,6 +57,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            currentSkillFilter,
                                                            skillIcons = [],
                                                        }) => {
+    const {theme} = useTheme();
+    const hoverShadow = theme === 'dark'
+        ? '0 0 40px 5px rgba(255,255,255,0.4)'
+        : '0 0 30px 8px rgba(20,24,33,0.10)';
+
     // Touch device detection
     const [isTouch, setIsTouch] = useState(false);
     useEffect(() => {
@@ -262,7 +268,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             }}
             whileHover={{
                 translateY: -6,
-                boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
+                boxShadow: hoverShadow,
                 borderRadius: '2rem'
             }}
         >
@@ -271,25 +277,25 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 ref={cardRef}
                 className={`
                     relative overflow-hidden rounded-3xl
-                    outline-1 outline-[color-mix(in_oklab,var(--ink)_25%,transparent)] shadow-2xl
-                    bg-[color-mix(in_oklab,var(--surface)_92%,var(--ink))]
+                    outline-1 outline-[var(--card-outline)] shadow-2xl
+                    bg-[var(--card-bg)]
                     p-6
                     transition-all duration-300
                     ${item.title.includes(" -s") ? 'outline-dashed outline-4' : ''}
-                    hover:outline-4 hover:outline-[color-mix(in_oklab,var(--ink)_60%,transparent)] hover:shadow-lg hover:shadow-red-500/10
+                    hover:outline-4 hover:outline-[var(--card-hover-outline)] hover:shadow-lg hover:shadow-red-500/10
                     ${dimmed ? 'opacity-93 outline-gray-700' : ''}
               `}
             >
                 {/* Subtle highlight */}
                 <div
-                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-[var(--card-glow-from)] to-transparent pointer-events-none"/>
 
                 {/* Title & Meta */}
                 <div className="mb-4">
                     <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">
                             <h3
-                                className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
+                                className="text-3xl text-[var(--card-text)] mb-2 group-hover:text-[var(--ink)] transition-colors"
                                 style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 {item.title.replace(" -v", "").replace(" -s", "")}
@@ -299,15 +305,15 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 style={{fontFamily: 'var(--font-codecLight)'}}
                             >
                                 {item.company && (
-                                    <span className="text-gray-300 font-normal">
+                                    <span className="text-[var(--card-text-sub)] font-normal">
                                         {item.company}
                                     </span>
                                 )}
                                 {item.location && (
-                                    <span className="text-gray-500">{item.location}</span>
+                                    <span className="text-[var(--card-text-muted)]">{item.location}</span>
                                 )}
                                 {((item.start_date || item.end_date || item.is_current) && (formatDate(item.start_date) !== 'Jan 0001')) && (
-                                    <span className="text-gray-500">
+                                    <span className="text-[var(--card-text-muted)]">
                                         {formatDate(item.start_date)}
                                         {item.start_date &&
                                             (item.end_date || item.is_current) &&
@@ -335,7 +341,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/20  text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
+                                    className="p-2 rounded-lg bg-[var(--card-icon-bg)] text-[var(--card-icon-text)] border border-transparent hover:border-[var(--card-outline)] hover:text-[var(--card-text)] hover:bg-[var(--card-icon-bg)] transition-all"
                                 >
                                     <ExternalLink className="w-4 h-4"/>
                                 </motion.a>
@@ -347,7 +353,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     rel="noopener noreferrer"
                                     whileHover={{scale: 1.1}}
                                     whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
+                                    className="p-2 rounded-lg bg-[var(--card-icon-bg)] text-[var(--card-icon-text)] border border-transparent hover:border-[var(--card-outline)] hover:text-[var(--card-text)] hover:bg-[var(--card-icon-bg)] transition-all"
                                 >
                                     <Github className="w-4 h-4"/>
                                 </motion.a>
@@ -359,7 +365,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         rel="noopener noreferrer"
                                         whileHover={{scale: 1.1}}
                                         whileTap={{scale: 0.95}}
-                                        className="p-2 rounded-lg bg-zinc-600/20 text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
+                                        className="p-2 rounded-lg bg-[var(--card-icon-bg)] text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-[var(--card-outline)] hover:bg-[var(--card-icon-bg)]"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
@@ -508,7 +514,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {item.description && item.description.split('\n').map((para, i) => (
                     <p
                         key={i}
-                        className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
+                        className="text-[var(--card-text-muted)] text-sm mb-3 whitespace-pre-wrap"
                         style={{fontFamily: 'var(--font-codecLight)'}}
                     >
                         {para}

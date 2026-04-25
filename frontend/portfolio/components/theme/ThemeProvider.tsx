@@ -8,18 +8,15 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import {AnimatePresence, motion} from 'framer-motion';
 
 export type Theme = 'dark' | 'light';
 
 interface ThemeContextValue {
     theme: Theme;
     toggle: () => void;
-    isTransitioning: boolean;
 }
 
 const STORAGE_KEY = 'theme';
-const FADE_MS = 240;
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -38,7 +35,6 @@ function readInitialTheme(): Theme {
 
 export default function ThemeProvider({children}: {children: React.ReactNode}) {
     const [theme, setTheme] = useState<Theme>('dark');
-    const [pendingTheme, setPendingTheme] = useState<Theme | null>(null);
     const lockRef = useRef(false);
 
     useEffect(() => {
@@ -63,51 +59,14 @@ export default function ThemeProvider({children}: {children: React.ReactNode}) {
     const toggle = useCallback(() => {
         if (lockRef.current) return;
         lockRef.current = true;
-
-        const reduced =
-            typeof window !== 'undefined' &&
-            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
         const next: Theme = theme === 'dark' ? 'light' : 'dark';
-
-        if (reduced) {
-            applyTheme(next);
-            lockRef.current = false;
-            return;
-        }
-
-        setPendingTheme(next);
-
-        window.setTimeout(() => {
-            applyTheme(next);
-        }, FADE_MS);
-
-        window.setTimeout(() => {
-            setPendingTheme(null);
-            lockRef.current = false;
-        }, FADE_MS * 2);
+        applyTheme(next);
+        window.setTimeout(() => { lockRef.current = false; }, 80);
     }, [applyTheme, theme]);
 
-    const fadeColor = pendingTheme === 'light' ? '#faf9f6' : '#0a0a0a';
-
     return (
-        <ThemeContext.Provider
-            value={{theme, toggle, isTransitioning: pendingTheme !== null}}
-        >
+        <ThemeContext.Provider value={{theme, toggle}}>
             {children}
-            <AnimatePresence>
-                {pendingTheme && (
-                    <motion.div
-                        key="theme-fade"
-                        initial={{opacity: 0}}
-                        animate={{opacity: 1}}
-                        exit={{opacity: 0}}
-                        transition={{duration: FADE_MS / 1000, ease: 'easeInOut'}}
-                        className="fixed inset-0 pointer-events-none"
-                        style={{backgroundColor: fadeColor, zIndex: 100}}
-                    />
-                )}
-            </AnimatePresence>
         </ThemeContext.Provider>
     );
 }
@@ -115,7 +74,7 @@ export default function ThemeProvider({children}: {children: React.ReactNode}) {
 export function useTheme(): ThemeContextValue {
     const ctx = useContext(ThemeContext);
     if (!ctx) {
-        return {theme: 'dark', toggle: () => {}, isTransitioning: false};
+        return {theme: 'dark', toggle: () => {}};
     }
     return ctx;
 }

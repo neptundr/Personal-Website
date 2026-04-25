@@ -10,7 +10,7 @@ interface ThemeToggleProps {
 }
 
 export default function ThemeToggle({delay = 0.75}: ThemeToggleProps) {
-    const {theme, toggle, isTransitioning} = useTheme();
+    const {theme, toggle} = useTheme();
     const isDark = theme === 'dark';
 
     return (
@@ -19,7 +19,6 @@ export default function ThemeToggle({delay = 0.75}: ThemeToggleProps) {
             onClick={toggle}
             aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
             aria-pressed={!isDark}
-            disabled={isTransitioning}
             initial={{opacity: 0, y: -15}}
             animate={{opacity: 1, y: 0}}
             transition={{delay, duration: 0.6}}
@@ -27,8 +26,7 @@ export default function ThemeToggle({delay = 0.75}: ThemeToggleProps) {
             className="group relative inline-flex h-[26px] w-[26px] items-center justify-center
                        rounded-full border border-red-500/30 bg-red-500/10 backdrop-blur-md
                        cursor-pointer transition-colors duration-450
-                       hover:border-red-500 hover:bg-red-500/55
-                       disabled:cursor-default"
+                       hover:border-red-500 hover:bg-red-500/55"
         >
             <AnimatePresence mode="wait" initial={false}>
                 <motion.span

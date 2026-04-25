@@ -46,6 +46,7 @@ export default function FractalTunnel() {
         tunnelPrimary: '200 20 25',
         tunnelSecondary: '120 10 15',
         particle: '200 20 25',
+        alphaBoost: 0,
     });
 
     if (particleCharsRef.current.length === 0) {
@@ -236,7 +237,7 @@ export default function FractalTunnel() {
                 ctx.scale(1, -1);
                 ctx.rotate(a);
 
-                const alpha = -0.075 + (t + 0.1) * 0.85 * (1 - t * 0.15);
+                const alpha = colorsRef.current.alphaBoost + (-0.075 + (t + 0.1) * 0.85 * (1 - t * 0.15));
                 const fontSize = 14 * (1 + t * 0.4) * ageGrowth;
 
                 ctx.fillStyle = `rgba(${particleRgb.replace(/ /g, ',')},${alpha})`;
@@ -274,6 +275,7 @@ export default function FractalTunnel() {
                 tunnelPrimary: readColor('--tunnel-primary-rgb', '200 20 25'),
                 tunnelSecondary: readColor('--tunnel-secondary-rgb', '120 10 15'),
                 particle: readColor('--particle-rgb', '200 20 25'),
+                alphaBoost: parseFloat(readColor('--particle-alpha-boost', '0')),
             };
         };
 

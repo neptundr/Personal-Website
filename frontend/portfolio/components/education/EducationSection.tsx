@@ -67,7 +67,7 @@ class EducationSection extends React.Component<{ education: any }> {
                         w-full h-30
                         bg-gradient-to-b
                         from-transparent
-                        to-black
+                        to-[var(--surface)]
                         z-9
                     "
                 />

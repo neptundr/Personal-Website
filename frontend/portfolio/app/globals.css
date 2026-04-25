@@ -10,9 +10,27 @@
     --ink-soft-rgb: 180 180 180;
     --grid-line: rgba(180, 180, 180, 0.08);
 
+    /* Cards — exact original zinc-950 values restored */
+    --card-bg: #09090b;
+    --card-outline: #9ca3af;
+    --card-hover-outline: #f9fafb;
+    --card-text: #e4e4e7;
+    --card-text-sub: #d1d5db;
+    --card-text-muted: #9ca3af;
+    --card-icon-bg: rgba(82, 82, 91, 0.2);
+    --card-icon-text: #9ca3af;
+    --card-divider: rgba(63, 63, 70, 0.9);
+    --card-glow-from: rgba(255, 255, 255, 0.05);
+
+    /* Skill badges */
+    --badge-text-active: #ffffff;
+    --badge-text-hover: #ffffff;
+
+    /* Tunnel / particles */
     --tunnel-primary-rgb: 200 20 25;
     --tunnel-secondary-rgb: 120 10 15;
     --particle-rgb: 200 20 25;
+    --particle-alpha-boost: 0;
 
     --background: var(--surface);
     --foreground: var(--ink);
@@ -29,9 +47,27 @@
     --ink-soft-rgb: 64 70 82;
     --grid-line: rgba(20, 24, 33, 0.10);
 
-    --tunnel-primary-rgb: 70 80 95;
-    --tunnel-secondary-rgb: 120 130 145;
-    --particle-rgb: 90 20 25;
+    /* Cards — warm off-white with readable dark contrast */
+    --card-bg: #edeae5;
+    --card-outline: #d1d5db;
+    --card-hover-outline: #374151;
+    --card-text: #141821;
+    --card-text-sub: #374151;
+    --card-text-muted: #6b7280;
+    --card-icon-bg: rgba(20, 24, 33, 0.07);
+    --card-icon-text: #6b7280;
+    --card-divider: rgba(209, 213, 219, 0.9);
+    --card-glow-from: rgba(20, 24, 33, 0.03);
+
+    /* Skill badges — text always dark in light theme */
+    --badge-text-active: #1a0607;
+    --badge-text-hover: #141821;
+
+    /* Tunnel — bright red particles more visible on light bg */
+    --tunnel-primary-rgb: 200 20 25;
+    --tunnel-secondary-rgb: 140 10 15;
+    --particle-rgb: 210 30 35;
+    --particle-alpha-boost: 0.22;
 
     --background: var(--surface);
     --foreground: var(--ink);
@@ -72,4 +108,20 @@ html {
 @keyframes ph-sweep {
     from { transform: translateX(-180%); }
     to   { transform: translateX(380%); }
+}
+
+/* ─── Skill badge — theme-aware text colours ─────────────────────────────── */
+/* Active badge text uses the CSS var so dark=white, light=dark-red */
+.skill-badge-active {
+    color: var(--badge-text-active) !important;
+}
+/* On hover the badge text also follows the theme var */
+.skill-badge:hover {
+    color: var(--badge-text-hover) !important;
+}
+
+/* ─── Light-theme-only visibility helpers ───────────────────────────────── */
+/* Elements with this class are hidden in light theme (e.g. red glow blobs) */
+[data-theme="light"] .dark-only {
+    display: none !important;
 }
