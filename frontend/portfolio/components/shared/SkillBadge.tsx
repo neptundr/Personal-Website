@@ -171,7 +171,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                 inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
                 ${isActive
                 ? 'border-red-500 bg-red-500/20 text-white'
-                : `border-gray-400/45 bg-white/8 text-gray-200`}
+                : `border-[color-mix(in_oklab,var(--ink)_30%,transparent)] bg-[color-mix(in_oklab,var(--ink)_8%,transparent)] text-[var(--ink-soft)]`}
                 font-light transition-all duration-300 cursor-pointer
                 hover:border-red-500 hover:bg-red-500/55 hover:text-white
             `}

@@ -36,9 +36,9 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
         >
             <div
                 className="relative flex overflow-hidden outline-1 shadow-2xl
-                bg-zinc-950 rounded-3xl h-full
-                transition-all duration-300 outline-gray-400
-                hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10 hover:outline-4"
+                bg-[color-mix(in_oklab,var(--surface)_92%,var(--ink))] rounded-3xl h-full
+                transition-all duration-300 outline-[color-mix(in_oklab,var(--ink)_25%,transparent)]
+                hover:outline-[color-mix(in_oklab,var(--ink)_60%,transparent)] hover:shadow-lg hover:shadow-red-500/10 hover:outline-4"
             >
                 {/* LEFT COLUMN */}
                 <div className="p-3 sm:p-3 md:p-3 flex flex-col items-start">
@@ -54,7 +54,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                     sm:w-24 sm:h-24
                                     md:w-28 md:h-28
                                     lg:w-40 lg:h-40
-                                    rounded-xl bg-white/90
+                                    rounded-xl bg-[color-mix(in_oklab,var(--surface)_92%,var(--ink))]
                                     flex items-center justify-center shrink-0
                                     hover:opacity-85
                                     transition-all duration-300
@@ -83,8 +83,8 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                         rel="noopener noreferrer"
                         className="
                             flex flex-wrap items-baseline
-                            text-lg md:text-3xl text-white
-                            hover:text-zinc-300 transition-colors duration-300
+                            text-lg md:text-3xl text-[var(--ink)]
+                            hover:text-[var(--ink-soft)] transition-colors duration-300
                         "
                         style={{fontFamily: 'var(--font-codecBold)'}}
                     >

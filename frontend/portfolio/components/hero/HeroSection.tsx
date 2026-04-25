@@ -4,6 +4,7 @@ import React, {useRef, useState, useEffect} from 'react'
 import {motion, AnimatePresence} from 'framer-motion'
 import RotatingText from "@/components/hero/RotatingText";
 import {ExternalLink} from "lucide-react";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 interface HeroSectionProps {
     name?: string
@@ -148,7 +149,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* FRACTAL TUNNEL (fade-in only) */}
             <motion.div
-                className="absolute inset-0 bg-black"
+                className="absolute inset-0 bg-[var(--surface)]"
                 initial={{opacity: 1}}
                 animate={{opacity: tunnelVisible ? 0 : 1}}
                 transition={{
@@ -163,8 +164,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                     duration: 1.2, ease: 'easeOut'
                                 }}>
                         <button
-                            className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/40
-                                text-white/90 hover:text-white hover:bg-zinc-700/80
+                            className="px-3 py-1.5 rounded-lg
+                                bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]
+                                border border-[color-mix(in_oklab,var(--ink)_40%,transparent)]
+                                text-[color-mix(in_oklab,var(--ink)_90%,transparent)]
+                                hover:text-[var(--ink)] hover:bg-[color-mix(in_oklab,var(--surface)_80%,transparent)]
                                 transition-all duration-300 text-sm font-light tracking-wide backdrop-blur-sm"
                             onClick={handleSkip}
                             style={{fontFamily:"var(--font-codecBold)"}}
@@ -182,7 +186,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             className="absolute bottom-16 left-6 md:left-12 lg:left-24"
                         >
                             <motion.h1
-                                className="text-6xl sm:text-7xl md:text-9xl lg:text-[9rem] leading-tight text-white"
+                                className="text-6xl sm:text-7xl md:text-9xl lg:text-[9rem] leading-tight text-[var(--ink)]"
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 <motion.span
@@ -245,7 +249,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                className="absolute text-white font-codec text-5xl md:text-7xl"
+                                className="absolute text-[var(--ink)] font-codec text-5xl md:text-7xl"
                                 style={{
                                     fontFamily: 'var(--font-codecBold)',
                                     left: w.left,
@@ -275,7 +279,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             }}
                             className="absolute top-1/2 left-1/2
                                        -translate-x-1/2 -translate-y-1/2
-                                       text-white text-[clamp(4rem,18vw,12rem)]"
+                                       text-[var(--ink)] text-[clamp(4rem,18vw,12rem)]"
                             style={{fontFamily: 'var(--font-codecBold)'}}
                         >
                             Portfolio
@@ -293,7 +297,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             transition={{duration: 0.4}}
                         >
                             <div
-                                className="text-5xl sm:text-7xl md:text-9xl lg:text-[9rem] text-white leading-tight"
+                                className="text-5xl sm:text-7xl md:text-9xl lg:text-[9rem] text-[var(--ink)] leading-tight"
                                 style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 <motion.span
@@ -335,13 +339,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             className="absolute top-18 left-6 md:left-12 lg:left-24 flex flex-col gap-3"
                         >
                             <span
-                                className="text-white text-xl md:text-2xl"
+                                className="text-[var(--ink)] text-xl md:text-2xl"
                                 style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 Denis Kaizer. Developer Portfolio
                             </span>
 
-                            {availableForHire && showBadge && (<div>
+                            {availableForHire && showBadge && (<div className="flex items-center gap-2">
                                 <motion.a
                                     href="https://github.com/neptundr/Personal-Website"
                                     target="_blank"
@@ -366,6 +370,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                                 className="w-3 h-3 mb-0.5 opacity-100 transition-colors duration-300 group-hover:opacity-100 group-hover:text-white"/>
                                         </span>
                                 </motion.a>
+                                <ThemeToggle delay={0.75} />
                             </div>)}
 
                             {/* MESSAGE BOX */}
@@ -375,7 +380,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                                         initial={{opacity: 0, y: 5}}
                                         animate={{opacity: 1, y: 0}}
                                         transition={{duration: 0.5, delay: 1}}
-                                        className="mt-2 mr-6 px-3 py-1 max-w-90 rounded-md bg-red-500/20 text-white text-xs"
+                                        className="mt-2 mr-6 px-3 py-1 max-w-90 rounded-md bg-red-500/20 text-[var(--ink)] text-xs"
                                     >
                                         {process.env.NEXT_PUBLIC_MESSAGE}
                                     </motion.div>

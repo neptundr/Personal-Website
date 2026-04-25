@@ -94,7 +94,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                 <span className="text-red-500/80 text-xs tracking-[0.4em] uppercase font-medium" ref={filterRowRef}>
                     Experience
                 </span>
-                <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-white tracking-tight"
+                <h2 className="mt-4 text-4xl md:text-5xl lg:text-6xl text-[var(--ink)] tracking-tight"
                     style={{fontFamily: 'var(--font-codecBold)'}}>
                     What I’ve Built
                 </h2>
@@ -110,17 +110,17 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
             >
                 <div className="mb-12 flex flex-wrap gap-3 items-center">
                     <Tabs value={filter} onValueChange={v => setFilter(v as any)}>
-                        <TabsList className="backdrop-blur-md bg-zinc-900/50 border border-gray-400/40">
+                        <TabsList className="backdrop-blur-md bg-[color-mix(in_oklab,var(--surface)_60%,transparent)] border border-[color-mix(in_oklab,var(--ink)_20%,transparent)]">
                             {['all', 'work', 'project', 'achievement'].map(v => (
                                 <TabsTrigger
                                     key={v}
                                     value={v}
                                     className="
-                                    text-gray-400
+                                    text-[var(--ink-soft)]
                                     data-[state=active]:bg-red-500/10
                                     data-[state=active]:text-red-400
                                     transition-all
-                                    hover:bg-gray-500/20 hover:text-gray-300
+                                    hover:bg-[color-mix(in_oklab,var(--ink)_12%,transparent)] hover:text-[var(--ink)]
                                 "
                                 >
                                     {v === 'all'
@@ -144,7 +144,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                     onClick={() => setSkillFilter(null)}
                                     className="
                                     px-3 py-2 rounded-full text-sm
-                                    border border-red-500 bg-red-500/20 text-white
+                                    border border-red-500 bg-red-500/20 text-[var(--ink)]
                                     flex items-center gap-2 backdrop-blur-2xl
                                 "
                                     initial={{opacity: 0, x: -16}}

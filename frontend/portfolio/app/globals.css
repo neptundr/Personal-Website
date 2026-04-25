@@ -1,34 +1,57 @@
 @import "tailwindcss";
 
-:root {
-    --background: #ffffff;
-    --foreground: #171717;
+:root,
+:root[data-theme="dark"] {
+    --surface: #0a0a0a;
+    --surface-rgb: 10 10 10;
+    --ink: #ededed;
+    --ink-rgb: 237 237 237;
+    --ink-soft: #b4b4b4;
+    --ink-soft-rgb: 180 180 180;
+    --grid-line: rgba(180, 180, 180, 0.08);
+
+    --tunnel-primary-rgb: 200 20 25;
+    --tunnel-secondary-rgb: 120 10 15;
+    --particle-rgb: 200 20 25;
+
+    --background: var(--surface);
+    --foreground: var(--ink);
     --input: 240 3.7% 15.9%;
-    /*--background: 240 10% 3.9%;*/
     --primary: 0 84% 60%;
 }
 
+:root[data-theme="light"] {
+    --surface: #faf9f6;
+    --surface-rgb: 250 249 246;
+    --ink: #141821;
+    --ink-rgb: 20 24 33;
+    --ink-soft: #404652;
+    --ink-soft-rgb: 64 70 82;
+    --grid-line: rgba(20, 24, 33, 0.10);
+
+    --tunnel-primary-rgb: 70 80 95;
+    --tunnel-secondary-rgb: 120 130 145;
+    --particle-rgb: 90 20 25;
+
+    --background: var(--surface);
+    --foreground: var(--ink);
+}
+
 @theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
+    --color-background: var(--surface);
+    --color-foreground: var(--ink);
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
-    }
-}
-
 body {
-    background: var(--background);
-    color: var(--foreground);
+    background: var(--surface);
+    color: var(--ink);
     font-family: Arial, Helvetica, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: geometricPrecision;
+    transition: background-color 240ms ease, color 240ms ease;
 }
 
 html {

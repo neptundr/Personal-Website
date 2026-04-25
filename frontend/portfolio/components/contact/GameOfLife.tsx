@@ -8,6 +8,30 @@ const GameOfLife: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const animationRef = useRef<number | null>(null);
     const [key, setKey] = useState<number>(0);
+    const colorsRef = useRef({
+        surface: '10 10 10',
+        ink: '237 237 237',
+        grid: 'rgba(180,180,180,0.08)',
+    });
+
+    useEffect(() => {
+        const read = (name: string, fallback: string) => {
+            const v = getComputedStyle(document.documentElement)
+                .getPropertyValue(name)
+                .trim();
+            return v || fallback;
+        };
+        const refresh = () => {
+            colorsRef.current = {
+                surface: read('--surface-rgb', '10 10 10'),
+                ink: read('--ink-rgb', '237 237 237'),
+                grid: read('--grid-line', 'rgba(180,180,180,0.08)'),
+            };
+        };
+        refresh();
+        window.addEventListener('themechange', refresh);
+        return () => window.removeEventListener('themechange', refresh);
+    }, []);
 
     const cellSize = 10;
 
@@ -123,12 +147,16 @@ const GameOfLife: React.FC = () => {
         };
 
         const draw = () => {
-            ctx.fillStyle = 'black';
+            const {surface, ink, grid: gridColor} = colorsRef.current;
+            const surfaceCsv = surface.replace(/ /g, ',');
+            const inkCsv = ink.replace(/ /g, ',');
+
+            ctx.fillStyle = `rgb(${surfaceCsv})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             for (let i = 0; i <= cols; i++) {
                 const x = i * cellSize;
-                ctx.strokeStyle = 'rgba(64,64,64,0.15)';
+                ctx.strokeStyle = gridColor;
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
@@ -138,7 +166,7 @@ const GameOfLife: React.FC = () => {
 
             for (let j = 0; j <= rows; j++) {
                 const y = j * cellSize;
-                ctx.strokeStyle = 'rgba(64,64,64,0.15)';
+                ctx.strokeStyle = gridColor;
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
                 ctx.moveTo(0, y);
@@ -151,11 +179,9 @@ const GameOfLife: React.FC = () => {
                     // @ts-ignore
                     const alpha: number = displayGrid[i][j];
                     if (alpha > 0.01) {
-                        const v = 255;
-                        ctx.fillStyle = `rgba(${v},${v},${v},${alpha ** 2})`;
+                        ctx.fillStyle = `rgba(${inkCsv},${alpha ** 2})`;
 
-                        // draw with rounded corners
-                        const radius = 6; // adjust corner radius
+                        const radius = 6;
                         fillRoundedRect(
                             ctx,
                             i * cellSize + 1,
@@ -168,11 +194,11 @@ const GameOfLife: React.FC = () => {
                 }
             }
 
-            // Add black fade at the bottom
+            // Surface-colored fade at the bottom (transitions section into the page bg).
             const fadeHeight = 128;
             const gradient = ctx.createLinearGradient(0, canvas.height - fadeHeight, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(0,0,0,0)');
-            gradient.addColorStop(1, 'rgba(0,0,0,1)');
+            gradient.addColorStop(0, `rgba(${surfaceCsv},0)`);
+            gradient.addColorStop(1, `rgba(${surfaceCsv},1)`);
             ctx.fillStyle = gradient;
             ctx.fillRect(0, canvas.height - fadeHeight, canvas.width, fadeHeight);
         };
@@ -221,8 +247,12 @@ const GameOfLife: React.FC = () => {
                 <div className="absolute z-20 top-6 left-6 flex gap-2 pointer-events-auto">
                     <button
                         onClick={() => setKey(k => k + 1)}
-                        className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/10
-                                   text-white/60 hover:text-white hover:bg-zinc-900/80
+                        className="px-3 py-1.5 rounded-lg
+                                   bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]
+                                   border border-[color-mix(in_oklab,var(--ink)_14%,transparent)]
+                                   text-[color-mix(in_oklab,var(--ink)_60%,transparent)]
+                                   hover:text-[var(--ink)]
+                                   hover:bg-[color-mix(in_oklab,var(--surface)_80%,transparent)]
                                    transition-colors text-xs font-light tracking-wide backdrop-blur-sm"
                     >
                         Regenerate
@@ -232,8 +262,12 @@ const GameOfLife: React.FC = () => {
                         href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-white/10
-                                   text-white/60 hover:text-white hover:bg-zinc-900/80
+                        className="px-3 py-1.5 rounded-lg
+                                   bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]
+                                   border border-[color-mix(in_oklab,var(--ink)_14%,transparent)]
+                                   text-[color-mix(in_oklab,var(--ink)_60%,transparent)]
+                                   hover:text-[var(--ink)]
+                                   hover:bg-[color-mix(in_oklab,var(--surface)_80%,transparent)]
                                    transition-colors text-xs font-light tracking-wide backdrop-blur-sm
                                    flex items-center justify-center"
                     >

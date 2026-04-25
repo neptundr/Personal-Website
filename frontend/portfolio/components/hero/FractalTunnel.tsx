@@ -30,6 +30,24 @@ export default function FractalTunnel() {
     const numParticles = 100;
     const particleCharsRef = useRef<string[]>([]);
 
+    // Springy hover state (disabled on coarse pointers / reduced motion).
+    // Layout: [ox, oy, vx, vy] per particle.
+    const offsetsRef = useRef<Float32Array>(new Float32Array(numParticles * 4));
+    const mouseRef = useRef<{x: number; y: number; active: boolean}>({
+        x: -9999,
+        y: -9999,
+        active: false,
+    });
+    const isFinePointerRef = useRef(false);
+    const reducedMotionRef = useRef(false);
+
+    // Cached theme-derived color triplets (space-separated "r g b").
+    const colorsRef = useRef({
+        tunnelPrimary: '200 20 25',
+        tunnelSecondary: '120 10 15',
+        particle: '200 20 25',
+    });
+
     if (particleCharsRef.current.length === 0) {
         for (let i = 0; i < numParticles; i++) {
             particleCharsRef.current.push(
@@ -118,10 +136,12 @@ export default function FractalTunnel() {
                     ctx.moveTo(Math.cos(sa0) * r0, Math.sin(sa0) * r0);
                     ctx.lineTo(Math.cos(sa1) * r1, Math.sin(sa1) * r1);
 
+                    const primary = colorsRef.current.tunnelPrimary;
+                    const secondary = colorsRef.current.tunnelSecondary;
                     ctx.strokeStyle =
                         (layer + i) % 3 < 2
-                            ? `rgba(200,20,25,${opacity})`
-                            : `rgba(120,10,15,${opacity})`;
+                            ? `rgba(${primary.replace(/ /g, ',')},${opacity})`
+                            : `rgba(${secondary.replace(/ /g, ',')},${opacity})`;
 
                     ctx.lineWidth = thickness;
                     ctx.lineCap = 'round';
@@ -136,6 +156,16 @@ export default function FractalTunnel() {
 
             const ageGrowth = 1 + Math.min(time * 0.02, 0.6);
 
+            const springEnabled =
+                isFinePointerRef.current && !reducedMotionRef.current;
+            const offsets = offsetsRef.current;
+            const mouse = mouseRef.current;
+            const k = 90;    // spring stiffness
+            const c = 14;    // damping
+            const repelRadius = 170;
+            const repelStrength = 22000;
+            const particleRgb = colorsRef.current.particle;
+
             for (let p = 0; p < numParticles; p++) {
                 const t =
                     (1 + time * 0.3 + p * 0.2 + Math.sin(p * 7.89) * 0.8) % 4;
@@ -147,15 +177,69 @@ export default function FractalTunnel() {
 
                 const r = t * viewportRadius * 0.55;
 
+                const baseX = cx + Math.cos(a) * r;
+                const baseY = cy + Math.sin(a) * r;
+
+                const i = p * 4;
+                let ox = offsets[i]!;
+                let oy = offsets[i + 1]!;
+                let vx = offsets[i + 2]!;
+                let vy = offsets[i + 3]!;
+
+                if (springEnabled) {
+                    const dt = 0.016;
+                    // Repulsion from mouse pointer (at the particle's current drawn position).
+                    let fx = 0;
+                    let fy = 0;
+                    if (mouse.active) {
+                        const drawnX = baseX + ox;
+                        const drawnY = baseY + oy;
+                        const dx = drawnX - mouse.x;
+                        const dy = drawnY - mouse.y;
+                        const dist2 = dx * dx + dy * dy;
+                        if (dist2 < repelRadius * repelRadius && dist2 > 1) {
+                            const dist = Math.sqrt(dist2);
+                            const falloff = 1 - dist / repelRadius;
+                            const mag = (repelStrength * falloff * falloff) / dist2;
+                            fx = (dx / dist) * mag;
+                            fy = (dy / dist) * mag;
+                        }
+                    }
+                    // Hooke's law + damping back to rest (0, 0).
+                    const ax = -k * ox - c * vx + fx;
+                    const ay = -k * oy - c * vy + fy;
+                    vx += ax * dt;
+                    vy += ay * dt;
+                    ox += vx * dt;
+                    oy += vy * dt;
+                    // Clamp to avoid runaway displacement on tab-switch etc.
+                    const maxOff = 90;
+                    if (ox > maxOff) ox = maxOff;
+                    else if (ox < -maxOff) ox = -maxOff;
+                    if (oy > maxOff) oy = maxOff;
+                    else if (oy < -maxOff) oy = -maxOff;
+                    offsets[i] = ox;
+                    offsets[i + 1] = oy;
+                    offsets[i + 2] = vx;
+                    offsets[i + 3] = vy;
+                } else if (ox !== 0 || oy !== 0 || vx !== 0 || vy !== 0) {
+                    // Hard reset when interaction is disabled.
+                    offsets[i] = 0;
+                    offsets[i + 1] = 0;
+                    offsets[i + 2] = 0;
+                    offsets[i + 3] = 0;
+                    ox = oy = 0;
+                }
+
                 ctx.save();
-                ctx.translate(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+                ctx.translate(baseX + ox, baseY + oy);
                 ctx.scale(1, -1);
                 ctx.rotate(a);
 
                 const alpha = -0.075 + (t + 0.1) * 0.85 * (1 - t * 0.15);
                 const fontSize = 14 * (1 + t * 0.4) * ageGrowth;
 
-                ctx.fillStyle = `rgba(200,20,25,${alpha})`;
+                ctx.fillStyle = `rgba(${particleRgb.replace(/ /g, ',')},${alpha})`;
                 ctx.font = `${fontSize}px "Fira Code", monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -174,6 +258,64 @@ export default function FractalTunnel() {
     useEffect(() => {
         stableViewportHeightRef.current = window.innerHeight;
         stableViewportWidthRef.current = window.innerWidth;
+    }, []);
+
+    // theme color sync + pointer spring listeners
+    useEffect(() => {
+        const readColor = (name: string, fallback: string) => {
+            const v = getComputedStyle(document.documentElement)
+                .getPropertyValue(name)
+                .trim();
+            return v || fallback;
+        };
+
+        const refreshColors = () => {
+            colorsRef.current = {
+                tunnelPrimary: readColor('--tunnel-primary-rgb', '200 20 25'),
+                tunnelSecondary: readColor('--tunnel-secondary-rgb', '120 10 15'),
+                particle: readColor('--particle-rgb', '200 20 25'),
+            };
+        };
+
+        refreshColors();
+        window.addEventListener('themechange', refreshColors);
+
+        const fineMq = window.matchMedia('(pointer: fine)');
+        const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const syncFine = () => {
+            isFinePointerRef.current = fineMq.matches;
+        };
+        const syncMotion = () => {
+            reducedMotionRef.current = motionMq.matches;
+        };
+        syncFine();
+        syncMotion();
+        fineMq.addEventListener?.('change', syncFine);
+        motionMq.addEventListener?.('change', syncMotion);
+
+        const onPointerMove = (e: PointerEvent) => {
+            if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+            mouseRef.current.x = e.clientX;
+            mouseRef.current.y = e.clientY;
+            mouseRef.current.active = true;
+        };
+        const onPointerLeave = () => {
+            mouseRef.current.active = false;
+            mouseRef.current.x = -9999;
+            mouseRef.current.y = -9999;
+        };
+        window.addEventListener('pointermove', onPointerMove, {passive: true});
+        window.addEventListener('pointerleave', onPointerLeave);
+        window.addEventListener('blur', onPointerLeave);
+
+        return () => {
+            window.removeEventListener('themechange', refreshColors);
+            fineMq.removeEventListener?.('change', syncFine);
+            motionMq.removeEventListener?.('change', syncMotion);
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerleave', onPointerLeave);
+            window.removeEventListener('blur', onPointerLeave);
+        };
     }, []);
 
     useEffect(() => {
@@ -245,13 +387,16 @@ export default function FractalTunnel() {
 
     return (
         <>
-            <div className="absolute inset-0 h-full bg-black"/>
+            <div className="absolute inset-0 h-full bg-[var(--surface)]"/>
             <canvas
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full  pointer-events-none"
                 style={{zIndex: 0}}
             />
-            <div className="absolute inset-0 h-full bg-black/35"/>
+            <div
+                className="absolute inset-0 h-full pointer-events-none"
+                style={{backgroundColor: 'rgb(var(--surface-rgb) / 0.35)'}}
+            />
         </>
     );
 }

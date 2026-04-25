@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import ThemeProvider from '../components/theme/ThemeProvider';
 
 const queryClient = new QueryClient();
 
@@ -25,7 +26,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             <VhSetter />
-            {children}
+            <ThemeProvider>{children}</ThemeProvider>
         </QueryClientProvider>
     );
 }

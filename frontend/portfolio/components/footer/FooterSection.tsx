@@ -13,14 +13,14 @@ const FooterSection = () => {
             transition={{duration: 0.4, delay: 1.2}}
             className="
                 w-full
-                bg-black
-                border-t border-zinc-900
+                bg-[var(--surface)]
+                border-t border-[color-mix(in_oklab,var(--ink)_14%,transparent)]
                 py-6
                 text-center
                 z-20
             "
         >
-            <p className="text-gray-500 text-sm font-light">
+            <p className="text-[color-mix(in_oklab,var(--ink)_55%,transparent)] text-sm font-light">
                 © {new Date().getFullYear()} Denis Kaizer. Crafted with passion.
             </p>
         </motion.div>

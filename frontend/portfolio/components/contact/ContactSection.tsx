@@ -63,7 +63,7 @@ const colorClasses: Record<string, string> = {
     red: 'hover:text-red-400 hover:border-red-300',
     blue: 'hover:text-blue-400 hover:border-blue-300',
     sky: 'hover:text-sky-400 hover:border-sky-300',
-    white: 'hover:text-white hover:border-gray-300',
+    white: 'hover:text-[var(--ink)] hover:border-gray-300',
     yellow: 'hover:text-yellow-400 hover:border-yellow-300',
     lime: 'hover:text-lime-400 hover:border-lime-300',
     purple: 'hover:text-purple-400 hover:border-purple-300',
@@ -96,8 +96,8 @@ const ContactSection = ({settings}) => {
             className="
             relative
             min-h-screen max-h-350 md:min-h-245 md:max-h-350 lg:min-h-200 lg:max-h-screen
-            bg-black
-            border-t border-zinc-900
+            bg-[var(--surface)]
+            border-t border-[color-mix(in_oklab,var(--ink)_14%,transparent)]
             overflow-hidden
             flex flex-col
             "
@@ -117,7 +117,7 @@ const ContactSection = ({settings}) => {
                         absolute top-0 left-0
                         w-full h-15
                         bg-gradient-to-b
-                        from-black
+                        from-[var(--surface)]
                         to-transparent
                         z-20
                     "
@@ -134,9 +134,9 @@ const ContactSection = ({settings}) => {
                         relative left-1/2 -translate-x-1/2
                         w-fit
                         rounded-3xl
-                        bg-zinc-950/60
+                        bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]
                         backdrop-blur-xl
-                        border border-white/10
+                        border border-[color-mix(in_oklab,var(--ink)_14%,transparent)]
                         shadow-2xl
                         mt-19.5 sm:mt-27 md:mt-33
                         px-8 md:px-12 pt-8 pb-10 md:pt-12 sm:pb-8 md:pb-12
@@ -144,9 +144,9 @@ const ContactSection = ({settings}) => {
                 >
                     <div className="
                         absolute inset-0 rounded-3xl
-                        bg-gradient-to-b from-white/5 to-transparent
+                        bg-gradient-to-b from-[color-mix(in_oklab,var(--ink)_5%,transparent)] to-transparent
                         pointer-events-none
-                        border border-gray-400
+                        border border-[color-mix(in_oklab,var(--ink)_20%,transparent)]
                         -z-10
                     "/>
 
@@ -157,7 +157,7 @@ const ContactSection = ({settings}) => {
                         </span>
 
                         <h2
-                            className="mt-4 font-codec text-3xl sm:text-5xl md:text-5xl lg:text-6xl text-white tracking-tight whitespace-nowrap"
+                            className="mt-4 font-codec text-3xl sm:text-5xl md:text-5xl lg:text-6xl text-[var(--ink)] tracking-tight whitespace-nowrap"
                             style={{fontFamily: 'var(--font-codecBold)'}}
                         >
                             Now We Talk
@@ -203,11 +203,11 @@ const ContactSection = ({settings}) => {
                                 px-6 py-4 rounded-xl
                                 w-44
                                 justify-center
-                                bg-zinc-900/50
-                                text-gray-200
+                                bg-[color-mix(in_oklab,var(--surface)_50%,transparent)]
+                                text-[var(--ink-soft)]
                                 transition-colors duration-200 ease-in-out
                                 backdrop-blur-2xl
-                                border border-gray-400                               
+                                border border-[color-mix(in_oklab,var(--ink)_20%,transparent)]
                                 ${colorClasses[link.color]}
                             `;
 
@@ -275,7 +275,7 @@ const ContactSection = ({settings}) => {
                         {/* Wrapper defines the central vertical axis */}
                         <div className="grid grid-cols-2 w-full max-w-5xl pb-11.5 sm:pb-4.5">
                             <h2
-                                className="col-span-2 mt-4 font-codec text-white tracking-tight"
+                                className="col-span-2 mt-4 font-codec text-[var(--ink)] tracking-tight"
                                 style={{fontFamily: 'var(--font-codec)'}}
                             >
                                 {/* FIRST LINE */}
@@ -369,7 +369,7 @@ const ContactSection = ({settings}) => {
                         w-full h-15
                         bg-gradient-to-b
                         from-transparent
-                        to-black
+                        to-[var(--surface)]
                         z-9
                     "
                 />

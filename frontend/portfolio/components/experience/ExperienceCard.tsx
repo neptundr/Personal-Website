@@ -271,12 +271,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 ref={cardRef}
                 className={`
                     relative overflow-hidden rounded-3xl
-                    outline-1 outline-gray-400 shadow-2xl
-                    bg-zinc-950 
+                    outline-1 outline-[color-mix(in_oklab,var(--ink)_25%,transparent)] shadow-2xl
+                    bg-[color-mix(in_oklab,var(--surface)_92%,var(--ink))]
                     p-6
                     transition-all duration-300
                     ${item.title.includes(" -s") ? 'outline-dashed outline-4' : ''}
-                    hover:outline-4 hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10
+                    hover:outline-4 hover:outline-[color-mix(in_oklab,var(--ink)_60%,transparent)] hover:shadow-lg hover:shadow-red-500/10
                     ${dimmed ? 'opacity-93 outline-gray-700' : ''}
               `}
             >
@@ -369,7 +369,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             <motion.div
                                                 className="
                                                     absolute -left-11 -translate-x-1/2
-                                                    bg-black text-white text-xs px-2 py-1 rounded-md
+                                                    bg-[var(--ink)] text-[var(--surface)] text-xs px-2 py-1 rounded-md
                                                     pointer-events-none
                                                     whitespace-nowrap
                                                     z-10
