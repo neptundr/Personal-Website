@@ -65,9 +65,9 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                 <Image
                                     src={education.logo_url}
                                     alt={education.institution}
-                                    width={80}
-                                    height={80}
-                                    className="w-20 h-20 object-contain"
+                                    width={104}
+                                    height={104}
+                                    className="w-20 h-20 lg:w-26 lg:h-26 object-contain"
                                     unoptimized={education.logo_url.endsWith('.svg')}
                                 />
                             </div>
@@ -92,7 +92,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                             {education.institution} {" "}
                         </span>
 
-                        <span className="text-gray-400 whitespace-nowrap pr-5">
+                        <span className="text-gray-400 whitespace-nowrap pr-5" style={{fontFamily: 'var(--font-anelka)'}}>
                             {education.start_year} — {education.end_year || 'Present'}
                         </span>
                     </a>

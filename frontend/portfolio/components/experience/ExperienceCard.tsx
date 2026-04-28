@@ -290,7 +290,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         <div className="flex-1">
                             <h3
                                 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
-                                style={{fontFamily: 'var(--font-codecBold)'}}
+                                style={{fontFamily: item.title.includes(' -s') ? 'var(--font-codecBold)' : 'var(--font-anelka)'}}
                             >
                                 {item.title.replace(" -v", "").replace(" -s", "")}
                             </h3>
