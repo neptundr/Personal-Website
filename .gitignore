@@ -1,0 +1,4 @@
+.DS_Store
+.claude/worktrees/
+frontend/portfolio/.next/
+frontend/portfolio/node_modules/

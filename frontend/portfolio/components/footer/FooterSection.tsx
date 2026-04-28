@@ -21,7 +21,7 @@ const FooterSection = () => {
             "
         >
             <p className="text-gray-500 text-sm font-light">
-                © {new Date().getFullYear()} Denis Kaizer. Crafted with passion.
+                © {new Date().getFullYear()} Denis Kaizer. Keep smiling :)
             </p>
         </motion.div>
     );

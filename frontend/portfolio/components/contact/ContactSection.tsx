@@ -316,32 +316,32 @@ const ContactSection = ({settings}) => {
 
                                     <div className="flex justify-start pl-1 sm:pl-2">
                                         <span className={"whitespace-nowrap"}>
-                                            {new Date().toLocaleDateString('en-US', {weekday: 'long'})}
-                                            <motion.span
-                                                className="inline-block ml-1"
-                                                initial={{y: 0, scale: 1}}
-                                                animate={{y: [0, -15, 0], scale: [1, 1.1, 1]}}
-                                                transition={{
-                                                    y: {
-                                                        duration: 0.4345,
-                                                        delay: 0.35,
-                                                        times: [0, 0.35, 1],
-                                                        ease: 'easeInOut',
-                                                        repeat: Infinity,
-                                                        repeatDelay: 3.5 - 0.35,
-                                                    },
-                                                    scale: {
-                                                        duration: 0.4345,
-                                                        delay: 0.35,
-                                                        times: [0, 0.5, 1],
-                                                        ease: 'easeInOut',
-                                                        repeat: Infinity,
-                                                        repeatDelay: 3.5 - 0.35,
-                                                    }
-                                                }}
-                                            >
-                                                !
-                                            </motion.span>
+                                            {new Date().toLocaleDateString('en-US', {weekday: 'long'})}!
+                                            {/*<motion.span*/}
+                                            {/*    className="inline-block ml-1"*/}
+                                            {/*    initial={{y: 0, scale: 1}}*/}
+                                            {/*    animate={{y: [0, -15, 0], scale: [1, 1.1, 1]}}*/}
+                                            {/*    transition={{*/}
+                                            {/*        y: {*/}
+                                            {/*            duration: 0.4345,*/}
+                                            {/*            delay: 0.35,*/}
+                                            {/*            times: [0, 0.35, 1],*/}
+                                            {/*            ease: 'easeInOut',*/}
+                                            {/*            repeat: Infinity,*/}
+                                            {/*            repeatDelay: 3.5 - 0.35,*/}
+                                            {/*        },*/}
+                                            {/*        scale: {*/}
+                                            {/*            duration: 0.4345,*/}
+                                            {/*            delay: 0.35,*/}
+                                            {/*            times: [0, 0.5, 1],*/}
+                                            {/*            ease: 'easeInOut',*/}
+                                            {/*            repeat: Infinity,*/}
+                                            {/*            repeatDelay: 3.5 - 0.35,*/}
+                                            {/*        }*/}
+                                            {/*    }}*/}
+                                            {/*>*/}
+                                            {/*    !*/}
+                                            {/*</motion.span>*/}
                                         </span>
                                     </div>
                                 </div>

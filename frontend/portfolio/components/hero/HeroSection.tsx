@@ -276,7 +276,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             className="absolute top-1/2 left-1/2
                                        -translate-x-1/2 -translate-y-1/2
                                        text-white text-[clamp(4rem,18vw,12rem)]"
-                            style={{fontFamily: 'var(--font-anelka)'}}
+                            style={{fontFamily: 'var(--font-codecBold)'}}
                         >
                             Portfolio
                         </motion.h1>
@@ -336,7 +336,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                         >
                             <span className="text-white text-xl md:text-2xl">
                                 <span style={{fontFamily: 'var(--font-codecBold)'}}>Denis Kaizer.</span>
-                                <span style={{fontFamily: 'var(--font-anelka)'}}> Developer Portfolio</span>
+                                <span style={{fontFamily: 'var(--font-codecBold)'}}> Developer Portfolio</span>
                             </span>
 
                             {availableForHire && showBadge && (<div>

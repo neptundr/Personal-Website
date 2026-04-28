@@ -92,7 +92,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                             {education.institution} {" "}
                         </span>
 
-                        <span className="text-gray-400 whitespace-nowrap pr-5" style={{fontFamily: 'var(--font-anelka)'}}>
+                        <span className="text-gray-400 whitespace-nowrap pr-5" style={{fontFamily: 'var(--font-codecBold)'}}>
                             {education.start_year} — {education.end_year || 'Present'}
                         </span>
                     </a>
