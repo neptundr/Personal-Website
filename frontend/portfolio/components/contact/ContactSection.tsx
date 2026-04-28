@@ -275,8 +275,8 @@ const ContactSection = ({settings}) => {
                         {/* Wrapper defines the central vertical axis */}
                         <div className="grid grid-cols-2 w-full max-w-5xl pb-11.5 sm:pb-4.5">
                             <h2
-                                className="col-span-2 mt-4 font-codec text-white tracking-tight"
-                                style={{fontFamily: 'var(--font-codec)'}}
+                                className="col-span-2 mt-4 text-white tracking-tight"
+                                style={{fontFamily: 'var(--font-anelka)'}}
                             >
                                 {/* FIRST LINE */}
                                 <div

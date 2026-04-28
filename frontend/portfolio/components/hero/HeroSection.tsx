@@ -276,7 +276,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             className="absolute top-1/2 left-1/2
                                        -translate-x-1/2 -translate-y-1/2
                                        text-white text-[clamp(4rem,18vw,12rem)]"
-                            style={{fontFamily: 'var(--font-codecBold)'}}
+                            style={{fontFamily: 'var(--font-anelka)'}}
                         >
                             Portfolio
                         </motion.h1>
@@ -334,11 +334,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             transition={{duration: 0.6}}
                             className="absolute top-18 left-6 md:left-12 lg:left-24 flex flex-col gap-3"
                         >
-                            <span
-                                className="text-white text-xl md:text-2xl"
-                                style={{fontFamily: 'var(--font-codecBold)'}}
-                            >
-                                Denis Kaizer. Developer Portfolio
+                            <span className="text-white text-xl md:text-2xl">
+                                <span style={{fontFamily: 'var(--font-codecBold)'}}>Denis Kaizer.</span>
+                                <span style={{fontFamily: 'var(--font-anelka)'}}> Developer Portfolio</span>
                             </span>
 
                             {availableForHire && showBadge && (<div>
@@ -387,8 +385,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* SCROLL DOWN HINT */}
                 <AnimatePresence>
                     {showScrollHint && (
-                        <motion.div
-                            className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2"
+                        <motion.button
+                            onClick={() => document.getElementById('experience')?.scrollIntoView({behavior: 'smooth'})}
+                            className="absolute bottom-5 left-1/2 -translate-x-1/2 cursor-pointer bg-transparent border-none p-0"
                             initial={{opacity: 0, y: 15}}
                             animate={{
                                 opacity: 1,
@@ -413,7 +412,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                             >
                                 Scroll Down
                             </span>
-                        </motion.div>
+                        </motion.button>
                     )}
                 </AnimatePresence>
             </div>

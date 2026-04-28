@@ -17,3 +17,9 @@ export const codecBold = localFont({
     variable: "--font-codecBold",
     display: "swap",
 });
+
+export const anelka = localFont({
+    src: "../public/fonts/AnelkaFambuyaRegular.ttf",
+    variable: "--font-anelka",
+    display: "swap",
+});
