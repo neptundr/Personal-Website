@@ -150,37 +150,73 @@ export default function LiquidHero({ colorConfig = DEFAULT_COLOR_CONFIG }: Liqui
             dye.swap();
         }
 
-        // ── Ambient stroke: curved Bézier arc of splats ───────────────────
+        // ── Ambient stroke: curved Bézier from a random screen edge ─────────
         function ambientStroke() {
             const W = canvas.width;
             const H = canvas.height;
 
-            const x0    = Math.random() * W;
-            const y0    = Math.random() * H;
-            const angle = Math.random() * Math.PI * 2;
-            const len   = Math.min(W, H) * (0.35 + Math.random() * 0.40);
+            // Origin within 8% of a random edge; angle points inward
+            const margin = 0.08;
+            const edge   = Math.floor(Math.random() * 4);
+            let x0: number, y0: number, baseAngle: number;
 
-            // Bézier control point — perpendicular offset creates curvature
+            switch (edge) {
+                case 0: // top → downward
+                    x0 = Math.random() * W;
+                    y0 = Math.random() * H * margin;
+                    baseAngle = Math.PI * 0.5;
+                    break;
+                case 1: // right → leftward
+                    x0 = W * (1 - Math.random() * margin);
+                    y0 = Math.random() * H;
+                    baseAngle = Math.PI;
+                    break;
+                case 2: // bottom → upward
+                    x0 = Math.random() * W;
+                    y0 = H * (1 - Math.random() * margin);
+                    baseAngle = Math.PI * 1.5;
+                    break;
+                default: // left → rightward
+                    x0 = Math.random() * W * margin;
+                    y0 = Math.random() * H;
+                    baseAngle = 0;
+                    break;
+            }
+
+            // ±50° spread around inward direction
+            const angle = baseAngle + (Math.random() - 0.5) * (Math.PI * 5 / 9);
+            const len   = Math.min(W, H) * (0.35 + Math.random() * 0.45);
+
+            // Bézier control point — perpendicular bend for curvature
             const perp = angle + Math.PI / 2;
             const bend = len * (Math.random() - 0.5) * 0.65;
             const cBx  = x0 + Math.cos(angle) * len * 0.5 + Math.cos(perp) * bend;
             const cBy  = y0 + Math.sin(angle) * len * 0.5 + Math.sin(perp) * bend;
-
-            const x1 = x0 + Math.cos(angle) * len;
-            const y1 = y0 + Math.sin(angle) * len;
+            const x1   = x0 + Math.cos(angle) * len;
+            const y1   = y0 + Math.sin(angle) * len;
 
             const STEPS = 32;
             let px = x0, py = y0;
-
             for (let i = 1; i <= STEPS; i++) {
                 const t  = i / STEPS;
                 const mt = 1 - t;
                 const bx = mt * mt * x0 + 2 * mt * t * cBx + t * t * x1;
                 const by = mt * mt * y0 + 2 * mt * t * cBy + t * t * y1;
                 splat(bx, by, (bx - px) * 7, (by - py) * 7);
-                px = bx;
-                py = by;
+                px = bx; py = by;
             }
+
+            // Notify text overlay: normalized direction for shake
+            window.dispatchEvent(new CustomEvent('ambientStroke', {
+                detail: { dx: Math.cos(angle), dy: Math.sin(angle) },
+            }));
+        }
+
+        // Interval scales with screen width — fewer strokes on small screens
+        function ambientIntervalMs(): number {
+            if (innerWidth >= 1024) return 700;
+            if (innerWidth >= 600)  return 1400;
+            return 2800;
         }
 
         // ── Simulation step ───────────────────────────────────────────────
@@ -311,8 +347,9 @@ export default function LiquidHero({ colorConfig = DEFAULT_COLOR_CONFIG }: Liqui
         canvas.addEventListener('pointerleave', onPointerUp,   { passive: true });
 
         // ── Boot ──────────────────────────────────────────────────────────
-        for (let i = 0; i < INITIAL_SPLAT_COUNT; i++) ambientStroke();
-        const ambientTimer = setInterval(ambientStroke, AMBIENT_SPLAT_INTERVAL);
+        const initCount = innerWidth >= 768 ? INITIAL_SPLAT_COUNT : Math.max(2, Math.floor(INITIAL_SPLAT_COUNT / 2));
+        for (let i = 0; i < initCount; i++) ambientStroke();
+        const ambientTimer = setInterval(ambientStroke, ambientIntervalMs());
 
         // ── RAF + pause hooks ─────────────────────────────────────────────
         let rafId   = 0;

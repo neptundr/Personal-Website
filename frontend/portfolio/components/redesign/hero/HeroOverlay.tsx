@@ -1,4 +1,5 @@
-import React from 'react';
+'use client';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface HeroOverlayProps {
     centerWord: string;
@@ -10,15 +11,43 @@ interface HeroOverlayProps {
  * Layout:
  *   Left  — "Denis Kaizer"        vertical, reads bottom-to-top
  *   Right — "Developer Portfolio" vertical, reads top-to-bottom
- *   Center — admin-editable word, Anton font, heavy condensed
+ *   Center — admin-editable word, Bebas Neue font, heavy condensed
+ *
+ * Listens for `ambientStroke` CustomEvents dispatched by LiquidHero
+ * and briefly shakes all text in the stroke direction for impact.
  *
  * Vignette applied here via CSS radial-gradient (free, no JS).
  */
 export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
+    const [shake, setShake] = useState({ x: 0, y: 0 });
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        function onStroke(e: Event) {
+            const { dx, dy } = (e as CustomEvent<{ dx: number; dy: number }>).detail;
+            if (timerRef.current) clearTimeout(timerRef.current);
+            // Snap to offset immediately, then ease back
+            setShake({ x: dx * 5, y: dy * 5 });
+            timerRef.current = setTimeout(() => setShake({ x: 0, y: 0 }), 180);
+        }
+        window.addEventListener('ambientStroke', onStroke);
+        return () => {
+            window.removeEventListener('ambientStroke', onStroke);
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    const isResting = shake.x === 0 && shake.y === 0;
+
     return (
         <div
             className="fixed inset-0 w-full h-full"
-            style={{ zIndex: 20, pointerEvents: 'none' }}
+            style={{
+                zIndex: 20,
+                pointerEvents: 'none',
+                transform: `translate(${shake.x}px, ${shake.y}px)`,
+                transition: isResting ? 'transform 220ms ease-out' : 'none',
+            }}
         >
             {/* Vignette */}
             <div
@@ -41,7 +70,7 @@ export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
                     transform: 'translateY(-50%) rotate(180deg)',
                     writingMode: 'vertical-rl',
                     fontFamily: 'var(--font-codecBold)',
-                    fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
+                    fontSize: 'clamp(0.75rem, 1.3vw, 1.1rem)',
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',
                     color: '#F9F9F9',
@@ -62,7 +91,7 @@ export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
                     transform: 'translateY(-50%)',
                     writingMode: 'vertical-rl',
                     fontFamily: 'var(--font-codecBold)',
-                    fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
+                    fontSize: 'clamp(0.75rem, 1.3vw, 1.1rem)',
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',
                     color: '#F9F9F9',
