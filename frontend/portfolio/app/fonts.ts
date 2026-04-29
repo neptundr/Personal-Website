@@ -1,4 +1,5 @@
 import localFont from "next/font/local";
+import { Anton } from "next/font/google";
 
 export const codec = localFont({
     src: "../public/fonts/codec-500.ttf",
@@ -21,5 +22,12 @@ export const codecBold = localFont({
 export const anelka = localFont({
     src: "../public/fonts/AnelkaFambuyaRegular.ttf",
     variable: "--font-anelka",
+    display: "swap",
+});
+
+export const anton = Anton({
+    weight: "400",
+    subsets: ["latin"],
+    variable: "--font-anton",
     display: "swap",
 });

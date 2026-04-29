@@ -27,6 +27,7 @@ interface SiteSettings {
     email: string;
     twitter_url: string;
     resume_url: string;
+    hero_center_word?: string;
 }
 
 /* --------------------------- component --------------------------- */
@@ -44,7 +45,8 @@ export default function AdminSettings() {
         github_url: '',
         email: '',
         twitter_url: '',
-        resume_url: ''
+        resume_url: '',
+        hero_center_word: '',
     });
 
     const [loveItemsText, setLoveItemsText] = useState<string>('');
@@ -75,6 +77,7 @@ export default function AdminSettings() {
             email: settings.email ?? '',
             twitter_url: settings.twitter_url ?? '',
             resume_url: settings.resume_url ?? '',
+            hero_center_word: settings.hero_center_word ?? '',
         });
 
         setLoveItemsText((settings.love_items ?? [''])?.join(", "));
@@ -237,6 +240,21 @@ export default function AdminSettings() {
                                     rows={2}
                                 />
                                 <p className="text-xs text-white/30 mt-1">These will rotate in the hero section</p>
+                            </div>
+
+                            <div>
+                                <Label className="text-white/80 mb-2 block">Center word (new design)</Label>
+                                <Input
+                                    value={formData.hero_center_word ?? ''}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData(prev => ({
+                                        ...prev,
+                                        hero_center_word: e.target.value,
+                                    }))}
+                                    placeholder="CREATE"
+                                    maxLength={20}
+                                    className="bg-black border-white/10 text-white placeholder:text-white/30"
+                                />
+                                <p className="text-xs text-white/30 mt-1">Large condensed word displayed over the liquid hero (max 20 chars)</p>
                             </div>
                         </CardContent>
                     </Card>

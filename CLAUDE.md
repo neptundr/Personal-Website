@@ -159,3 +159,34 @@ npm run build    # verify production build before pushing
 ```
 
 The `backend/` folder has its own Python venv and is not needed for local development.
+
+---
+
+## Redesign v2 (branch: `redesign/v2`)
+
+Phase 1 complete: liquid WebGL hero at `/`.
+
+### New files
+| Path | Purpose |
+|------|---------|
+| `components/redesign/hero/LiquidHero.tsx` | WebGL2 Navier-Stokes fluid sim, mouse-interactive |
+| `components/redesign/hero/LiquidHeroLazy.tsx` | `dynamic(..., {ssr:false})` client wrapper |
+| `components/redesign/hero/liquid-shaders.ts` | All GLSL shader strings |
+| `components/redesign/hero/liquid-config.ts` | Palette, sim constants, FBO sizes |
+| `components/redesign/hero/liquid-webgl.ts` | WebGL helpers (FBO, programs, blit) |
+| `components/redesign/hero/Grain.tsx` | SVG feTurbulence film grain overlay |
+| `components/redesign/hero/HeroOverlay.tsx` | Side text + Anton center word + vignette |
+| `app/old-design/page.tsx` | Preserved old home at `/old-design` |
+
+### Supabase migration (run manually in dashboard)
+```sql
+ALTER TABLE site_settings
+ADD COLUMN IF NOT EXISTS hero_center_word TEXT DEFAULT 'CREATE';
+```
+
+### Design tokens (redesign)
+- Magenta: `#E91E5C` / `{ r:0.913, g:0.118, b:0.361 }`
+- Mint: `#2EE5A0` / `{ r:0.180, g:0.898, b:0.627 }`
+- Background: `#0A0A0C`
+- Center word font: Anton (`--font-anton`, Google Fonts)
+- Side text font: codecBold (`--font-codecBold`)

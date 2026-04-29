@@ -44,4 +44,5 @@ export interface SiteSettings {
   email?: string;
   twitter_url?: string;
   resume_url?: string;
+  hero_center_word?: string;
 }
