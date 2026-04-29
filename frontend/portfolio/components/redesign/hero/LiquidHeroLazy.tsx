@@ -1,11 +1,15 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import type { ColorConfig } from './liquid-config';
 
-// Thin client-side wrapper so a Server Component can dynamically import
-// the canvas component with ssr: false (Next.js requires this inside a Client Component).
+interface Props { colorConfig?: ColorConfig }
+
+// ssr: false must live inside a Client Component (Next.js 16 rule).
 const LiquidHero = dynamic(() => import('./LiquidHero'), { ssr: false });
 
-export default function LiquidHeroLazy() {
-    return <LiquidHero />;
+export default function LiquidHeroLazy({ colorConfig }: Props) {
+    return colorConfig !== undefined
+        ? <LiquidHero colorConfig={colorConfig} />
+        : <LiquidHero />;
 }

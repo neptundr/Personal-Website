@@ -17,7 +17,7 @@ export default function Grain() {
                 pointerEvents: 'none',
                 zIndex: 10,
                 mixBlendMode: 'overlay',
-                opacity: 0.12,
+                opacity: 0.48,
             }}
         >
             <svg

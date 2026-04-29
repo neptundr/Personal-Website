@@ -1,7 +1,7 @@
 import type {ReactNode} from 'react';
 // @ts-ignore
 import './globals.css';
-import {codec, codecBold, codecLight, anelka, anton} from './fonts';
+import {codec, codecBold, codecLight, anelka, anton, bebasNeue} from './fonts';
 import Providers from './providers';
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -34,7 +34,7 @@ export const metadata = {
 
 export default function RootLayout({children}: { children: ReactNode }) {
     return (
-        <html lang="en" className={`${codec.variable} ${codecLight.variable} ${codecBold.variable} ${anelka.variable} ${anton.variable}`}>
+        <html lang="en" className={`${codec.variable} ${codecLight.variable} ${codecBold.variable} ${anelka.variable} ${anton.variable} ${bebasNeue.variable}`}>
             <body>
                 <Providers>
                     {children}

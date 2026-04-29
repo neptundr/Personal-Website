@@ -193,17 +193,33 @@ export const gradientSubtractShader = `
     }
 `;
 
-/** Renders dye to screen with RGB chromatic aberration. */
+/**
+ * Display shader — maps dye luminance to one of 4 colours via hard thresholds.
+ * All dye is injected as white so lum = R channel intensity (clamped 0..1).
+ *
+ * Uniforms:
+ *   cDark, cMid, cMidLight, cLight  — vec3 RGB (0..1)
+ *   t1, t2, t3                      — ascending luminance thresholds 0..1
+ */
 export const displayShader = `
     precision highp float;
     precision highp sampler2D;
     varying vec2 vUv;
     uniform sampler2D uTexture;
-    uniform float aberration;
+    uniform vec3 cDark;
+    uniform vec3 cMid;
+    uniform vec3 cMidLight;
+    uniform vec3 cLight;
+    uniform float t1;
+    uniform float t2;
+    uniform float t3;
     void main () {
-        float r = texture2D(uTexture, vec2(vUv.x + aberration, vUv.y)).r;
-        float g = texture2D(uTexture, vUv).g;
-        float b = texture2D(uTexture, vec2(vUv.x - aberration, vUv.y)).b;
-        gl_FragColor = vec4(r, g, b, 1.0);
+        float lum = clamp(texture2D(uTexture, vUv).r, 0.0, 1.0);
+        vec3 col;
+        if      (lum >= t3) { col = cLight;    }
+        else if (lum >= t2) { col = cMidLight; }
+        else if (lum >= t1) { col = cMid;      }
+        else                { col = cDark;     }
+        gl_FragColor = vec4(col, 1.0);
     }
 `;

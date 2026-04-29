@@ -27,7 +27,7 @@ export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
                     position: 'absolute',
                     inset: 0,
                     background:
-                        'radial-gradient(ellipse at center, transparent 55%, #050507 100%)',
+                        'radial-gradient(ellipse at center, transparent 50%, #1D0118 100%)',
                 }}
             />
 
@@ -44,7 +44,7 @@ export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
                     fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',
-                    color: 'rgba(245,245,245,0.85)',
+                    color: '#F9F9F9',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
                 }}
@@ -65,7 +65,7 @@ export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
                     fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',
-                    color: 'rgba(245,245,245,0.85)',
+                    color: '#F9F9F9',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
                 }}
@@ -85,15 +85,14 @@ export default function HeroOverlay({ centerWord }: HeroOverlayProps) {
             >
                 <h1
                     style={{
-                        fontFamily: 'var(--font-anton)',
+                        fontFamily: 'var(--font-bebas)',
                         fontSize: 'clamp(6rem, 18vw, 16rem)',
                         lineHeight: 1,
                         letterSpacing: '-0.02em',
                         textTransform: 'uppercase',
-                        color: '#ffffff',
+                        color: '#F9F9F9',
                         margin: 0,
                         userSelect: 'none',
-                        mixBlendMode: 'difference',
                     }}
                 >
                     {centerWord}

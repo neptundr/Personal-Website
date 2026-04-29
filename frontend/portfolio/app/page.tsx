@@ -1,6 +1,6 @@
 import React from 'react';
 
-import LiquidHeroLazy from '@/components/redesign/hero/LiquidHeroLazy';
+import LiquidHeroSection from '@/components/redesign/hero/LiquidHeroSection';
 import Grain from '@/components/redesign/hero/Grain';
 import HeroOverlay from '@/components/redesign/hero/HeroOverlay';
 
@@ -30,7 +30,7 @@ export default async function Home() {
             style={{ background: '#0A0A0C', minHeight: '100vh' }}
         >
             {/* Fluid canvas — fixed, fills viewport */}
-            <LiquidHeroLazy />
+            <LiquidHeroSection />
 
             {/* Film grain overlay */}
             <Grain />

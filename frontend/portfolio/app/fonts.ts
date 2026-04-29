@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Anton } from "next/font/google";
+import { Anton, Bebas_Neue } from "next/font/google";
 
 export const codec = localFont({
     src: "../public/fonts/codec-500.ttf",
@@ -29,5 +29,12 @@ export const anton = Anton({
     weight: "400",
     subsets: ["latin"],
     variable: "--font-anton",
+    display: "swap",
+});
+
+export const bebasNeue = Bebas_Neue({
+    weight: "400",
+    subsets: ["latin"],
+    variable: "--font-bebas",
     display: "swap",
 });
