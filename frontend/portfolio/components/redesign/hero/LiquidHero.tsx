@@ -202,7 +202,7 @@ export default function LiquidHero({ colorConfig = DEFAULT_COLOR_CONFIG }: Liqui
                 const mt = 1 - t;
                 const bx = mt * mt * x0 + 2 * mt * t * cBx + t * t * x1;
                 const by = mt * mt * y0 + 2 * mt * t * cBy + t * t * y1;
-                splat(bx, by, (bx - px) * 7, (by - py) * 7);
+                splat(bx, by, (bx - px) * 4, (by - py) * 4);
                 px = bx; py = by;
             }
 
@@ -329,7 +329,7 @@ export default function LiquidHero({ colorConfig = DEFAULT_COLOR_CONFIG }: Liqui
             const { cx, cy } = canvasXY(e);
             const p = ptrs.get(e.pointerId);
             if (p) {
-                if (p.down) splat(cx, cy, (cx - p.x) * 6, (cy - p.y) * 6);
+                if (p.down) splat(cx, cy, (cx - p.x) * 2, (cy - p.y) * 2);
                 p.x = cx; p.y = cy;
             } else {
                 ptrs.set(e.pointerId, { x: cx, y: cy, down: false });
