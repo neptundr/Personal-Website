@@ -38,6 +38,7 @@ export interface Project {
     skills?: string[];
     link?: string;
     github_url?: string;
+    app_store_url?: string;
     order?: number;
     featured?: boolean;
 }
@@ -53,7 +54,7 @@ type FieldConfig = {
 };
 
 const projectFields: FieldConfig[] = [
-    {key: 'title', label: 'Title ("-v" for a vertical image frame; "-s" for special display)', type: 'text', placeholder: 'Title'},
+    {key: 'title', label: 'Title ("-v" vertical frame; "-s" special display; "-f" full natural-resolution image)', type: 'text', placeholder: 'Title'},
     {
         key: 'type',
         label: 'Type',
@@ -75,6 +76,7 @@ const projectFields: FieldConfig[] = [
     {key: 'skills', label: 'Skills (comma-separated)', type: 'array'},
     {key: 'link', label: 'External Link', type: 'text'},
     {key: 'github_url', label: 'GitHub URL', type: 'text'},
+    {key: 'app_store_url', label: 'App Store URL', type: 'text'},
     {key: 'order', label: 'Display Order', type: 'number'},
     {key: 'featured', label: 'Featured', type: 'boolean'},
 ] as const;

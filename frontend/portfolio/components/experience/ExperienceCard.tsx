@@ -3,7 +3,7 @@
 import React, {useState, useRef, useEffect, useMemo} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {format} from 'date-fns';
-import {ExternalLink, Github} from 'lucide-react';
+import {ExternalLink, Github, Star} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
 
@@ -18,6 +18,7 @@ interface ExperienceItem {
     featured?: boolean;
     link?: string;
     github_url?: string;
+    app_store_url?: string;
     image_url?: string;
     description?: string;
     skills?: string[];
@@ -43,8 +44,26 @@ const formatDate = (date?: string) => {
     }
 };
 
-// Tracks whether the initial staggered load delay has already passed.
-// Module-level so it survives re-mounts (filter toggles, etc.).
+// Apple App Store icon (not in lucide)
+const AppStoreIcon = () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+    </svg>
+);
+
+const btnMotion = (show: boolean, i: number) => ({
+    animate: {
+        opacity: show ? 1 : 0,
+        x: show ? 0 : 8,
+        scale: show ? 1 : 0.88,
+    } as const,
+    transition: {
+        delay: show ? i * 0.055 : (3 - i) * 0.04,
+        duration: show ? 0.22 : 0.18,
+        ease: (show ? [0.16, 1, 0.3, 1] : 'easeIn') as [number, number, number, number] | 'easeIn',
+    },
+});
+
 let initialPageLoadDone = false;
 
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
@@ -56,7 +75,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            currentSkillFilter,
                                                            skillIcons = [],
                                                        }) => {
-    // Touch device detection
+    const hasFlag = (f: string) => item.title.includes(` -${f}`);
+    const isVertical = hasFlag('v');
+    const isSpecial = hasFlag('s');
+    const isFull = hasFlag('f');
+    const cleanTitle = item.title.replace(/ -[vsf]/g, '').trim();
+
     const [isTouch, setIsTouch] = useState(false);
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -67,13 +91,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         return () => mq.removeEventListener('change', handler);
     }, []);
 
-    // Hover state
     const [hovered, setHovered] = useState(false);
     const [isStarHovered, setIsStarHovered] = useState(false);
     const [imageHovered, setImageHovered] = useState(false);
     const [viewerOpen, setViewerOpen] = useState(false);
 
-    // Images
     const images = useMemo(() => {
         if (!item.image_url) return [];
         return item.image_url
@@ -82,9 +104,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             .filter(Boolean);
     }, [item.image_url]);
 
-    // Delay src assignment so all cards don't fire simultaneously on the very
-    // first page load. Once any card's timer fires, the flag stays true for the
-    // rest of the session — re-mounts (e.g. filter toggle) load instantly.
     const [isReadyToLoad, setIsReadyToLoad] = useState(initialPageLoadDone);
     useEffect(() => {
         if (initialPageLoadDone) return;
@@ -95,21 +114,22 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         return () => clearTimeout(t);
     }, [index]);
 
-    // Per-image retry: on error, re-queue a cache-busted src after 2 s.
     const [retrySuffixes, setRetrySuffixes] = useState<Record<string, number>>({});
     const retryTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
     const handleImgError = (src: string) => {
-        if (retryTimers.current[src]) return; // already scheduled
+        if (retryTimers.current[src]) return;
         retryTimers.current[src] = setTimeout(() => {
             delete retryTimers.current[src];
-            setRetrySuffixes(prev => ({ ...prev, [src]: Date.now() }));
+            setRetrySuffixes(prev => ({...prev, [src]: Date.now()}));
         }, 2000);
     };
 
     useEffect(() => {
         const timers = retryTimers.current;
-        return () => { Object.values(timers).forEach(clearTimeout); };
+        return () => {
+            Object.values(timers).forEach(clearTimeout);
+        };
     }, []);
 
     const resolvedSrc = (src: string) => {
@@ -117,7 +137,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         return suffix ? `${src}?_r=${suffix}` : src;
     };
 
-    // Preload images only after the load delay kicks in.
     useEffect(() => {
         if (!isReadyToLoad || typeof window === 'undefined') return;
         images.forEach(src => {
@@ -126,7 +145,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         });
     }, [isReadyToLoad, images]);
 
-    // Crossfade state
     const [imgIndex, setImgIndex] = useState(0);
     const [prevImgIndex, setPrevImgIndex] = useState(0);
     const [imgLoaded, setImgLoaded] = useState(false);
@@ -136,9 +154,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const imgIndexRef = useRef(imgIndex);
     imgIndexRef.current = imgIndex;
     const decodedRef = useRef<Set<string>>(new Set());
-    // Only create interval once, and control with imageActive state
     const imageActive = isTouch || hovered;
-    // Stable image rotation logic
+
     const ensureDecoded = async (src: string) => {
         if (decodedRef.current.has(src)) return;
         await new Promise<void>((resolve) => {
@@ -156,32 +173,30 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         });
         decodedRef.current.add(src);
     };
+
     useEffect(() => {
         if (images.length <= 1) return;
         let unmounted = false;
-        // Clear any previous timers
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
-        // Helper to rotate to next image
+
         const nextImage = async () => {
             const next = (imgIndexRef.current + 1) % images.length;
-            // @ts-ignore
-            await ensureDecoded(images[next]);
+            await ensureDecoded(images[next]!);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(next);
             setImgLoaded(false);
         };
-        // Helper to reset to index 0
+
         const resetToFirst = async () => {
-            // @ts-ignore
-            await ensureDecoded(images[0]);
+            await ensureDecoded(images[0]!);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(0);
             setImgLoaded(false);
         };
+
         if (imageActive) {
             if (isTouch) {
-                // Random initial delay between 0-600ms, then normal interval
                 const initialDelay = Math.random() * 601;
                 resetTimeoutRef.current = setTimeout(() => {
                     if (unmounted) return;
@@ -192,14 +207,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     }, 2500);
                 }, initialDelay);
             } else {
-                // Start interval, only once
                 intervalRef.current = setInterval(() => {
                     if (unmounted) return;
                     nextImage();
                 }, 2000);
             }
         } else {
-            // On mouse leave, if not at 0, rotate back to 0 after 2.5s
             if (imgIndexRef.current !== 0) {
                 resetTimeoutRef.current = setTimeout(() => {
                     if (unmounted) return;
@@ -207,16 +220,15 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 }, 750);
             }
         }
+
         return () => {
             unmounted = true;
             if (intervalRef.current) clearInterval(intervalRef.current);
             if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
         };
-        // Only depends on imageActive and images.length
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [imageActive, images.length]);
 
-    // Prevent scroll when viewer open
     useEffect(() => {
         if (!viewerOpen) return;
         document.body.style.overflow = 'hidden';
@@ -225,33 +237,86 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         };
     }, [viewerOpen]);
 
-
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!cardRef.current) return;
-
         const el = cardRef.current;
         const resize = () => {
             const height = el.getBoundingClientRect().height;
-            el.parentElement!.style.gridRowEnd =
-                `span ${Math.ceil(height / 10)}`;
+            el.parentElement!.style.gridRowEnd = `span ${Math.ceil(height / 10)}`;
         };
-
         resize();
-
         const ro = new ResizeObserver(resize);
         ro.observe(el);
-
         return () => ro.disconnect();
     }, []);
 
+    const imageFilterStyle = isTouch
+        ? 'grayscale(0%) brightness(1)'
+        : hovered
+            ? 'grayscale(0%) brightness(1)'
+            : dimmed
+                ? 'grayscale(90%) brightness(0.9)'
+                : 'grayscale(50%) brightness(1.15)';
 
-    // Grid-friendly outer layout: block, w-full, relative
+    const aspectClass = isVertical ? 'aspect-[9/12]' : 'aspect-video';
+
+    // Hover overlay shared between -f and normal image containers.
+    // backdrop-blur-md is always present; only opacity animates.
+    // This prevents abrupt blur disappearance when hover is interrupted mid-transition.
+    const imageOverlay = (
+        <motion.div
+            className="absolute inset-0 z-30"
+            onMouseEnter={() => setImageHovered(true)}
+            onMouseLeave={() => setImageHovered(false)}
+        >
+            <motion.div
+                className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/27 pointer-events-none backdrop-blur-md transform-gpu"
+                animate={{opacity: imageHovered ? 1 : 0}}
+                transition={{duration: 0.3, ease: 'easeOut'}}
+            >
+                <motion.span
+                    className="text-white text-sm tracking-wide"
+                    style={{fontFamily: 'var(--font-codecLight)'}}
+                    animate={{
+                        opacity: imageHovered ? 1 : 0,
+                        y: imageHovered ? 0 : 6,
+                    }}
+                    transition={{duration: 0.3, ease: 'easeOut'}}
+                >
+                    Click to open fullscreen
+                </motion.span>
+            </motion.div>
+        </motion.div>
+    );
+
+    const shimmerPlaceholder = (
+        <AnimatePresence>
+            {!hasLoadedOnce && (
+                <motion.div
+                    key="img-ph"
+                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                    style={{zIndex: 1, background: 'rgba(255,255,255,0.045)', borderRadius: 'inherit'}}
+                    exit={{opacity: 0}}
+                    transition={{duration: 0.5, ease: 'easeOut'}}
+                >
+                    <div
+                        className="absolute inset-0"
+                        style={{
+                            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.13) 50%, transparent 75%)',
+                            animation: 'ph-sweep 2s linear infinite',
+                        }}
+                    />
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+
     return (
         <motion.div
             className="block w-full relative group"
-            transition={{duration: 0.25, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
+            transition={{duration: 0.25, ease: 'easeOut', type: 'spring', damping: 9, stiffness: 180}}
             onMouseEnter={() => {
                 setHovered(true);
                 onHover(item.id);
@@ -263,45 +328,39 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             whileHover={{
                 translateY: -6,
                 boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
-                borderRadius: '2rem'
+                borderRadius: '2rem',
             }}
         >
-            {/* Card content */}
             <div
                 ref={cardRef}
                 className={`
                     relative overflow-hidden rounded-3xl
                     outline-1 outline-gray-400 shadow-2xl
-                    bg-zinc-950 
+                    bg-zinc-950
                     p-6
                     transition-all duration-300
-                    ${item.title.includes(" -s") ? 'outline-dashed outline-4' : ''}
+                    ${isSpecial ? 'outline-dashed outline-4' : ''}
                     hover:outline-4 hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10
                     ${dimmed ? 'opacity-93 outline-gray-700' : ''}
-              `}
+                `}
             >
-                {/* Subtle highlight */}
-                <div
-                    className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
 
-                {/* Title & Meta */}
                 <div className="mb-4">
                     <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">
                             <h3
                                 className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
-                                style={{fontFamily: item.title.includes(' -s') ? 'var(--font-codecBold)' : 'var(--font-codecBold)'}}
+                                style={{fontFamily: 'var(--font-codecBold)'}}
                             >
-                                {item.title.replace(" -v", "").replace(" -s", "")}
+                                {cleanTitle}
                             </h3>
                             <div
                                 className="flex flex-wrap items-center gap-3 text-sm"
                                 style={{fontFamily: 'var(--font-codecLight)'}}
                             >
                                 {item.company && (
-                                    <span className="text-gray-300 font-normal">
-                                        {item.company}
-                                    </span>
+                                    <span className="text-gray-300 font-normal">{item.company}</span>
                                 )}
                                 {item.location && (
                                     <span className="text-gray-500">{item.location}</span>
@@ -309,9 +368,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 {((item.start_date || item.end_date || item.is_current) && (formatDate(item.start_date) !== 'Jan 0001')) && (
                                     <span className="text-gray-500">
                                         {formatDate(item.start_date)}
-                                        {item.start_date &&
-                                            (item.end_date || item.is_current) &&
-                                            ' — '}
+                                        {item.start_date && (item.end_date || item.is_current) && ' — '}
                                         {item.is_current ? (
                                             <span
                                                 className="text-red-50 font-medium"
@@ -326,16 +383,19 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 )}
                             </div>
                         </div>
-                        {/* Links */}
+
+                        {/* Link buttons — staggered fade-in on card hover, reverse stagger on leave */}
                         <div className="flex items-center gap-2 shrink-0">
                             {item.link && (
                                 <motion.a
                                     href={item.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    whileHover={{scale: 1.1}}
-                                    whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/20  text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
+                                    initial={{opacity: 0, x: 8, scale: 0.88}}
+                                    {...btnMotion(hovered, 0)}
+                                    whileHover={{scale: 1.12}}
+                                    whileTap={{scale: 0.93}}
+                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
                                 >
                                     <ExternalLink className="w-4 h-4"/>
                                 </motion.a>
@@ -345,166 +405,154 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.github_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    whileHover={{scale: 1.1}}
-                                    whileTap={{scale: 0.95}}
-                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-all"
+                                    initial={{opacity: 0, x: 8, scale: 0.88}}
+                                    {...btnMotion(hovered, 1)}
+                                    whileHover={{scale: 1.12}}
+                                    whileTap={{scale: 0.93}}
+                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
                                 >
                                     <Github className="w-4 h-4"/>
                                 </motion.a>
                             )}
+                            {item.app_store_url && (
+                                <motion.a
+                                    href={item.app_store_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    initial={{opacity: 0, x: 8, scale: 0.88}}
+                                    {...btnMotion(hovered, 2)}
+                                    whileHover={{scale: 1.12}}
+                                    whileTap={{scale: 0.93}}
+                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                                >
+                                    <AppStoreIcon/>
+                                </motion.a>
+                            )}
                             {item.featured && (
-                                <motion.div className="relative">
-                                    <motion.a
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        whileHover={{scale: 1.1}}
-                                        whileTap={{scale: 0.95}}
-                                        className="p-2 rounded-lg bg-zinc-600/20 text-xs text-yellow-400 font-normal transition-all flex items-center justify-center relative border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
+                                <motion.div
+                                    className="relative"
+                                    initial={{opacity: 0, x: 8, scale: 0.88}}
+                                    {...btnMotion(hovered, 3)}
+                                >
+                                    <motion.button
+                                        type="button"
+                                        whileHover={{scale: 1.12}}
+                                        whileTap={{scale: 0.93}}
+                                        className="p-2 rounded-lg bg-zinc-600/20 text-yellow-400 transition-colors flex items-center justify-center border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
-                                        <span className="w-4 h-4 text-center">{'★'}</span>
-                                        {/* Tooltip */}
-                                        {isStarHovered && (
-                                            <motion.div
-                                                className="
-                                                    absolute -left-11 -translate-x-1/2
-                                                    bg-black text-white text-xs px-2 py-1 rounded-md
-                                                    pointer-events-none
-                                                    whitespace-nowrap
-                                                    z-10
-                                                    text-center
-                                                "
-                                                initial={{opacity: 0}}
-                                                animate={{opacity: 1}}
-                                            >
-                                                Featured <br/> Experience
-                                            </motion.div>
-                                        )}
-                                    </motion.a>
+                                        <Star className="w-4 h-4 fill-current"/>
+                                        {/* Tooltip with AnimatePresence for smooth fade out */}
+                                        <AnimatePresence>
+                                            {isStarHovered && (
+                                                <motion.div
+                                                    key="star-tip"
+                                                    className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
+                                                    initial={{opacity: 0, y: -4}}
+                                                    animate={{opacity: 1, y: 0}}
+                                                    exit={{opacity: 0, y: -4}}
+                                                    transition={{duration: 0.18, ease: 'easeOut'}}
+                                                >
+                                                    Featured<br/>Experience
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.button>
                                 </motion.div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* Images with stable crossfade */}
+                {/* Images */}
                 {images.length > 0 && (
-                    <div
-                        className={`relative mb-4 rounded-lg overflow-hidden cursor-pointer select-none
-                            ${item.title.includes(" -v") ? "aspect-[9/12]" : "aspect-video"}
-                        `}
-                        style={{minHeight: 0}}
-                        onMouseEnter={() => setImageHovered(true)}
-                        onMouseLeave={() => setImageHovered(false)}
-                        onClick={() => {
-                            setViewerOpen(true);
-                            setImageHovered(false);
-                            setHovered(false);
-                        }}
-                    >
-                        {/* Shimmer placeholder — shown until the first image loads,
-                            then faded out and removed so the animation fully stops. */}
-                        <AnimatePresence>
-                            {!hasLoadedOnce && (
-                                <motion.div
-                                    key="img-ph"
-                                    className="absolute inset-0 overflow-hidden pointer-events-none"
-                                    style={{zIndex: 1, background: 'rgba(255,255,255,0.045)', borderRadius: 'inherit'}}
-                                    exit={{opacity: 0}}
-                                    transition={{duration: 0.5, ease: 'easeOut'}}
-                                >
-                                    <div
-                                        className="absolute inset-0"
-                                        style={{
-                                            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.13) 50%, transparent 75%)',
-                                            animation: 'ph-sweep 2s linear infinite',
-                                        }}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                        {/* Crossfade images: previous and current */}
-                        {images.map((src, idx) => {
-                            // Only render prev and current for crossfade, others hidden
-                            const isPrev = idx === prevImgIndex;
-                            const isCurrent = idx === imgIndex;
-                            if (!isPrev && !isCurrent) return null;
-                            const rSrc = resolvedSrc(src);
-                            return (
-                                <motion.img
-                                    key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
-                                    src={isReadyToLoad ? rSrc : undefined}
-                                    alt={item.title}
-                                    draggable={false}
-                                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                                    style={{
-                                        zIndex: isCurrent ? 20 : 10,
-                                    }}
-                                    initial={{ opacity: isCurrent ? 0 : 1 }}
-                                    animate={{
-                                        opacity: isCurrent && imgLoaded ? 1 : 0,
-                                        filter: isTouch
-                                            ? 'grayscale(0%) brightness(1)'
-                                            : hovered
-                                                ? 'grayscale(0%) brightness(1)'
-                                                : dimmed
-                                                    ? 'grayscale(90%) brightness(0.9)'
-                                                    : 'grayscale(50%) brightness(1.15)',
-                                    }}
-                                    transition={{
-                                        opacity: {duration: 0.4, ease: 'easeInOut'},
-                                        filter: {duration: 0.25, ease: 'easeInOut'},
-                                    }}
-                                    onLoad={() => {
-                                        decodedRef.current.add(src);
-                                        if (isCurrent) {
-                                            setImgLoaded(true);
-                                            setHasLoadedOnce(true);
-                                        }
-                                    }}
-                                    onError={() => handleImgError(src)}
-                                />
-                            );
-                        })}
-                        {/* Overlay for click-to-view */}
-                        <motion.div
-                            className="absolute inset-0 z-30"
+                    isFull ? (
+                        /* -f flag: image renders at natural resolution, no forced aspect ratio */
+                        <div
+                            className="relative mb-4 rounded-lg overflow-hidden cursor-pointer select-none"
                             onMouseEnter={() => setImageHovered(true)}
                             onMouseLeave={() => setImageHovered(false)}
+                            onClick={() => {
+                                setViewerOpen(true);
+                                setImageHovered(false);
+                                setHovered(false);
+                            }}
                         >
+                            {shimmerPlaceholder}
+                            <motion.img
+                                src={isReadyToLoad ? resolvedSrc(images[0]!) : undefined}
+                                alt={cleanTitle}
+                                draggable={false}
+                                className="w-full h-auto block"
+                                animate={{filter: imageFilterStyle}}
+                                transition={{filter: {duration: 0.25, ease: 'easeInOut'}}}
+                                onLoad={() => {
+                                    setImgLoaded(true);
+                                    setHasLoadedOnce(true);
+                                }}
+                                onError={() => handleImgError(images[0]!)}
+                            />
+                            {imageOverlay}
+                        </div>
+                    ) : (
+                        /* Normal: fixed aspect ratio with crossfade */
+                        <div
+                            className={`relative mb-4 rounded-lg overflow-hidden cursor-pointer select-none ${aspectClass}`}
+                            style={{minHeight: 0}}
+                            onMouseEnter={() => setImageHovered(true)}
+                            onMouseLeave={() => setImageHovered(false)}
+                            onClick={() => {
+                                setViewerOpen(true);
+                                setImageHovered(false);
+                                setHovered(false);
+                            }}
+                        >
+                            {shimmerPlaceholder}
+                            {images.map((src, idx) => {
+                                const isPrev = idx === prevImgIndex;
+                                const isCurrent = idx === imgIndex;
+                                if (!isPrev && !isCurrent) return null;
+                                const rSrc = resolvedSrc(src);
+                                return (
+                                    <motion.img
+                                        key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
+                                        src={isReadyToLoad ? rSrc : undefined}
+                                        alt={cleanTitle}
+                                        draggable={false}
+                                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                        style={{zIndex: isCurrent ? 20 : 10}}
+                                        initial={{opacity: isCurrent ? 0 : 1}}
+                                        animate={{
+                                            opacity: isCurrent && imgLoaded ? 1 : 0,
+                                            filter: imageFilterStyle,
+                                        }}
+                                        transition={{
+                                            opacity: {duration: 0.4, ease: 'easeInOut'},
+                                            filter: {duration: 0.25, ease: 'easeInOut'},
+                                        }}
+                                        onLoad={() => {
+                                            decodedRef.current.add(src);
+                                            if (isCurrent) {
+                                                setImgLoaded(true);
+                                                setHasLoadedOnce(true);
+                                            }
+                                        }}
+                                        onError={() => handleImgError(src)}
+                                    />
+                                );
+                            })}
+                            {imageOverlay}
                             <motion.div
-                                className={`absolute inset-0 flex items-center justify-center rounded-lg
-                                bg-black/27 pointer-events-none
-                                will-change-opacity transform-gpu ${imageHovered ? "backdrop-blur-md" : ""}`}
-                                animate={{opacity: imageHovered ? 1 : 0}}
-                                transition={{duration: 0.35, ease: 'easeOut'}}
-                            >
-                                <motion.span
-                                    className="text-white text-sm tracking-wide"
-                                    style={{fontFamily: 'var(--font-codecLight)'}}
-                                    initial={{opacity: 0}}
-                                    animate={{
-                                        opacity: imageHovered ? 1 : 0,
-                                        y: imageHovered ? 0 : 6,
-                                    }}
-                                    transition={{duration: 0.35, ease: 'easeOut'}}
-                                >
-                                    Click to open fullscreen
-                                </motion.span>
-                            </motion.div>
-                        </motion.div>
-                        {/* Gradient overlay for subtle effect */}
-                        <motion.div
-                            className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-25"
-                            initial={{opacity: 1}}
-                            animate={{opacity: isTouch || hovered ? 0 : 1}}
-                            transition={{duration: 0.5, ease: 'easeOut'}}
-                        />
-                    </div>
+                                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-25"
+                                initial={{opacity: 1}}
+                                animate={{opacity: isTouch || hovered ? 0 : 1}}
+                                transition={{duration: 0.5, ease: 'easeOut'}}
+                            />
+                        </div>
+                    )
                 )}
 
-                {/* Description */}
                 {item.description && item.description.split('\n').map((para, i) => (
                     <p
                         key={i}
@@ -515,7 +563,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     </p>
                 ))}
 
-                {/* Skills */}
                 {item.skills && (
                     <div className="flex flex-wrap mt-4.5 gap-2">
                         {item.skills.map((skill, badgeIndex) => {
@@ -530,19 +577,15 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 isActive: currentSkillFilter === skill,
                                 dimmed,
                                 hovered,
-                                onClick: () =>
-                                    onSkillClick(
-                                        currentSkillFilter === skill ? null : skill
-                                    ),
+                                onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
                             };
                             if (iconUrl) badgeProps.iconUrl = iconUrl;
-                            return <SkillBadge key={skill} {...badgeProps} />;
+                            return <SkillBadge key={skill} {...badgeProps}/>;
                         })}
                     </div>
                 )}
             </div>
 
-            {/* Fullscreen Image Viewer */}
             <AnimatePresence>
                 {viewerOpen && (
                     <FullscreenImageViewer
