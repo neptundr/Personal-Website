@@ -21,7 +21,7 @@ async function loadHeroSettings(): Promise<SiteSettings> {
 
 export default async function Home() {
     const settings = await loadHeroSettings();
-    const centerWord = settings.hero_center_word || 'CREATE';
+    const centerWord = settings.hero_center_word || 'EXPLORE';
 
     return (
         <div
