@@ -76,16 +76,15 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 /* ── Info footer bar ──
-   - Full card width, top border only (primaryColor)
-   - Height = ~1.5× skill badge (~24px → 36px = h-9)
-   - CSS keyframe marquee — no JS animation loop, no stutter
-   - Centers text when it fits; scrolls when it doesn't */
+   - Full card width, top border primaryColor, l/r/b borders match card outline (gray-400)
+   - h-9 = ~1.5× skill badge; bg = primaryColor at 20% alpha
+   - CSS @keyframes marquee — zero JS per frame, no stutter
+   - Centers text when it fits; slow scroll (30 px/s) when it overflows */
 const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primaryColor}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const measureRef = useRef<HTMLSpanElement>(null);
     const [needsMarquee, setNeedsMarquee] = useState(false);
     const [duration, setDuration] = useState(8);
-    // Stable unique ID for CSS keyframe name — one per component instance
     const animId = useRef(`mq-${Math.random().toString(36).slice(2, 8)}`).current;
 
     useEffect(() => {
@@ -96,7 +95,7 @@ const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primar
             const cW = containerRef.current.clientWidth;
             const overflows = tW > cW;
             setNeedsMarquee(overflows);
-            if (overflows) setDuration(Math.max(4, tW / 60));
+            if (overflows) setDuration(Math.max(6, tW / 30)); // 30 px/s — slow, readable
         };
         check();
         const ro = new ResizeObserver(check);
@@ -107,10 +106,16 @@ const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primar
     return (
         <div
             ref={containerRef}
-            className="overflow-hidden flex items-center h-9 border-t w-full relative"
-            style={{borderColor: primaryColor}}
+            className="overflow-hidden flex items-center h-9 w-full relative"
+            style={{
+                borderTop: `1px solid ${primaryColor}`,
+                borderLeft: '1px solid rgb(156, 163, 175)',
+                borderRight: '1px solid rgb(156, 163, 175)',
+                borderBottom: '1px solid rgb(156, 163, 175)',
+                backgroundColor: primaryColor + '33',
+            }}
         >
-            {/* Invisible measuring span — absolute so it doesn't affect layout */}
+            {/* Invisible measuring span */}
             <span
                 ref={measureRef}
                 className="invisible whitespace-nowrap text-xs pointer-events-none absolute"
@@ -122,7 +127,6 @@ const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primar
 
             {needsMarquee ? (
                 <>
-                    {/* Pure CSS keyframe — zero JS per frame, no stutter */}
                     <style>{`
                         @keyframes ${animId} {
                             from { transform: translateX(0); }
@@ -377,7 +381,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         </AnimatePresence>
     );
 
-    // Info line text
     const dateRange = (() => {
         const start = formatDate(item.start_date);
         if (!start || start === 'Jan 0001') return '';
@@ -387,8 +390,10 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const infoText = [item.company, item.location, dateRange].filter(Boolean).join('  ·  ');
 
     const hasButtons = !!(item.app_store_url || item.link || item.github_url || item.featured);
+    const hasDescription = !!(item.description && item.description.trim());
+    const hasSkills = !!(item.skills && item.skills.length > 0);
+    const hasContent = hasDescription || hasSkills;
 
-    // Button style: rounded-full, blurred so visible over any image
     const btnClass = "p-2 rounded-full bg-black/40 backdrop-blur-sm text-gray-300 border border-white/20 hover:border-white/50 hover:text-white hover:bg-black/60 transition-colors";
 
     const buttons = (
@@ -493,13 +498,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     ${dimmed ? 'opacity-93 outline-gray-700' : ''}
                 `}
             >
-                {/* Subtle top shimmer */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0"/>
 
                 {/* ── IMAGE SECTION ── */}
                 {images.length > 0 ? (
                     <div
                         className={`relative ${isFull ? '' : aspectClass} overflow-hidden cursor-pointer select-none`}
+                        style={{willChange: 'transform'}}
                         onMouseEnter={() => setImageHovered(true)}
                         onMouseLeave={() => setImageHovered(false)}
                         onClick={() => {
@@ -560,19 +565,19 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             })
                         )}
 
-                        {/* Gradient fades to exact zinc-950 color → seamless into card body */}
+                        {/* Gradient: bottom 20% fully opaque zinc-950, rest fades — no seam possible */}
                         <div
                             className="absolute bottom-0 left-0 right-0 pointer-events-none"
                             style={{
-                                height: '7rem',
+                                height: '8rem',
                                 zIndex: 25,
-                                background: 'linear-gradient(to top, rgb(9,9,11) 0%, transparent 100%)',
+                                background: 'linear-gradient(to top, rgb(9,9,11) 0%, rgb(9,9,11) 20%, transparent 100%)',
                             }}
                         />
 
-                        {/* Title at image bottom, over gradient */}
+                        {/* Title — slightly lower with pb-4 */}
                         <div
-                            className="absolute bottom-0 left-0 right-0 px-5 pb-3 pointer-events-none"
+                            className="absolute bottom-0 left-0 right-0 px-5 pb-4 pointer-events-none"
                             style={{zIndex: 26}}
                         >
                             <h3
@@ -583,10 +588,14 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             </h3>
                         </div>
 
-                        {/* Fullscreen hover overlay — backdrop-blur always present, only opacity animates */}
+                        {/* Fullscreen hover overlay — blur fades out toward bottom to avoid hard edge at image/content join */}
                         <motion.div
                             className="absolute inset-0 flex items-center justify-center bg-black/27 pointer-events-none backdrop-blur-md transform-gpu"
-                            style={{zIndex: 28}}
+                            style={{
+                                zIndex: 28,
+                                WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
+                                maskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
+                            } as React.CSSProperties}
                             animate={{opacity: imageHovered ? 1 : 0}}
                             transition={{duration: 0.3, ease: 'easeOut'}}
                         >
@@ -600,7 +609,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             </motion.span>
                         </motion.div>
 
-                        {/* Buttons — top-right on image, above overlay, blurred for visibility */}
+                        {/* Buttons — top-right, above overlay */}
                         {hasButtons && (
                             <div className="absolute top-3 right-3 flex items-center" style={{zIndex: 40}}>
                                 {buttons}
@@ -608,7 +617,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         )}
                     </div>
                 ) : (
-                    /* ── NO IMAGE: title + buttons ── */
+                    /* ── NO IMAGE ── */
                     <div className="px-5 pt-5 pb-0 relative">
                         <div className="flex items-start justify-between gap-4">
                             <h3
@@ -622,43 +631,45 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     </div>
                 )}
 
-                {/* ── CONTENT ── description + skills */}
-                <div className={`px-5 pt-3 ${infoText ? 'pb-3' : 'pb-5'}`}>
-                    {item.description && item.description.split('\n').map((para, i) => (
-                        <p
-                            key={i}
-                            className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
-                            style={{fontFamily: 'var(--font-codecLight)'}}
-                        >
-                            {para}
-                        </p>
-                    ))}
+                {/* ── CONTENT — description + skills; skipped entirely when empty to avoid gap ── */}
+                {hasContent && (
+                    <div className={`px-5 pt-2 ${infoText ? 'pb-3' : 'pb-5'}`}>
+                        {hasDescription && item.description!.split('\n').map((para, i) => (
+                            <p
+                                key={i}
+                                className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
+                                style={{fontFamily: 'var(--font-codecLight)'}}
+                            >
+                                {para}
+                            </p>
+                        ))}
 
-                    {item.skills && (
-                        <div className="flex flex-wrap mt-4.5 gap-2">
-                            {item.skills.map((skill, badgeIndex) => {
-                                const iconUrl = skillIcons.find(
-                                    s => s.skill_name?.toLowerCase() === skill.toLowerCase()
-                                )?.icon_url;
-                                const badgeProps: React.ComponentProps<typeof SkillBadge> = {
-                                    skill,
-                                    badgeIndex,
-                                    cardIndex: index,
-                                    size: 'sm',
-                                    isActive: currentSkillFilter === skill,
-                                    dimmed,
-                                    hovered,
-                                    primaryColor,
-                                    onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
-                                };
-                                if (iconUrl) badgeProps.iconUrl = iconUrl;
-                                return <SkillBadge key={skill} {...badgeProps}/>;
-                            })}
-                        </div>
-                    )}
-                </div>
+                        {hasSkills && (
+                            <div className={`flex flex-wrap gap-2 ${hasDescription ? 'mt-4' : 'mt-0'}`}>
+                                {item.skills!.map((skill, badgeIndex) => {
+                                    const iconUrl = skillIcons.find(
+                                        s => s.skill_name?.toLowerCase() === skill.toLowerCase()
+                                    )?.icon_url;
+                                    const badgeProps: React.ComponentProps<typeof SkillBadge> = {
+                                        skill,
+                                        badgeIndex,
+                                        cardIndex: index,
+                                        size: 'sm',
+                                        isActive: currentSkillFilter === skill,
+                                        dimmed,
+                                        hovered,
+                                        primaryColor,
+                                        onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
+                                    };
+                                    if (iconUrl) badgeProps.iconUrl = iconUrl;
+                                    return <SkillBadge key={skill} {...badgeProps}/>;
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                {/* ── INFO BAR — very bottom, full width, top border only ── */}
+                {/* ── INFO BAR — very bottom, full width ── */}
                 {infoText && (
                     <InfoBar text={infoText} primaryColor={primaryColor}/>
                 )}
