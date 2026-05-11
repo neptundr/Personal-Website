@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useState, useRef, useEffect, useMemo} from 'react';
-import {motion, AnimatePresence} from 'framer-motion';
+import {motion, AnimatePresence, type MotionStyle} from 'framer-motion';
 import {format} from 'date-fns';
 import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
@@ -595,7 +595,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 zIndex: 28,
                                 WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
                                 maskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
-                            } as React.CSSProperties}
+                            } as MotionStyle}
                             animate={{opacity: imageHovered ? 1 : 0}}
                             transition={{duration: 0.3, ease: 'easeOut'}}
                         >
