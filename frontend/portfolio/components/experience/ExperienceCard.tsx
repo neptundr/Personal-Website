@@ -426,9 +426,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             {isStarHovered && (
                                 <motion.div
                                     key="star-tip"
-                                    className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
-                                    initial={{opacity: 0, x: 4}} animate={{opacity: 1, x: 0}}
-                                    exit={{opacity: 0, x: 4}} transition={{duration: 0.18, ease: 'easeOut'}}
+                                    className="absolute right-full mr-1 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
+                                    initial={{opacity: 0, x: 6, scale: 0.7}} animate={{opacity: 1, x: 0, scale: 1}}
+                                    exit={{opacity: 0, x: 4, scale: 0.6}} transition={{duration: 0.18, ease: 'easeOut'}}
                                 >
                                     Featured<br/>Experience
                                 </motion.div>
@@ -535,13 +535,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             style={{
                                 height: '8rem',
                                 zIndex: 25,
-                                background: 'linear-gradient(to top, rgb(9,9,11) 0%, rgb(9,9,11) 20%, transparent 100%)',
+                                background: 'linear-gradient(to top, rgb(15, 15, 17) 0%, rgb(15, 15, 17) 30%, transparent 100%)',
                             }}
                         />
 
                         {/* Title — fades OUT when imageHovered (mutually exclusive with fullscreen overlay) */}
                         <motion.div
-                            className="absolute bottom-0 left-0 right-0 px-5 pb-4 pointer-events-none"
+                            className="absolute bottom-2 left-0 right-0 px-5 pb-2 pointer-events-none"
                             style={{zIndex: 30}}
                             animate={{opacity: imageHovered ? 0 : 1}}
                             transition={{duration: 0.25, ease: 'easeOut'}}
@@ -604,12 +604,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     <div
                         className="relative pointer-events-none"
                         style={{
-                            zIndex: 29,
+                            zIndex: 20,
                             marginTop: '-2rem',
                             height: '2rem',
                             backdropFilter: 'blur(12px)',
                             WebkitBackdropFilter: 'blur(12px)',
-                            background: 'linear-gradient(to bottom, transparent 0%, rgb(9,9,11) 70%)',
+                            background: 'linear-gradient(to bottom, transparent 40%, rgb(15, 15, 17) 70%)',
                         }}
                     />
                 )}
@@ -618,17 +618,17 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     -mt-4 slides description up slightly onto the image area (which is already
                     zinc-950 from the gradient, so color is seamless). Equal 12px gaps throughout. */}
                 {hasContent && (
-                    <div className={`relative px-5 pt-3 ${infoText ? 'pb-3' : 'pb-5'} -mt-4`}
+                    <div className={`relative px-4 ${hasDescription ? (images.length > 0 ? "pt-2": "mt-2 -pt-2") : "-pt-3"} ${infoText ? 'pb-4' : (hasSkills ? 'pb-5': "pb-1")} -mt-4`}
                          style={{zIndex: 32}}>
                         {hasDescription && item.description!.split('\n').map((para, i) => (
-                            <p key={i} className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
+                            <p key={i} className={`${images.length > 0 ? "pl-8" : "pl-1"} pr-5 text-gray-400 text-sm mb-3 whitespace-pre-wrap`}
                                style={{fontFamily: 'var(--font-codecLight)'}}>
                                 {para}
                             </p>
                         ))}
 
                         {hasSkills && (
-                            <div className={`flex flex-wrap gap-2 ${hasDescription ? 'mt-3' : 'mt-0'}`}>
+                            <div className={`flex flex-wrap gap-x-1.5 gap-y-2 ${hasDescription ? 'mt-3' : 'mt-7'}`}>
                                 {item.skills!.map((skill, badgeIndex) => {
                                     const iconUrl = skillIcons.find(
                                         s => s.skill_name?.toLowerCase() === skill.toLowerCase()
