@@ -147,7 +147,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                     onClick={() => setSkillFilter(null)}
                                     className="
                                     px-3 py-2 rounded-full text-sm
-                                    border border-red-500 bg-red-500/20 text-white
+                                    border-[1.2px] border-red-500 bg-red-500/20 text-white
                                     flex items-center gap-2 backdrop-blur-2xl
                                 "
                                     initial={{opacity: 0, x: -16}}

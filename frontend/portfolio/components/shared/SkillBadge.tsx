@@ -165,14 +165,24 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         lg: 'text-base px-4 py-2',
     };
 
-    // Dynamic hover style driven by card's primaryColor (falls back to red if absent)
-    const hoverStyle: MotionStyle = (badgeHovered && primaryColor && !isActive)
-        ? {
-            borderColor: primaryColor,
-            backgroundColor: primaryColor + '55',  // 8-char hex = ~33% alpha
-            color: 'white',
+    // Combined dynamic style — covers both active and hover states when primaryColor is set
+    const dynamicStyle: MotionStyle = (() => {
+        if (isActive && primaryColor) {
+            return {
+                borderColor: primaryColor,
+                backgroundColor: primaryColor + '33',  // ~20% alpha, matches bg-red-500/20
+                color: 'white',
+            };
         }
-        : {};
+        if (badgeHovered && primaryColor && !isActive) {
+            return {
+                borderColor: primaryColor,
+                backgroundColor: primaryColor + '55',
+                color: 'white',
+            };
+        }
+        return {};
+    })();
 
     return (
         <motion.span
@@ -182,10 +192,10 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
             onClick={onClick}
             onMouseEnter={() => setBadgeHovered(true)}
             onMouseLeave={() => setBadgeHovered(false)}
-            style={hoverStyle}
+            style={dynamicStyle}
             className={`
-                inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
-                ${isActive
+                inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border-[1.2px]
+                ${isActive && !primaryColor
                 ? 'border-red-500 bg-red-500/20 text-white'
                 : 'border-gray-400/45 bg-white/8 text-gray-200'}
                 font-light transition-all duration-300 cursor-pointer
