@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, {useState} from 'react';
 import {motion} from 'framer-motion';
 import Image from 'next/image';
+import {ExternalLink} from 'lucide-react';
 
 interface Education {
     type: 'university' | 'school';
@@ -21,6 +22,8 @@ interface EducationCardProps {
 }
 
 const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
+    const [logoHovered, setLogoHovered] = useState(false);
+
     return (
         <motion.div
             initial={{opacity: 0, y: 40}}
@@ -47,19 +50,20 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                             href={education.institution_url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onMouseEnter={() => setLogoHovered(true)}
+                            onMouseLeave={() => setLogoHovered(false)}
                         >
                             <div
                                 className="
+                                    relative overflow-hidden
                                     w-25 h-25
                                     sm:w-24 sm:h-24
                                     md:w-28 md:h-28
                                     lg:w-40 lg:h-40
                                     rounded-xl bg-white/90
                                     flex items-center justify-center shrink-0
-                                    hover:opacity-85
                                     transition-all duration-300
                                 "
-                                // whileHover={{opacity: 0.75}}
                                 style={{aspectRatio: '1 / 1'}}
                             >
                                 <Image
@@ -70,6 +74,19 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                     className="w-20 h-20 lg:w-26 lg:h-26 object-contain"
                                     unoptimized={education.logo_url.endsWith('.svg')}
                                 />
+                                {education.institution_url && (
+                                    <motion.div
+                                        className="absolute inset-0 rounded-xl backdrop-blur-md flex flex-col items-center justify-center gap-1 text-center"
+                                        animate={{opacity: logoHovered ? 1 : 0}}
+                                        transition={{duration: 0.2, ease: 'easeInOut'}}
+                                        style={{backgroundColor: 'rgba(0,0,0,0.35)'}}
+                                    >
+                                        <span className="text-white text-xs font-medium leading-tight flex items-center gap-1">
+                                            Click to visit
+                                            <ExternalLink className="w-3 h-3"/>
+                                        </span>
+                                    </motion.div>
+                                )}
                             </div>
                         </a>
                     )}
