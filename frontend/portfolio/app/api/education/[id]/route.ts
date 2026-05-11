@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, TABLES } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,7 @@ export async function PUT(
     if (error) {
         return NextResponse.json({ detail: error.message }, { status: 500 });
     }
+    revalidatePath('/');
     return NextResponse.json(data);
 }
 
