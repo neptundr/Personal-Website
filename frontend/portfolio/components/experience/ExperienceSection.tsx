@@ -18,6 +18,7 @@ interface ExperienceItem {
     featured?: boolean;
     link?: string;
     github_url?: string;
+    app_store_url?: string;
     image_url?: string;
     description?: string;
     skills?: string[];

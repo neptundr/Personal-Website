@@ -3,7 +3,7 @@
 import React, {useState, useRef, useEffect, useMemo} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {format} from 'date-fns';
-import {ExternalLink, Github, Star} from 'lucide-react';
+import {ExternalLink, Github, Gem} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
 
@@ -51,18 +51,6 @@ const AppStoreIcon = () => (
     </svg>
 );
 
-const btnMotion = (show: boolean, i: number) => ({
-    animate: {
-        opacity: show ? 1 : 0,
-        x: show ? 0 : 8,
-        scale: show ? 1 : 0.88,
-    } as const,
-    transition: {
-        delay: show ? i * 0.055 : (3 - i) * 0.04,
-        duration: show ? 0.22 : 0.18,
-        ease: (show ? [0.16, 1, 0.3, 1] : 'easeIn') as [number, number, number, number] | 'easeIn',
-    },
-});
 
 let initialPageLoadDone = false;
 
@@ -384,15 +372,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             </div>
                         </div>
 
-                        {/* Link buttons — staggered fade-in on card hover, reverse stagger on leave */}
+                        {/* Link buttons — always visible */}
                         <div className="flex items-center gap-2 shrink-0">
                             {item.link && (
                                 <motion.a
                                     href={item.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    initial={{opacity: 0, x: 8, scale: 0.88}}
-                                    {...btnMotion(hovered, 0)}
                                     whileHover={{scale: 1.12}}
                                     whileTap={{scale: 0.93}}
                                     className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
@@ -405,8 +391,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.github_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    initial={{opacity: 0, x: 8, scale: 0.88}}
-                                    {...btnMotion(hovered, 1)}
                                     whileHover={{scale: 1.12}}
                                     whileTap={{scale: 0.93}}
                                     className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
@@ -419,8 +403,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     href={item.app_store_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    initial={{opacity: 0, x: 8, scale: 0.88}}
-                                    {...btnMotion(hovered, 2)}
                                     whileHover={{scale: 1.12}}
                                     whileTap={{scale: 0.93}}
                                     className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
@@ -429,11 +411,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 </motion.a>
                             )}
                             {item.featured && (
-                                <motion.div
-                                    className="relative"
-                                    initial={{opacity: 0, x: 8, scale: 0.88}}
-                                    {...btnMotion(hovered, 3)}
-                                >
+                                <div className="relative">
                                     <motion.button
                                         type="button"
                                         whileHover={{scale: 1.12}}
@@ -442,16 +420,16 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
-                                        <Star className="w-4 h-4 fill-current"/>
-                                        {/* Tooltip with AnimatePresence for smooth fade out */}
+                                        <Gem className="w-4 h-4 fill-current"/>
+                                        {/* Tooltip — appears to the left of the button */}
                                         <AnimatePresence>
                                             {isStarHovered && (
                                                 <motion.div
                                                     key="star-tip"
-                                                    className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
-                                                    initial={{opacity: 0, y: -4}}
-                                                    animate={{opacity: 1, y: 0}}
-                                                    exit={{opacity: 0, y: -4}}
+                                                    className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
+                                                    initial={{opacity: 0, x: 4}}
+                                                    animate={{opacity: 1, x: 0}}
+                                                    exit={{opacity: 0, x: 4}}
                                                     transition={{duration: 0.18, ease: 'easeOut'}}
                                                 >
                                                     Featured<br/>Experience
@@ -459,7 +437,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             )}
                                         </AnimatePresence>
                                     </motion.button>
-                                </motion.div>
+                                </div>
                             )}
                         </div>
                     </div>

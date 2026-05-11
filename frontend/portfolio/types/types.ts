@@ -13,6 +13,7 @@ export interface Project {
   skills?: string[];
   link?: string;
   github_url?: string;
+  app_store_url?: string;
   order?: number;
   featured?: boolean;
 }
