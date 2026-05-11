@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useState, useEffect, useRef} from 'react';
-import {motion} from 'framer-motion';
+import {motion, type MotionStyle} from 'framer-motion';
 
 type SkillBadgeProps = {
     skill: string;
@@ -13,6 +13,8 @@ type SkillBadgeProps = {
     isActive?: boolean;
     dimmed?: boolean;
     hovered?: boolean;
+    /** Card primary color — drives hover border/bg instead of default red. */
+    primaryColor?: string;
     onClick?: () => void;
 };
 
@@ -49,8 +51,10 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
                                                    isActive = false,
                                                    dimmed = false,
                                                    hovered = false,
+                                                   primaryColor,
                                                    onClick
                                                }) => {
+    const [badgeHovered, setBadgeHovered] = useState(false);
     const [imgLoaded, setImgLoaded] = useState(false);
     const [showCircleShimmer, setShowCircleShimmer] = useState(true);
     const [popScale, setPopScale] = useState(1);
@@ -161,19 +165,31 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
         lg: 'text-base px-4 py-2',
     };
 
+    // Dynamic hover style driven by card's primaryColor (falls back to red if absent)
+    const hoverStyle: MotionStyle = (badgeHovered && primaryColor && !isActive)
+        ? {
+            borderColor: primaryColor,
+            backgroundColor: primaryColor + '55',  // 8-char hex = ~33% alpha
+            color: 'white',
+        }
+        : {};
+
     return (
         <motion.span
             whileHover={{scale: 1.08}}
             animate={{scale: dimmed ? 1 : popScale}}
             transition={{duration: 0.05, ease: "easeInOut", type: 'spring'}}
             onClick={onClick}
+            onMouseEnter={() => setBadgeHovered(true)}
+            onMouseLeave={() => setBadgeHovered(false)}
+            style={hoverStyle}
             className={`
                 inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border
                 ${isActive
                 ? 'border-red-500 bg-red-500/20 text-white'
-                : `border-gray-400/45 bg-white/8 text-gray-200`}
+                : 'border-gray-400/45 bg-white/8 text-gray-200'}
                 font-light transition-all duration-300 cursor-pointer
-                hover:border-red-500 hover:bg-red-500/55 hover:text-white
+                ${!primaryColor ? 'hover:border-red-500 hover:bg-red-500/55 hover:text-white' : ''}
             `}
         >
             {icon}

@@ -32,7 +32,8 @@ type FieldType =
     | 'number'
     | 'boolean'
     | 'select'
-    | 'array';
+    | 'array'
+    | 'color';
 
 export interface FieldOption {
     label: string;
@@ -214,6 +215,27 @@ export default function EntityForm<T extends Record<string, any>>({
                                         }}
                                         placeholder="React, TypeScript, Framer Motion"
                                     />
+                                )}
+
+                                {field.type === 'color' && (
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            value={formData[field.key] ?? '#ffffff'}
+                                            onChange={e => handleChange(field.key, e.target.value)}
+                                            className="w-10 h-10 rounded cursor-pointer border-0 p-0.5 bg-zinc-800"
+                                        />
+                                        <Input
+                                            value={formData[field.key] ?? '#ffffff'}
+                                            onChange={e => handleChange(field.key, e.target.value)}
+                                            placeholder="#ffffff"
+                                            className="bg-black border-white/10 text-white placeholder:text-white/30 font-mono w-32"
+                                        />
+                                        <span
+                                            className="w-8 h-8 rounded-md border border-white/20 shrink-0"
+                                            style={{backgroundColor: formData[field.key] ?? '#ffffff'}}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         ))}

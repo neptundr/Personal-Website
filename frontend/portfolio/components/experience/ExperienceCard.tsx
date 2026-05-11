@@ -3,7 +3,7 @@
 import React, {useState, useRef, useEffect, useMemo} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {format} from 'date-fns';
-import {ExternalLink, Github, Star} from 'lucide-react';
+import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
 
@@ -23,6 +23,8 @@ interface ExperienceItem {
     description?: string;
     skills?: string[];
     type?: 'work' | 'project' | 'achievement';
+    color_primary?: string;
+    color_secondary?: string;
 }
 
 interface ExperienceCardProps {
@@ -44,13 +46,36 @@ const formatDate = (date?: string) => {
     }
 };
 
-// App Store icon — stylised "A" (App Store branding, not Apple logo)
+// PNG icons rendered as CSS masks so they inherit currentColor from the button
+const maskStyle = (url: string): React.CSSProperties => ({
+    maskImage: `url(${url})`,
+    maskSize: 'contain',
+    maskRepeat: 'no-repeat',
+    maskPosition: 'center',
+    WebkitMaskImage: `url(${url})`,
+    WebkitMaskSize: 'contain',
+    WebkitMaskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center',
+});
+
 const AppStoreIcon = () => (
-    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5.5 19L12 4l6.5 15"/>
-        <path d="M8 14h8"/>
-    </svg>
+    <span className="w-4 h-4 inline-block bg-current" style={maskStyle('/icons/app-store.png')}/>
 );
+const StarIcon = () => (
+    <span className="w-4 h-4 inline-block bg-current" style={maskStyle('/icons/star.png')}/>
+);
+
+// Convert #rrggbb hex to rgba string
+const hexToRgba = (hex: string, alpha: number): string => {
+    try {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    } catch {
+        return `rgba(255, 255, 255, ${alpha})`;
+    }
+};
 
 
 let initialPageLoadDone = false;
@@ -69,6 +94,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const isSpecial = hasFlag('s');
     const isFull = hasFlag('f');
     const cleanTitle = item.title.replace(/ -[vsf]/g, '').trim();
+
+    const primaryColor = item.color_primary ?? '#ffffff';
+    const glowColor = hexToRgba(primaryColor, 0.5);
 
     const [isTouch, setIsTouch] = useState(false);
     useEffect(() => {
@@ -316,7 +344,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             }}
             whileHover={{
                 translateY: -6,
-                boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
+                boxShadow: `0 0 40px 5px ${glowColor}`,
                 borderRadius: '2rem',
             }}
         >
@@ -421,7 +449,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         onMouseEnter={() => setIsStarHovered(true)}
                                         onMouseLeave={() => setIsStarHovered(false)}
                                     >
-                                        <Star className="w-4 h-4 fill-current"/>
+                                        <StarIcon/>
                                         {/* Tooltip — appears to the left of the button */}
                                         <AnimatePresence>
                                             {isStarHovered && (
@@ -556,6 +584,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 isActive: currentSkillFilter === skill,
                                 dimmed,
                                 hovered,
+                                primaryColor,
                                 onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
                             };
                             if (iconUrl) badgeProps.iconUrl = iconUrl;

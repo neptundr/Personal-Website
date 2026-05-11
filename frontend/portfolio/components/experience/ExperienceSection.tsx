@@ -20,6 +20,8 @@ interface ExperienceItem {
     github_url?: string;
     app_store_url?: string;
     image_url?: string;
+    color_primary?: string;
+    color_secondary?: string;
     description?: string;
     skills?: string[];
     type?: 'work' | 'project' | 'achievement';

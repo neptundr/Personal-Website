@@ -39,6 +39,8 @@ export interface Project {
     link?: string;
     github_url?: string;
     app_store_url?: string;
+    color_primary?: string;
+    color_secondary?: string;
     order?: number;
     featured?: boolean;
 }
@@ -48,7 +50,7 @@ export interface Project {
 type FieldConfig = {
     key: string;
     label: string;
-    type: 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'array' | 'date';
+    type: 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'array' | 'date' | 'color';
     placeholder?: string;
     options?: { value: string; label: string }[];
 };
@@ -77,6 +79,8 @@ const projectFields: FieldConfig[] = [
     {key: 'link', label: 'External Link', type: 'text'},
     {key: 'github_url', label: 'GitHub URL', type: 'text'},
     {key: 'app_store_url', label: 'App Store URL', type: 'text'},
+    {key: 'color_primary', label: 'Primary Color (glow + badge hover)', type: 'color'},
+    {key: 'color_secondary', label: 'Secondary Color', type: 'color'},
     {key: 'order', label: 'Display Order', type: 'number'},
     {key: 'featured', label: 'Featured', type: 'boolean'},
 ] as const;

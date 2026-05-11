@@ -14,6 +14,8 @@ export interface Project {
   link?: string;
   github_url?: string;
   app_store_url?: string;
+  color_primary?: string;
+  color_secondary?: string;
   order?: number;
   featured?: boolean;
 }
