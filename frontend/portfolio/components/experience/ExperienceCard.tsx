@@ -46,7 +46,7 @@ const formatDate = (date?: string) => {
     }
 };
 
-// PNG icons rendered as CSS masks so they inherit currentColor from the button
+// PNG icons rendered as CSS masks so they inherit currentColor
 const maskStyle = (url: string): React.CSSProperties => ({
     maskImage: `url(${url})`,
     maskSize: 'contain',
@@ -65,7 +65,6 @@ const StarIcon = () => (
     <span className="w-4 h-4 inline-block bg-current" style={maskStyle('/icons/star.png')}/>
 );
 
-// Convert #rrggbb hex to rgba string
 const hexToRgba = (hex: string, alpha: number): string => {
     try {
         const r = parseInt(hex.slice(1, 3), 16);
@@ -75,6 +74,70 @@ const hexToRgba = (hex: string, alpha: number): string => {
     } catch {
         return `rgba(255, 255, 255, ${alpha})`;
     }
+};
+
+/* ── Scrolling marquee info badge ──
+   No edge fades — text appears/disappears at card border via overflow:hidden.
+   When text fits, renders statically. */
+const InfoBadge: React.FC<{ text: string; primaryColor: string }> = ({text, primaryColor}) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const measureRef = useRef<HTMLSpanElement>(null);
+    const [needsMarquee, setNeedsMarquee] = useState(false);
+    const [textWidth, setTextWidth] = useState(0);
+
+    useEffect(() => {
+        if (!containerRef.current || !measureRef.current) return;
+        const check = () => {
+            if (!containerRef.current || !measureRef.current) return;
+            const tW = measureRef.current.scrollWidth;
+            const cW = containerRef.current.clientWidth;
+            setTextWidth(tW);
+            setNeedsMarquee(tW > cW - 20);
+        };
+        check();
+        const ro = new ResizeObserver(check);
+        ro.observe(containerRef.current);
+        return () => ro.disconnect();
+    }, [text]);
+
+    const duration = Math.max(4, textWidth / 60); // ~60 px/s
+
+    return (
+        <div
+            ref={containerRef}
+            className="overflow-hidden rounded-full border-[1.2px] px-3 py-1 relative"
+            style={{borderColor: primaryColor, backgroundColor: primaryColor + '33'}}
+        >
+            {/* Hidden measuring span */}
+            <span
+                ref={measureRef}
+                className="absolute invisible whitespace-nowrap text-xs pointer-events-none"
+                aria-hidden="true"
+                style={{fontFamily: 'var(--font-codec)'}}
+            >
+                {text}
+            </span>
+
+            {needsMarquee ? (
+                <motion.div
+                    className="flex whitespace-nowrap"
+                    animate={{x: ['0%', '-50%']}}
+                    transition={{repeat: Infinity, duration, ease: 'linear'}}
+                >
+                    <span className="text-white text-xs pr-12" style={{fontFamily: 'var(--font-codec)'}}>
+                        {text}
+                    </span>
+                    <span className="text-white text-xs pr-12" style={{fontFamily: 'var(--font-codec)'}}>
+                        {text}
+                    </span>
+                </motion.div>
+            ) : (
+                <span className="text-white text-xs whitespace-nowrap" style={{fontFamily: 'var(--font-codec)'}}>
+                    {text}
+                </span>
+            )}
+        </div>
+    );
 };
 
 
@@ -279,35 +342,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
     const aspectClass = isVertical ? 'aspect-[9/12]' : 'aspect-video';
 
-    // Hover overlay shared between -f and normal image containers.
-    // backdrop-blur-md is always present; only opacity animates.
-    // This prevents abrupt blur disappearance when hover is interrupted mid-transition.
-    const imageOverlay = (
-        <motion.div
-            className="absolute inset-0 z-30"
-            onMouseEnter={() => setImageHovered(true)}
-            onMouseLeave={() => setImageHovered(false)}
-        >
-            <motion.div
-                className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/27 pointer-events-none backdrop-blur-md transform-gpu"
-                animate={{opacity: imageHovered ? 1 : 0}}
-                transition={{duration: 0.3, ease: 'easeOut'}}
-            >
-                <motion.span
-                    className="text-white text-sm tracking-wide"
-                    style={{fontFamily: 'var(--font-codecLight)'}}
-                    animate={{
-                        opacity: imageHovered ? 1 : 0,
-                        y: imageHovered ? 0 : 6,
-                    }}
-                    transition={{duration: 0.3, ease: 'easeOut'}}
-                >
-                    Click to open fullscreen
-                </motion.span>
-            </motion.div>
-        </motion.div>
-    );
-
     const shimmerPlaceholder = (
         <AnimatePresence>
             {!hasLoadedOnce && (
@@ -328,6 +362,90 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 </motion.div>
             )}
         </AnimatePresence>
+    );
+
+    // Build info line text
+    const dateRange = (() => {
+        const start = formatDate(item.start_date);
+        if (!start || start === 'Jan 0001') return '';
+        const end = item.is_current ? 'Present' : formatDate(item.end_date);
+        return end ? `${start} — ${end}` : start;
+    })();
+    const infoText = [item.company, item.location, dateRange].filter(Boolean).join('  ·  ');
+
+    const hasButtons = !!(item.app_store_url || item.link || item.github_url || item.featured);
+
+    // Buttons — used in both image overlay (top-right) and no-image header
+    const buttons = (
+        <div
+            className="flex items-center gap-2 shrink-0"
+            onClick={e => e.stopPropagation()}
+        >
+            {item.app_store_url && (
+                <motion.a
+                    href={item.app_store_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{scale: 1.12}}
+                    whileTap={{scale: 0.93}}
+                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                >
+                    <AppStoreIcon/>
+                </motion.a>
+            )}
+            {item.link && (
+                <motion.a
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{scale: 1.12}}
+                    whileTap={{scale: 0.93}}
+                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                >
+                    <ExternalLink className="w-4 h-4"/>
+                </motion.a>
+            )}
+            {item.github_url && (
+                <motion.a
+                    href={item.github_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{scale: 1.12}}
+                    whileTap={{scale: 0.93}}
+                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                >
+                    <Github className="w-4 h-4"/>
+                </motion.a>
+            )}
+            {item.featured && (
+                <div className="relative">
+                    <motion.button
+                        type="button"
+                        whileHover={{scale: 1.12}}
+                        whileTap={{scale: 0.93}}
+                        className="p-2 rounded-lg bg-zinc-600/20 text-yellow-400 transition-colors flex items-center justify-center border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
+                        onMouseEnter={() => setIsStarHovered(true)}
+                        onMouseLeave={() => setIsStarHovered(false)}
+                    >
+                        <StarIcon/>
+                        <AnimatePresence>
+                            {isStarHovered && (
+                                <motion.div
+                                    key="star-tip"
+                                    className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
+                                    initial={{opacity: 0, x: 4}}
+                                    animate={{opacity: 1, x: 0}}
+                                    exit={{opacity: 0, x: 4}}
+                                    transition={{duration: 0.18, ease: 'easeOut'}}
+                                >
+                                    Featured<br/>Experience
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.button>
+                </div>
+            )}
+        </div>
     );
 
     return (
@@ -354,139 +472,31 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     relative overflow-hidden rounded-3xl
                     outline-1 outline-gray-400 shadow-2xl
                     bg-zinc-950
-                    p-6
                     transition-all duration-300
                     ${isSpecial ? 'outline-dashed outline-4' : ''}
                     hover:outline-4 hover:outline-gray-50 hover:shadow-lg hover:shadow-red-500/10
                     ${dimmed ? 'opacity-93 outline-gray-700' : ''}
                 `}
             >
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"/>
+                {/* Subtle top shimmer */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0"/>
 
-                <div className="mb-4">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                        <div className="flex-1">
-                            <h3
-                                className="text-3xl text-gray-200 mb-2 group-hover:text-white transition-colors"
-                                style={{fontFamily: 'var(--font-codecBold)'}}
-                            >
-                                {cleanTitle}
-                            </h3>
-                            <div
-                                className="flex flex-wrap items-center gap-3 text-sm"
-                                style={{fontFamily: 'var(--font-codecLight)'}}
-                            >
-                                {item.company && (
-                                    <span className="text-gray-300 font-normal">{item.company}</span>
-                                )}
-                                {item.location && (
-                                    <span className="text-gray-500">{item.location}</span>
-                                )}
-                                {((item.start_date || item.end_date || item.is_current) && (formatDate(item.start_date) !== 'Jan 0001')) && (
-                                    <span className="text-gray-500">
-                                        {formatDate(item.start_date)}
-                                        {item.start_date && (item.end_date || item.is_current) && ' — '}
-                                        {item.is_current ? (
-                                            <span
-                                                className="text-red-50 font-medium"
-                                                style={{fontFamily: 'var(--font-codec)'}}
-                                            >
-                                                Present
-                                            </span>
-                                        ) : (
-                                            formatDate(item.end_date)
-                                        )}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                {/* ── IMAGE SECTION — flush to card edges, corners clipped by card's overflow-hidden ── */}
+                {images.length > 0 ? (
+                    <div
+                        className={`relative ${isFull ? '' : aspectClass} overflow-hidden cursor-pointer select-none`}
+                        onMouseEnter={() => setImageHovered(true)}
+                        onMouseLeave={() => setImageHovered(false)}
+                        onClick={() => {
+                            setViewerOpen(true);
+                            setImageHovered(false);
+                            setHovered(false);
+                        }}
+                    >
+                        {shimmerPlaceholder}
 
-                        {/* Link buttons — always visible; App Store always leftmost */}
-                        <div className="flex items-center gap-2 shrink-0">
-                            {item.app_store_url && (
-                                <motion.a
-                                    href={item.app_store_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    whileHover={{scale: 1.12}}
-                                    whileTap={{scale: 0.93}}
-                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
-                                >
-                                    <AppStoreIcon/>
-                                </motion.a>
-                            )}
-                            {item.link && (
-                                <motion.a
-                                    href={item.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    whileHover={{scale: 1.12}}
-                                    whileTap={{scale: 0.93}}
-                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
-                                >
-                                    <ExternalLink className="w-4 h-4"/>
-                                </motion.a>
-                            )}
-                            {item.github_url && (
-                                <motion.a
-                                    href={item.github_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    whileHover={{scale: 1.12}}
-                                    whileTap={{scale: 0.93}}
-                                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
-                                >
-                                    <Github className="w-4 h-4"/>
-                                </motion.a>
-                            )}
-                            {item.featured && (
-                                <div className="relative">
-                                    <motion.button
-                                        type="button"
-                                        whileHover={{scale: 1.12}}
-                                        whileTap={{scale: 0.93}}
-                                        className="p-2 rounded-lg bg-zinc-600/20 text-yellow-400 transition-colors flex items-center justify-center border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
-                                        onMouseEnter={() => setIsStarHovered(true)}
-                                        onMouseLeave={() => setIsStarHovered(false)}
-                                    >
-                                        <StarIcon/>
-                                        {/* Tooltip — appears to the left of the button */}
-                                        <AnimatePresence>
-                                            {isStarHovered && (
-                                                <motion.div
-                                                    key="star-tip"
-                                                    className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
-                                                    initial={{opacity: 0, x: 4}}
-                                                    animate={{opacity: 1, x: 0}}
-                                                    exit={{opacity: 0, x: 4}}
-                                                    transition={{duration: 0.18, ease: 'easeOut'}}
-                                                >
-                                                    Featured<br/>Experience
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </motion.button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Images */}
-                {images.length > 0 && (
-                    isFull ? (
-                        /* -f flag: image renders at natural resolution, no forced aspect ratio */
-                        <div
-                            className="relative mb-4 rounded-lg overflow-hidden cursor-pointer select-none"
-                            onMouseEnter={() => setImageHovered(true)}
-                            onMouseLeave={() => setImageHovered(false)}
-                            onClick={() => {
-                                setViewerOpen(true);
-                                setImageHovered(false);
-                                setHovered(false);
-                            }}
-                        >
-                            {shimmerPlaceholder}
+                        {/* Images */}
+                        {isFull ? (
                             <motion.img
                                 src={isReadyToLoad ? resolvedSrc(images[0]!) : undefined}
                                 alt={cleanTitle}
@@ -500,23 +510,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 }}
                                 onError={() => handleImgError(images[0]!)}
                             />
-                            {imageOverlay}
-                        </div>
-                    ) : (
-                        /* Normal: fixed aspect ratio with crossfade */
-                        <div
-                            className={`relative mb-4 rounded-lg overflow-hidden cursor-pointer select-none ${aspectClass}`}
-                            style={{minHeight: 0}}
-                            onMouseEnter={() => setImageHovered(true)}
-                            onMouseLeave={() => setImageHovered(false)}
-                            onClick={() => {
-                                setViewerOpen(true);
-                                setImageHovered(false);
-                                setHovered(false);
-                            }}
-                        >
-                            {shimmerPlaceholder}
-                            {images.map((src, idx) => {
+                        ) : (
+                            images.map((src, idx) => {
                                 const isPrev = idx === prevImgIndex;
                                 const isCurrent = idx === imgIndex;
                                 if (!isPrev && !isCurrent) return null;
@@ -548,50 +543,113 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         onError={() => handleImgError(src)}
                                     />
                                 );
-                            })}
-                            {imageOverlay}
-                            <motion.div
-                                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-25"
-                                initial={{opacity: 1}}
-                                animate={{opacity: isTouch || hovered ? 0 : 1}}
-                                transition={{duration: 0.5, ease: 'easeOut'}}
-                            />
+                            })
+                        )}
+
+                        {/* Fixed-height title gradient — same absolute height regardless of image size */}
+                        <div
+                            className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                            style={{
+                                height: '7rem',
+                                zIndex: 25,
+                                background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%)',
+                            }}
+                        />
+
+                        {/* Title at image bottom, over gradient */}
+                        <div
+                            className="absolute bottom-0 left-0 right-0 px-5 pb-3 pointer-events-none"
+                            style={{zIndex: 26}}
+                        >
+                            <h3
+                                className="text-2xl sm:text-3xl text-gray-200 group-hover:text-white transition-colors leading-tight"
+                                style={{fontFamily: 'var(--font-codecBold)'}}
+                            >
+                                {cleanTitle}
+                            </h3>
                         </div>
-                    )
-                )}
 
-                {item.description && item.description.split('\n').map((para, i) => (
-                    <p
-                        key={i}
-                        className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
-                        style={{fontFamily: 'var(--font-codecLight)'}}
-                    >
-                        {para}
-                    </p>
-                ))}
+                        {/* Fullscreen hover overlay — backdrop-blur always present, only opacity animates */}
+                        <motion.div
+                            className="absolute inset-0 flex items-center justify-center bg-black/27 pointer-events-none backdrop-blur-md transform-gpu"
+                            style={{zIndex: 28}}
+                            animate={{opacity: imageHovered ? 1 : 0}}
+                            transition={{duration: 0.3, ease: 'easeOut'}}
+                        >
+                            <motion.span
+                                className="text-white text-sm tracking-wide"
+                                style={{fontFamily: 'var(--font-codecLight)'}}
+                                animate={{opacity: imageHovered ? 1 : 0, y: imageHovered ? 0 : 6}}
+                                transition={{duration: 0.3, ease: 'easeOut'}}
+                            >
+                                Click to open fullscreen
+                            </motion.span>
+                        </motion.div>
 
-                {item.skills && (
-                    <div className="flex flex-wrap mt-4.5 gap-2">
-                        {item.skills.map((skill, badgeIndex) => {
-                            const iconUrl = skillIcons.find(
-                                s => s.skill_name?.toLowerCase() === skill.toLowerCase()
-                            )?.icon_url;
-                            const badgeProps: React.ComponentProps<typeof SkillBadge> = {
-                                skill,
-                                badgeIndex,
-                                cardIndex: index,
-                                size: 'sm',
-                                isActive: currentSkillFilter === skill,
-                                dimmed,
-                                hovered,
-                                primaryColor,
-                                onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
-                            };
-                            if (iconUrl) badgeProps.iconUrl = iconUrl;
-                            return <SkillBadge key={skill} {...badgeProps}/>;
-                        })}
+                        {/* Buttons — top-right corner, above everything, stop propagation so they don't open viewer */}
+                        {hasButtons && (
+                            <div className="absolute top-3 right-3 flex items-center" style={{zIndex: 40}}>
+                                {buttons}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* ── NO IMAGE: title + buttons in padded header ── */
+                    <div className="px-5 pt-5 pb-0 relative">
+                        <div className="flex items-start justify-between gap-4">
+                            <h3
+                                className="text-3xl text-gray-200 group-hover:text-white transition-colors"
+                                style={{fontFamily: 'var(--font-codecBold)'}}
+                            >
+                                {cleanTitle}
+                            </h3>
+                            {hasButtons && buttons}
+                        </div>
                     </div>
                 )}
+
+                {/* ── INFO LINE — company · location · dates, styled like active skill badge ── */}
+                {infoText && (
+                    <div className="px-5 pt-3">
+                        <InfoBadge text={infoText} primaryColor={primaryColor}/>
+                    </div>
+                )}
+
+                {/* ── CONTENT — description + skills ── */}
+                <div className="px-5 pb-5 pt-3">
+                    {item.description && item.description.split('\n').map((para, i) => (
+                        <p
+                            key={i}
+                            className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
+                            style={{fontFamily: 'var(--font-codecLight)'}}
+                        >
+                            {para}
+                        </p>
+                    ))}
+
+                    {item.skills && (
+                        <div className="flex flex-wrap mt-4.5 gap-2">
+                            {item.skills.map((skill, badgeIndex) => {
+                                const iconUrl = skillIcons.find(
+                                    s => s.skill_name?.toLowerCase() === skill.toLowerCase()
+                                )?.icon_url;
+                                const badgeProps: React.ComponentProps<typeof SkillBadge> = {
+                                    skill,
+                                    badgeIndex,
+                                    cardIndex: index,
+                                    size: 'sm',
+                                    isActive: currentSkillFilter === skill,
+                                    dimmed,
+                                    hovered,
+                                    primaryColor,
+                                    onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
+                                };
+                                if (iconUrl) badgeProps.iconUrl = iconUrl;
+                                return <SkillBadge key={skill} {...badgeProps}/>;
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <AnimatePresence>

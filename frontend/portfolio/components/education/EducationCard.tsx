@@ -81,10 +81,18 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                                         transition={{duration: 0.2, ease: 'easeInOut'}}
                                         style={{backgroundColor: 'rgba(0,0,0,0.35)'}}
                                     >
-                                        <span className="text-white text-xs font-medium leading-tight flex items-center gap-1">
-                                            Click to visit
+                                        <motion.span
+                                            className="text-white text-sm tracking-wide flex items-center gap-1"
+                                            style={{fontFamily: 'var(--font-codecLight)'}}
+                                            animate={{
+                                                opacity: logoHovered ? 1 : 0,
+                                                y: logoHovered ? 0 : 6,
+                                            }}
+                                            transition={{duration: 0.3, ease: 'easeOut'}}
+                                        >
+                                            Visit
                                             <ExternalLink className="w-3 h-3"/>
-                                        </span>
+                                        </motion.span>
                                     </motion.div>
                                 )}
                             </div>
