@@ -427,8 +427,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 <motion.div
                                     key="star-tip"
                                     className="absolute right-full mr-1 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
-                                    initial={{opacity: 0, x: 6, scale: 0.7}} animate={{opacity: 1, x: 0, scale: 1}}
-                                    exit={{opacity: 0, x: 4, scale: 0.6}} transition={{duration: 0.18, ease: 'easeOut'}}
+                                    initial={{opacity: 0, x: 15, scale: 0.5}} animate={{opacity: 1, x: 0, scale: 1}}
+                                    exit={{opacity: 0, x: 6, scale: 0.9}} transition={{duration: 0.18, ease: 'easeOut'}}
                                 >
                                     Featured<br/>Experience
                                 </motion.div>
