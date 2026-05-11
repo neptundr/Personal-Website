@@ -51,6 +51,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     }, [])
 
     /* ----------------------------
+       ESCAPE KEY = SKIP INTRO
+    ---------------------------- */
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleSkip()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    /* ----------------------------
        INTRO SEQUENCE
     ---------------------------- */
 
