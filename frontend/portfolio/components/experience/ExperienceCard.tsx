@@ -76,11 +76,15 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 /* ── Info footer bar ──
-   - Full card width, top border primaryColor, l/r/b borders match card outline (gray-400)
-   - h-9 = ~1.5× skill badge; bg = primaryColor at 20% alpha
-   - CSS @keyframes marquee — zero JS per frame, no stutter
-   - Centers text when it fits; slow scroll (30 px/s) when it overflows */
-const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primaryColor}) => {
+   - Top border only
+   - Rest:  skill-badge defaults (gray-400/45 border, white/8 bg)
+   - Hover: primaryColor border + primaryColor/20 bg
+   - CSS @keyframes marquee, 30px/s */
+const InfoBar: React.FC<{ text: string; primaryColor: string; hovered: boolean }> = ({
+    text,
+    primaryColor,
+    hovered,
+}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const measureRef = useRef<HTMLSpanElement>(null);
     const [needsMarquee, setNeedsMarquee] = useState(false);
@@ -95,7 +99,7 @@ const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primar
             const cW = containerRef.current.clientWidth;
             const overflows = tW > cW;
             setNeedsMarquee(overflows);
-            if (overflows) setDuration(Math.max(6, tW / 30)); // 30 px/s — slow, readable
+            if (overflows) setDuration(Math.max(6, tW / 30));
         };
         check();
         const ro = new ResizeObserver(check);
@@ -103,19 +107,18 @@ const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primar
         return () => ro.disconnect();
     }, [text]);
 
+    const borderColor = hovered ? primaryColor : 'rgba(156,163,175,0.45)';
+    const bgColor     = hovered ? primaryColor + '33' : 'rgba(255,255,255,0.08)';
+
     return (
         <div
             ref={containerRef}
-            className="overflow-hidden flex items-center h-9 w-full relative"
+            className="overflow-hidden flex items-center h-9 w-full relative transition-colors duration-300"
             style={{
-                borderTop: `1px solid ${primaryColor}`,
-                borderLeft: '1px solid rgb(156, 163, 175)',
-                borderRight: '1px solid rgb(156, 163, 175)',
-                borderBottom: '1px solid rgb(156, 163, 175)',
-                backgroundColor: primaryColor + '33',
+                borderTop: `1px solid ${borderColor}`,
+                backgroundColor: bgColor,
             }}
         >
-            {/* Invisible measuring span */}
             <span
                 ref={measureRef}
                 className="invisible whitespace-nowrap text-xs pointer-events-none absolute"
@@ -146,10 +149,7 @@ const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primar
                     </div>
                 </>
             ) : (
-                <span
-                    className="text-white/80 text-xs w-full text-center"
-                    style={{fontFamily: 'var(--font-codec)'}}
-                >
+                <span className="text-white/80 text-xs w-full text-center" style={{fontFamily: 'var(--font-codec)'}}>
                     {text}
                 </span>
             )}
@@ -224,9 +224,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
     useEffect(() => {
         const timers = retryTimers.current;
-        return () => {
-            Object.values(timers).forEach(clearTimeout);
-        };
+        return () => { Object.values(timers).forEach(clearTimeout); };
     }, []);
 
     const resolvedSrc = (src: string) => {
@@ -329,9 +327,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     useEffect(() => {
         if (!viewerOpen) return;
         document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = '';
-        };
+        return () => { document.body.style.overflow = ''; };
     }, [viewerOpen]);
 
     const cardRef = useRef<HTMLDivElement>(null);
@@ -397,43 +393,22 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const btnClass = "p-2 rounded-full bg-black/40 backdrop-blur-sm text-gray-300 border border-white/20 hover:border-white/50 hover:text-white hover:bg-black/60 transition-colors";
 
     const buttons = (
-        <div
-            className="flex items-center gap-2 shrink-0"
-            onClick={e => e.stopPropagation()}
-        >
+        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
             {item.app_store_url && (
-                <motion.a
-                    href={item.app_store_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{scale: 1.12}}
-                    whileTap={{scale: 0.93}}
-                    className={btnClass}
-                >
+                <motion.a href={item.app_store_url} target="_blank" rel="noopener noreferrer"
+                    whileHover={{scale: 1.12}} whileTap={{scale: 0.93}} className={btnClass}>
                     <AppStoreIcon/>
                 </motion.a>
             )}
             {item.link && (
-                <motion.a
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{scale: 1.12}}
-                    whileTap={{scale: 0.93}}
-                    className={btnClass}
-                >
+                <motion.a href={item.link} target="_blank" rel="noopener noreferrer"
+                    whileHover={{scale: 1.12}} whileTap={{scale: 0.93}} className={btnClass}>
                     <ExternalLink className="w-4 h-4"/>
                 </motion.a>
             )}
             {item.github_url && (
-                <motion.a
-                    href={item.github_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{scale: 1.12}}
-                    whileTap={{scale: 0.93}}
-                    className={btnClass}
-                >
+                <motion.a href={item.github_url} target="_blank" rel="noopener noreferrer"
+                    whileHover={{scale: 1.12}} whileTap={{scale: 0.93}} className={btnClass}>
                     <Github className="w-4 h-4"/>
                 </motion.a>
             )}
@@ -441,8 +416,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 <div className="relative">
                     <motion.button
                         type="button"
-                        whileHover={{scale: 1.12}}
-                        whileTap={{scale: 0.93}}
+                        whileHover={{scale: 1.12}} whileTap={{scale: 0.93}}
                         className={`${btnClass} text-yellow-400 hover:text-yellow-300 flex items-center justify-center`}
                         onMouseEnter={() => setIsStarHovered(true)}
                         onMouseLeave={() => setIsStarHovered(false)}
@@ -453,10 +427,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 <motion.div
                                     key="star-tip"
                                     className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
-                                    initial={{opacity: 0, x: 4}}
-                                    animate={{opacity: 1, x: 0}}
-                                    exit={{opacity: 0, x: 4}}
-                                    transition={{duration: 0.18, ease: 'easeOut'}}
+                                    initial={{opacity: 0, x: 4}} animate={{opacity: 1, x: 0}}
+                                    exit={{opacity: 0, x: 4}} transition={{duration: 0.18, ease: 'easeOut'}}
                                 >
                                     Featured<br/>Experience
                                 </motion.div>
@@ -472,14 +444,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         <motion.div
             className="block w-full relative group"
             transition={{duration: 0.25, ease: 'easeOut', type: 'spring', damping: 9, stiffness: 180}}
-            onMouseEnter={() => {
-                setHovered(true);
-                onHover(item.id);
-            }}
-            onMouseLeave={() => {
-                setHovered(false);
-                onHover(null);
-            }}
+            onMouseEnter={() => { setHovered(true); onHover(item.id); }}
+            onMouseLeave={() => { setHovered(false); onHover(null); }}
             whileHover={{
                 translateY: -6,
                 boxShadow: `0 0 40px 5px ${glowColor}`,
@@ -500,11 +466,14 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             >
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0"/>
 
-                {/* ── IMAGE SECTION ── */}
+                {/* ── IMAGE SECTION ──
+                    Outer div has NO overflow-hidden so it doesn't create its own stacking context.
+                    Images are clipped by an inner absolute div instead.
+                    This lets z-indices of title/overlay compete in card context, enabling the
+                    seam-cover div (outside image section) to slot between gradient and title. */}
                 {images.length > 0 ? (
                     <div
-                        className={`relative ${isFull ? '' : aspectClass} overflow-hidden cursor-pointer select-none`}
-                        style={{willChange: 'transform'}}
+                        className={`relative ${isFull ? '' : aspectClass} cursor-pointer select-none`}
                         onMouseEnter={() => setImageHovered(true)}
                         onMouseLeave={() => setImageHovered(false)}
                         onClick={() => {
@@ -513,59 +482,54 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             setHovered(false);
                         }}
                     >
-                        {shimmerPlaceholder}
+                        {/* Inner clip — images only */}
+                        <div className="absolute inset-0 overflow-hidden">
+                            {shimmerPlaceholder}
+                            {isFull ? (
+                                <motion.img
+                                    src={isReadyToLoad ? resolvedSrc(images[0]!) : undefined}
+                                    alt={cleanTitle}
+                                    draggable={false}
+                                    className="w-full h-auto block"
+                                    animate={{filter: imageFilterStyle}}
+                                    transition={{filter: {duration: 0.25, ease: 'easeInOut'}}}
+                                    onLoad={() => { setImgLoaded(true); setHasLoadedOnce(true); }}
+                                    onError={() => handleImgError(images[0]!)}
+                                />
+                            ) : (
+                                images.map((src, idx) => {
+                                    const isPrev = idx === prevImgIndex;
+                                    const isCurrent = idx === imgIndex;
+                                    if (!isPrev && !isCurrent) return null;
+                                    return (
+                                        <motion.img
+                                            key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
+                                            src={isReadyToLoad ? resolvedSrc(src) : undefined}
+                                            alt={cleanTitle}
+                                            draggable={false}
+                                            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                            style={{zIndex: isCurrent ? 20 : 10}}
+                                            initial={{opacity: isCurrent ? 0 : 1}}
+                                            animate={{
+                                                opacity: isCurrent && imgLoaded ? 1 : 0,
+                                                filter: imageFilterStyle,
+                                            }}
+                                            transition={{
+                                                opacity: {duration: 0.4, ease: 'easeInOut'},
+                                                filter: {duration: 0.25, ease: 'easeInOut'},
+                                            }}
+                                            onLoad={() => {
+                                                decodedRef.current.add(src);
+                                                if (isCurrent) { setImgLoaded(true); setHasLoadedOnce(true); }
+                                            }}
+                                            onError={() => handleImgError(src)}
+                                        />
+                                    );
+                                })
+                            )}
+                        </div>
 
-                        {isFull ? (
-                            <motion.img
-                                src={isReadyToLoad ? resolvedSrc(images[0]!) : undefined}
-                                alt={cleanTitle}
-                                draggable={false}
-                                className="w-full h-auto block"
-                                animate={{filter: imageFilterStyle}}
-                                transition={{filter: {duration: 0.25, ease: 'easeInOut'}}}
-                                onLoad={() => {
-                                    setImgLoaded(true);
-                                    setHasLoadedOnce(true);
-                                }}
-                                onError={() => handleImgError(images[0]!)}
-                            />
-                        ) : (
-                            images.map((src, idx) => {
-                                const isPrev = idx === prevImgIndex;
-                                const isCurrent = idx === imgIndex;
-                                if (!isPrev && !isCurrent) return null;
-                                const rSrc = resolvedSrc(src);
-                                return (
-                                    <motion.img
-                                        key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
-                                        src={isReadyToLoad ? rSrc : undefined}
-                                        alt={cleanTitle}
-                                        draggable={false}
-                                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                                        style={{zIndex: isCurrent ? 20 : 10}}
-                                        initial={{opacity: isCurrent ? 0 : 1}}
-                                        animate={{
-                                            opacity: isCurrent && imgLoaded ? 1 : 0,
-                                            filter: imageFilterStyle,
-                                        }}
-                                        transition={{
-                                            opacity: {duration: 0.4, ease: 'easeInOut'},
-                                            filter: {duration: 0.25, ease: 'easeInOut'},
-                                        }}
-                                        onLoad={() => {
-                                            decodedRef.current.add(src);
-                                            if (isCurrent) {
-                                                setImgLoaded(true);
-                                                setHasLoadedOnce(true);
-                                            }
-                                        }}
-                                        onError={() => handleImgError(src)}
-                                    />
-                                );
-                            })
-                        )}
-
-                        {/* Gradient: bottom 20% fully opaque zinc-950, rest fades — no seam possible */}
+                        {/* Gradient — title background, fades image to zinc-950 */}
                         <div
                             className="absolute bottom-0 left-0 right-0 pointer-events-none"
                             style={{
@@ -575,10 +539,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             }}
                         />
 
-                        {/* Title — slightly lower with pb-4 */}
-                        <div
+                        {/* Title — fades OUT when imageHovered (mutually exclusive with fullscreen overlay) */}
+                        <motion.div
                             className="absolute bottom-0 left-0 right-0 px-5 pb-4 pointer-events-none"
-                            style={{zIndex: 26}}
+                            style={{zIndex: 30}}
+                            animate={{opacity: imageHovered ? 0 : 1}}
+                            transition={{duration: 0.25, ease: 'easeOut'}}
                         >
                             <h3
                                 className="text-2xl sm:text-3xl text-gray-200 group-hover:text-white transition-colors leading-tight"
@@ -586,13 +552,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             >
                                 {cleanTitle}
                             </h3>
-                        </div>
+                        </motion.div>
 
-                        {/* Fullscreen hover overlay — blur fades out toward bottom to avoid hard edge at image/content join */}
+                        {/* Fullscreen overlay — fades IN when imageHovered, z-31 above title */}
                         <motion.div
                             className="absolute inset-0 flex items-center justify-center bg-black/27 pointer-events-none backdrop-blur-md transform-gpu"
                             style={{
-                                zIndex: 28,
+                                zIndex: 31,
                                 WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
                                 maskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
                             } as MotionStyle}
@@ -609,7 +575,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             </motion.span>
                         </motion.div>
 
-                        {/* Buttons — top-right, above overlay */}
+                        {/* Buttons */}
                         {hasButtons && (
                             <div className="absolute top-3 right-3 flex items-center" style={{zIndex: 40}}>
                                 {buttons}
@@ -620,10 +586,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     /* ── NO IMAGE ── */
                     <div className="px-5 pt-5 pb-0 relative">
                         <div className="flex items-start justify-between gap-4">
-                            <h3
-                                className="text-3xl text-gray-200 group-hover:text-white transition-colors"
-                                style={{fontFamily: 'var(--font-codecBold)'}}
-                            >
+                            <h3 className="text-3xl text-gray-200 group-hover:text-white transition-colors"
+                                style={{fontFamily: 'var(--font-codecBold)'}}>
                                 {cleanTitle}
                             </h3>
                             {hasButtons && buttons}
@@ -631,21 +595,40 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     </div>
                 )}
 
-                {/* ── CONTENT — description + skills; skipped entirely when empty to avoid gap ── */}
+                {/* ── SEAM COVER ──
+                    Lives outside the image container, overlaps its bottom by 2rem via negative margin.
+                    backdrop-blur + gradient from transparent → zinc-950 guarantees zero visible seam
+                    at the image/content boundary, including when the fullscreen blur overlay is active.
+                    z-29: above image gradient (z-25) but below title (z-30) and fullscreen overlay (z-31). */}
+                {images.length > 0 && (
+                    <div
+                        className="relative pointer-events-none"
+                        style={{
+                            zIndex: 29,
+                            marginTop: '-2rem',
+                            height: '2rem',
+                            backdropFilter: 'blur(12px)',
+                            WebkitBackdropFilter: 'blur(12px)',
+                            background: 'linear-gradient(to bottom, transparent 0%, rgb(9,9,11) 70%)',
+                        }}
+                    />
+                )}
+
+                {/* ── CONTENT — description + skills ──
+                    -mt-4 slides description up slightly onto the image area (which is already
+                    zinc-950 from the gradient, so color is seamless). Equal 12px gaps throughout. */}
                 {hasContent && (
-                    <div className={`px-5 pt-2 ${infoText ? 'pb-3' : 'pb-5'}`}>
+                    <div className={`relative px-5 pt-3 ${infoText ? 'pb-3' : 'pb-5'} -mt-4`}
+                         style={{zIndex: 32}}>
                         {hasDescription && item.description!.split('\n').map((para, i) => (
-                            <p
-                                key={i}
-                                className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
-                                style={{fontFamily: 'var(--font-codecLight)'}}
-                            >
+                            <p key={i} className="text-gray-400 text-sm mb-3 whitespace-pre-wrap"
+                               style={{fontFamily: 'var(--font-codecLight)'}}>
                                 {para}
                             </p>
                         ))}
 
                         {hasSkills && (
-                            <div className={`flex flex-wrap gap-2 ${hasDescription ? 'mt-4' : 'mt-0'}`}>
+                            <div className={`flex flex-wrap gap-2 ${hasDescription ? 'mt-3' : 'mt-0'}`}>
                                 {item.skills!.map((skill, badgeIndex) => {
                                     const iconUrl = skillIcons.find(
                                         s => s.skill_name?.toLowerCase() === skill.toLowerCase()
@@ -671,7 +654,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
                 {/* ── INFO BAR — very bottom, full width ── */}
                 {infoText && (
-                    <InfoBar text={infoText} primaryColor={primaryColor}/>
+                    <InfoBar text={infoText} primaryColor={primaryColor} hovered={hovered}/>
                 )}
             </div>
 
