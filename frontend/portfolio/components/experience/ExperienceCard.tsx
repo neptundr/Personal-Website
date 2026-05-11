@@ -46,7 +46,6 @@ const formatDate = (date?: string) => {
     }
 };
 
-// PNG icons rendered as CSS masks so they inherit currentColor
 const maskStyle = (url: string): React.CSSProperties => ({
     maskImage: `url(${url})`,
     maskSize: 'contain',
@@ -76,14 +75,18 @@ const hexToRgba = (hex: string, alpha: number): string => {
     }
 };
 
-/* ── Scrolling marquee info badge ──
-   No edge fades — text appears/disappears at card border via overflow:hidden.
-   When text fits, renders statically. */
-const InfoBadge: React.FC<{ text: string; primaryColor: string }> = ({text, primaryColor}) => {
+/* ── Info footer bar ──
+   - Full card width, top border only (primaryColor)
+   - Height = ~1.5× skill badge (~24px → 36px = h-9)
+   - CSS keyframe marquee — no JS animation loop, no stutter
+   - Centers text when it fits; scrolls when it doesn't */
+const InfoBar: React.FC<{ text: string; primaryColor: string }> = ({text, primaryColor}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const measureRef = useRef<HTMLSpanElement>(null);
     const [needsMarquee, setNeedsMarquee] = useState(false);
-    const [textWidth, setTextWidth] = useState(0);
+    const [duration, setDuration] = useState(8);
+    // Stable unique ID for CSS keyframe name — one per component instance
+    const animId = useRef(`mq-${Math.random().toString(36).slice(2, 8)}`).current;
 
     useEffect(() => {
         if (!containerRef.current || !measureRef.current) return;
@@ -91,8 +94,9 @@ const InfoBadge: React.FC<{ text: string; primaryColor: string }> = ({text, prim
             if (!containerRef.current || !measureRef.current) return;
             const tW = measureRef.current.scrollWidth;
             const cW = containerRef.current.clientWidth;
-            setTextWidth(tW);
-            setNeedsMarquee(tW > cW - 20);
+            const overflows = tW > cW;
+            setNeedsMarquee(overflows);
+            if (overflows) setDuration(Math.max(4, tW / 60));
         };
         check();
         const ro = new ResizeObserver(check);
@@ -100,18 +104,16 @@ const InfoBadge: React.FC<{ text: string; primaryColor: string }> = ({text, prim
         return () => ro.disconnect();
     }, [text]);
 
-    const duration = Math.max(4, textWidth / 60); // ~60 px/s
-
     return (
         <div
             ref={containerRef}
-            className="overflow-hidden rounded-full border-[1.2px] px-3 py-1 relative"
-            style={{borderColor: primaryColor, backgroundColor: primaryColor + '33'}}
+            className="overflow-hidden flex items-center h-9 border-t w-full relative"
+            style={{borderColor: primaryColor}}
         >
-            {/* Hidden measuring span */}
+            {/* Invisible measuring span — absolute so it doesn't affect layout */}
             <span
                 ref={measureRef}
-                className="absolute invisible whitespace-nowrap text-xs pointer-events-none"
+                className="invisible whitespace-nowrap text-xs pointer-events-none absolute"
                 aria-hidden="true"
                 style={{fontFamily: 'var(--font-codec)'}}
             >
@@ -119,20 +121,31 @@ const InfoBadge: React.FC<{ text: string; primaryColor: string }> = ({text, prim
             </span>
 
             {needsMarquee ? (
-                <motion.div
-                    className="flex whitespace-nowrap"
-                    animate={{x: ['0%', '-50%']}}
-                    transition={{repeat: Infinity, duration, ease: 'linear'}}
-                >
-                    <span className="text-white text-xs pr-12" style={{fontFamily: 'var(--font-codec)'}}>
-                        {text}
-                    </span>
-                    <span className="text-white text-xs pr-12" style={{fontFamily: 'var(--font-codec)'}}>
-                        {text}
-                    </span>
-                </motion.div>
+                <>
+                    {/* Pure CSS keyframe — zero JS per frame, no stutter */}
+                    <style>{`
+                        @keyframes ${animId} {
+                            from { transform: translateX(0); }
+                            to   { transform: translateX(-50%); }
+                        }
+                    `}</style>
+                    <div
+                        className="flex whitespace-nowrap shrink-0"
+                        style={{animation: `${animId} ${duration}s linear infinite`}}
+                    >
+                        <span className="text-white/80 text-xs pr-16" style={{fontFamily: 'var(--font-codec)'}}>
+                            {text}
+                        </span>
+                        <span className="text-white/80 text-xs pr-16" style={{fontFamily: 'var(--font-codec)'}}>
+                            {text}
+                        </span>
+                    </div>
+                </>
             ) : (
-                <span className="text-white text-xs whitespace-nowrap" style={{fontFamily: 'var(--font-codec)'}}>
+                <span
+                    className="text-white/80 text-xs w-full text-center"
+                    style={{fontFamily: 'var(--font-codec)'}}
+                >
                     {text}
                 </span>
             )}
@@ -364,7 +377,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         </AnimatePresence>
     );
 
-    // Build info line text
+    // Info line text
     const dateRange = (() => {
         const start = formatDate(item.start_date);
         if (!start || start === 'Jan 0001') return '';
@@ -375,7 +388,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
     const hasButtons = !!(item.app_store_url || item.link || item.github_url || item.featured);
 
-    // Buttons — used in both image overlay (top-right) and no-image header
+    // Button style: rounded-full, blurred so visible over any image
+    const btnClass = "p-2 rounded-full bg-black/40 backdrop-blur-sm text-gray-300 border border-white/20 hover:border-white/50 hover:text-white hover:bg-black/60 transition-colors";
+
     const buttons = (
         <div
             className="flex items-center gap-2 shrink-0"
@@ -388,7 +403,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     rel="noopener noreferrer"
                     whileHover={{scale: 1.12}}
                     whileTap={{scale: 0.93}}
-                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                    className={btnClass}
                 >
                     <AppStoreIcon/>
                 </motion.a>
@@ -400,7 +415,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     rel="noopener noreferrer"
                     whileHover={{scale: 1.12}}
                     whileTap={{scale: 0.93}}
-                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                    className={btnClass}
                 >
                     <ExternalLink className="w-4 h-4"/>
                 </motion.a>
@@ -412,7 +427,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     rel="noopener noreferrer"
                     whileHover={{scale: 1.12}}
                     whileTap={{scale: 0.93}}
-                    className="p-2 rounded-lg bg-zinc-600/20 text-gray-400 border border-transparent hover:border-gray-500 hover:text-white hover:bg-zinc-500/30 transition-colors"
+                    className={btnClass}
                 >
                     <Github className="w-4 h-4"/>
                 </motion.a>
@@ -423,7 +438,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         type="button"
                         whileHover={{scale: 1.12}}
                         whileTap={{scale: 0.93}}
-                        className="p-2 rounded-lg bg-zinc-600/20 text-yellow-400 transition-colors flex items-center justify-center border border-transparent hover:border-gray-500 hover:bg-zinc-500/30"
+                        className={`${btnClass} text-yellow-400 hover:text-yellow-300 flex items-center justify-center`}
                         onMouseEnter={() => setIsStarHovered(true)}
                         onMouseLeave={() => setIsStarHovered(false)}
                     >
@@ -481,7 +496,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {/* Subtle top shimmer */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0"/>
 
-                {/* ── IMAGE SECTION — flush to card edges, corners clipped by card's overflow-hidden ── */}
+                {/* ── IMAGE SECTION ── */}
                 {images.length > 0 ? (
                     <div
                         className={`relative ${isFull ? '' : aspectClass} overflow-hidden cursor-pointer select-none`}
@@ -495,7 +510,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     >
                         {shimmerPlaceholder}
 
-                        {/* Images */}
                         {isFull ? (
                             <motion.img
                                 src={isReadyToLoad ? resolvedSrc(images[0]!) : undefined}
@@ -546,13 +560,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             })
                         )}
 
-                        {/* Fixed-height title gradient — same absolute height regardless of image size */}
+                        {/* Gradient fades to exact zinc-950 color → seamless into card body */}
                         <div
                             className="absolute bottom-0 left-0 right-0 pointer-events-none"
                             style={{
                                 height: '7rem',
                                 zIndex: 25,
-                                background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%)',
+                                background: 'linear-gradient(to top, rgb(9,9,11) 0%, transparent 100%)',
                             }}
                         />
 
@@ -586,7 +600,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             </motion.span>
                         </motion.div>
 
-                        {/* Buttons — top-right corner, above everything, stop propagation so they don't open viewer */}
+                        {/* Buttons — top-right on image, above overlay, blurred for visibility */}
                         {hasButtons && (
                             <div className="absolute top-3 right-3 flex items-center" style={{zIndex: 40}}>
                                 {buttons}
@@ -594,7 +608,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         )}
                     </div>
                 ) : (
-                    /* ── NO IMAGE: title + buttons in padded header ── */
+                    /* ── NO IMAGE: title + buttons ── */
                     <div className="px-5 pt-5 pb-0 relative">
                         <div className="flex items-start justify-between gap-4">
                             <h3
@@ -608,15 +622,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     </div>
                 )}
 
-                {/* ── INFO LINE — company · location · dates, styled like active skill badge ── */}
-                {infoText && (
-                    <div className="px-5 pt-3">
-                        <InfoBadge text={infoText} primaryColor={primaryColor}/>
-                    </div>
-                )}
-
-                {/* ── CONTENT — description + skills ── */}
-                <div className="px-5 pb-5 pt-3">
+                {/* ── CONTENT ── description + skills */}
+                <div className={`px-5 pt-3 ${infoText ? 'pb-3' : 'pb-5'}`}>
                     {item.description && item.description.split('\n').map((para, i) => (
                         <p
                             key={i}
@@ -650,6 +657,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         </div>
                     )}
                 </div>
+
+                {/* ── INFO BAR — very bottom, full width, top border only ── */}
+                {infoText && (
+                    <InfoBar text={infoText} primaryColor={primaryColor}/>
+                )}
             </div>
 
             <AnimatePresence>
