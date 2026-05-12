@@ -249,7 +249,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
     const [imgIndex, setImgIndex] = useState(0);
     const [prevImgIndex, setPrevImgIndex] = useState(0);
-    const [imgLoaded, setImgLoaded] = useState(false);
+    const [loadedSrcs, setLoadedSrcs] = useState<Set<string>>(new Set());
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -287,14 +287,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             await ensureDecoded(images[next]!);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(next);
-            setImgLoaded(false); // prev stays visible at 1 until new image onLoad fires
         };
 
         const resetToFirst = async () => {
             await ensureDecoded(images[0]!);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(0);
-            setImgLoaded(false);
         };
 
         if (imageActive) {
@@ -513,7 +511,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     className="w-full h-auto block"
                                     animate={{filter: imageFilterStyle}}
                                     transition={{filter: {duration: 0.25, ease: 'easeInOut'}}}
-                                    onLoad={() => { setImgLoaded(true); setHasLoadedOnce(true); }}
+                                    onLoad={() => { setHasLoadedOnce(true); }}
                                     onError={() => handleImgError(images[0]!)}
                                 />
                             ) : (
@@ -522,10 +520,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     const isCurrent = idx === imgIndex;
                                     if (!isPrev && !isCurrent) return null;
                                     // Stable key — no remount on role change (prevents Framer initial flash)
-                                    // Crossfade: prev stays at 1 until current loads, then both transition
+                                    // Each src tracks load state independently → no snap-back on new transition
+                                    const currentSrcLoaded = loadedSrcs.has(images[imgIndex] ?? '');
                                     const targetOpacity = isCurrent
-                                        ? (imgLoaded ? 1 : 0)
-                                        : (imgLoaded ? 0 : 1);
+                                        ? (loadedSrcs.has(src) ? 1 : 0)
+                                        : (currentSrcLoaded ? 0 : 1); // prev: visible until current loads
                                     return (
                                         <motion.img
                                             key={`${idx}-${retrySuffixes[src] ?? 0}`}
@@ -544,7 +543,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             }}
                                             onLoad={() => {
                                                 decodedRef.current.add(src);
-                                                if (isCurrent) { setImgLoaded(true); setHasLoadedOnce(true); }
+                                                setLoadedSrcs(prev => new Set([...prev, src]));
+                                                if (isCurrent) setHasLoadedOnce(true);
                                             }}
                                             onError={() => handleImgError(src)}
                                         />
