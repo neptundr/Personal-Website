@@ -51,8 +51,8 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index, scrollAc
             }}
             animate={isTouch
                 ? (scrollActive
-                    ? {y: -6, boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)'}
-                    : {y: 0, boxShadow: '0 0 0px 0px rgba(0,0,0,0)'})
+                    ? {y: -6, boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)', borderRadius: '1.5rem'}
+                    : {y: 0, boxShadow: '0 0 0px 0px rgba(0,0,0,0)', borderRadius: '1.5rem'})
                 : {}
             }
             className="group relative"

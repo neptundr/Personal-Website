@@ -466,8 +466,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             }}
             animate={isTouch
                 ? (scrollActive
-                    ? {y: -6, boxShadow: `0 0 40px 5px ${glowColor}`}
-                    : {y: 0, boxShadow: '0 0 0px 0px rgba(0,0,0,0)'})
+                    ? {y: -6, boxShadow: `0 0 40px 5px ${glowColor}`, borderRadius: '2rem'}
+                    : {y: 0, boxShadow: '0 0 0px 0px rgba(0,0,0,0)', borderRadius: '1.5rem'})
                 : {}
             }
         >
