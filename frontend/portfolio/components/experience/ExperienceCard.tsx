@@ -622,19 +622,19 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     backdrop-blur + gradient from transparent → zinc-950 guarantees zero visible seam
                     at the image/content boundary, including when the fullscreen blur overlay is active.
                     z-29: above image gradient (z-25) but below title (z-30) and fullscreen overlay (z-31). */}
-                {images.length > 0 && (
-                    <div
-                        className="relative pointer-events-none"
-                        style={{
-                            zIndex: 29,
-                            marginTop: '-2rem',
-                            height: '2rem',
-                            backdropFilter: 'blur(12px)',
-                            WebkitBackdropFilter: 'blur(12px)',
-                            background: 'linear-gradient(to bottom, transparent 40%, rgb(15, 15, 17) 70%)',
-                        }}
-                    />
-                )}
+                {/*{images.length > 0 && (*/}
+                {/*    <div*/}
+                {/*        className="relative pointer-events-none"*/}
+                {/*        style={{*/}
+                {/*            zIndex: 29,*/}
+                {/*            marginTop: '-2rem',*/}
+                {/*            height: '2rem',*/}
+                {/*            backdropFilter: 'blur(12px)',*/}
+                {/*            WebkitBackdropFilter: 'blur(12px)',*/}
+                {/*            background: 'linear-gradient(to bottom, transparent 40%, rgb(15, 15, 17) 70%)',*/}
+                {/*        }}*/}
+                {/*    />*/}
+                {/*)}*/}
 
                 {/* ── CONTENT — description + skills ──
                     -mt-4 slides description up slightly onto the image area (which is already
