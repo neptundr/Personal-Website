@@ -4,6 +4,7 @@ import React, {useState} from 'react';
 import {motion} from 'framer-motion';
 import Image from 'next/image';
 import {ExternalLink} from 'lucide-react';
+import {renderRichText} from '../shared/richText';
 
 interface Education {
     type: 'university' | 'school';
@@ -126,7 +127,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
 
                     {education.description && (
                         <p className="text-gray-400 text-sm leading-relaxed pb-3 pr-5">
-                            {education.description}
+                            {renderRichText(education.description, 'rgb(255,255,255)')}
                         </p>
                     )}
                 </div>

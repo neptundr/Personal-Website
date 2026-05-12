@@ -6,6 +6,7 @@ import {format} from 'date-fns';
 import {ExternalLink, Github} from 'lucide-react';
 import SkillBadge from '../shared/SkillBadge';
 import FullscreenImageViewer from "@/components/viewer/FullscreenImageViewer";
+import {renderRichText} from '../shared/richText';
 
 interface ExperienceItem {
     id: number;
@@ -670,7 +671,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                 />
                                             </>
                                         )}
-                                        {para}
+                                        {renderRichText(para, hovered ? primaryColor : 'rgb(209,213,219)')}
                                     </p>
                                 );
                             });

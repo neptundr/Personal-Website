@@ -20,14 +20,15 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {X, Save} from 'lucide-react';
-import {useState} from "react";
+import {X, Save, Bold} from 'lucide-react';
+import {useState, useRef} from "react";
 
 /* ---------- types ---------- */
 
 type FieldType =
     | 'text'
     | 'textarea'
+    | 'richtext'
     | 'date'
     | 'number'
     | 'boolean'
@@ -58,6 +59,69 @@ interface EntityFormProps<T extends Record<string, any>> {
     onCancel: () => void;
     isLoading?: boolean;
 }
+
+/* ---------- RichTextArea — textarea with **bold** toggle ---------- */
+
+const RichTextArea: React.FC<{
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+}> = ({value, onChange, placeholder}) => {
+    const ref = useRef<HTMLTextAreaElement>(null);
+
+    const handleBold = () => {
+        const el = ref.current;
+        if (!el) return;
+        const {selectionStart: start, selectionEnd: end} = el;
+        const selected = value.slice(start, end);
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+
+        let newValue: string;
+        let newStart: number;
+        let newEnd: number;
+
+        // Toggle off if already wrapped
+        if (selected.startsWith('**') && selected.endsWith('**') && selected.length > 4) {
+            const inner = selected.slice(2, -2);
+            newValue = before + inner + after;
+            newStart = start;
+            newEnd = start + inner.length;
+        } else {
+            newValue = before + `**${selected}**` + after;
+            newStart = start + 2;
+            newEnd = end + 2;
+        }
+
+        onChange(newValue);
+        requestAnimationFrame(() => {
+            el.focus();
+            el.setSelectionRange(newStart, newEnd);
+        });
+    };
+
+    return (
+        <div className="space-y-1">
+            <div className="flex gap-1">
+                <button
+                    type="button"
+                    onClick={handleBold}
+                    title="Bold selected text (**text**)"
+                    className="flex items-center gap-1 px-2 py-0.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-white rounded border border-white/20 transition-colors"
+                >
+                    <Bold className="w-3 h-3"/>
+                </button>
+            </div>
+            <textarea
+                ref={ref}
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                placeholder={placeholder}
+                className="w-full min-h-[100px] rounded-md border border-white/10 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 resize-y font-mono"
+            />
+        </div>
+    );
+};
 
 /* ---------- component ---------- */
 
@@ -132,6 +196,14 @@ export default function EntityForm<T extends Record<string, any>>({
                                         }
                                         placeholder={field.placeholder}
                                         className="bg-black border-white/10 text-white placeholder:text-white/30 min-h-[100px]"
+                                    />
+                                )}
+
+                                {field.type === 'richtext' && (
+                                    <RichTextArea
+                                        value={formData[field.key] ?? ''}
+                                        onChange={val => handleChange(field.key, val)}
+                                        {...(field.placeholder !== undefined ? {placeholder: field.placeholder} : {})}
                                     />
                                 )}
 

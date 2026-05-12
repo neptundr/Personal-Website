@@ -41,7 +41,7 @@ interface FormData {
 type FieldConfig = {
     key: string;
     label: string;
-    type: 'text' | 'number' | 'textarea' | 'select';
+    type: 'text' | 'number' | 'textarea' | 'richtext' | 'select';
     placeholder?: string;
     options?: { value: string; label: string }[];
 };
@@ -63,7 +63,7 @@ const educationFields: FieldConfig[] = [
             {value: 'university', label: 'University/College'},
         ],
     },
-    {key: 'description', label: 'Description', type: 'textarea', placeholder: 'Additional details, achievements, etc.'},
+    {key: 'description', label: 'Description', type: 'richtext', placeholder: 'Additional details, achievements, etc.'},
     {key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://...'},
     {key: 'order', label: 'Display Order', type: 'number', placeholder: '1'},
 ];

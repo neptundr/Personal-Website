@@ -50,7 +50,7 @@ export interface Project {
 type FieldConfig = {
     key: string;
     label: string;
-    type: 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'array' | 'date' | 'color';
+    type: 'text' | 'number' | 'textarea' | 'richtext' | 'select' | 'boolean' | 'array' | 'date' | 'color';
     placeholder?: string;
     options?: { value: string; label: string }[];
 };
@@ -73,7 +73,7 @@ const projectFields: FieldConfig[] = [
     {key: 'start_date', label: 'Start Date (Enter 01.01.0001 to hide date from the card)', type: 'date'},
     {key: 'end_date', label: 'End Date', type: 'date'},
     {key: 'is_current', label: 'Currently Ongoing', type: 'boolean'},
-    {key: 'description', label: 'Description', type: 'textarea'},
+    {key: 'description', label: 'Description', type: 'richtext'},
     {key: 'image_url', label: 'Image URL (comma-separated)', type: 'textarea'},
     {key: 'skills', label: 'Skills (comma-separated)', type: 'array'},
     {key: 'link', label: 'External Link', type: 'text'},
