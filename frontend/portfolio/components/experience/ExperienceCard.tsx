@@ -249,6 +249,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
     const [imgIndex, setImgIndex] = useState(0);
     const [prevImgIndex, setPrevImgIndex] = useState(0);
+    const [transitionCount, setTransitionCount] = useState(0);
     const [loadedSrcs, setLoadedSrcs] = useState<Set<string>>(new Set());
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -291,12 +292,14 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         const nextImage = async () => {
             const next = (imgIndexRef.current + 1) % images.length;
             await ensureDecoded(images[next]!);
+            setTransitionCount(c => c + 1);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(next);
         };
 
         const resetToFirst = async () => {
             await ensureDecoded(images[0]!);
+            setTransitionCount(c => c + 1);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(0);
         };
@@ -507,11 +510,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         }}
                     >
                         {/* Inner clip — images only */}
-                        {/* Filter on container — one GPU layer instead of per-image, much cheaper on mobile */}
+                        {/* Filter on container — no transition, instant switch is cheaper on mobile */}
                         <div
                             className="absolute inset-0 overflow-hidden"
-                            style={{filter: imageFilterStyle, transition: 'filter 0.25s ease-in-out'}}
+                            style={{filter: imageFilterStyle}}
                         >
+                            {/* @keyframes injected once per card instance */}
+                            <style>{`@keyframes img-fade-in{from{opacity:0}to{opacity:1}}`}</style>
                             {shimmerPlaceholder}
                             {isFull ? (
                                 <img
@@ -524,27 +529,54 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                 />
                             ) : (
                                 images.map((src, idx) => {
-                                    const isPrev = idx === prevImgIndex;
+                                    // isPrev is only true when a genuine transition is happening
+                                    const isPrev = idx === prevImgIndex && prevImgIndex !== imgIndex;
                                     const isCurrent = idx === imgIndex;
                                     if (!isPrev && !isCurrent) return null;
-                                    const currentSrcLoaded = loadedSrcs.has(images[imgIndex] ?? '');
-                                    const targetOpacity = isCurrent
-                                        ? (loadedSrcs.has(src) ? 1 : 0)
-                                        : (currentSrcLoaded ? 0 : 1);
+                                    const srcLoaded = loadedSrcs.has(src);
+
+                                    if (isCurrent) {
+                                        // New key on every transition → always a fresh mount →
+                                        // CSS animation always starts from opacity:0 regardless of
+                                        // whether this image was previously loaded (avoids pop-in).
+                                        return (
+                                            <img
+                                                key={`curr-${idx}-${transitionCount}-${retrySuffixes[src] ?? 0}`}
+                                                src={isReadyToLoad ? resolvedSrc(src) : undefined}
+                                                alt={cleanTitle}
+                                                draggable={false}
+                                                className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
+                                                style={{
+                                                    zIndex: 20,
+                                                    // Wait for load before starting animation; once loaded play fade-in.
+                                                    opacity: srcLoaded ? undefined : 0,
+                                                    animation: srcLoaded ? 'img-fade-in 0.5s ease-in-out forwards' : 'none',
+                                                    willChange: 'opacity',
+                                                    transform: 'translateZ(0)',
+                                                }}
+                                                onLoad={() => {
+                                                    decodedRef.current.add(src);
+                                                    setLoadedSrcs(prev => new Set([...prev, src]));
+                                                    setHasLoadedOnce(true);
+                                                }}
+                                                onError={() => handleImgError(src)}
+                                            />
+                                        );
+                                    }
+
+                                    // Prev image — stable key, always fully visible underneath.
+                                    // Fade-in of current image on top creates the crossfade effect.
                                     return (
-                                        <motion.img
-                                            key={`${idx}-${retrySuffixes[src] ?? 0}`}
+                                        <img
+                                            key={`prev-${idx}-${retrySuffixes[src] ?? 0}`}
                                             src={isReadyToLoad ? resolvedSrc(src) : undefined}
                                             alt={cleanTitle}
                                             draggable={false}
                                             className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
-                                            style={{zIndex: isCurrent ? 20 : 10}}
-                                            animate={{opacity: targetOpacity}}
-                                            transition={{opacity: {duration: 0.4, ease: 'easeInOut'}}}
-                                            onLoad={() => {
-                                                decodedRef.current.add(src);
-                                                setLoadedSrcs(prev => new Set([...prev, src]));
-                                                if (isCurrent) setHasLoadedOnce(true);
+                                            style={{
+                                                zIndex: 10,
+                                                opacity: 1,
+                                                transform: 'translateZ(0)',
                                             }}
                                             onError={() => handleImgError(src)}
                                         />
