@@ -690,7 +690,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                 />
                                             </>
                                         )}
-                                        {renderRichText(para, effectiveHovered ? primaryColor : 'rgb(230,230,230)')}
+                                        {renderRichText(para, undefined, effectiveHovered ? primaryColor : undefined)}
                                     </p>
                                 );
                             });
