@@ -28,10 +28,9 @@ function parseRichText(text: string): Segment[] {
 
 /**
  * Render a description string that may contain **bold** markers.
- * boldColor:     CSS color for bold segments. Omit to inherit parent color.
- * boldGlowColor: CSS color for text-shadow glow on bold segments. Omit for no glow.
+ * boldColor: CSS color for bold segments. Omit to inherit parent color.
  */
-export function renderRichText(text: string, boldColor?: string, boldGlowColor?: string): React.ReactNode {
+export function renderRichText(text: string, boldColor?: string): React.ReactNode {
     const segments = parseRichText(text);
     return segments.map((seg, i) =>
         seg.bold ? (
@@ -40,7 +39,6 @@ export function renderRichText(text: string, boldColor?: string, boldGlowColor?:
                 style={{
                     fontFamily: 'var(--font-codecBold)',
                     ...(boldColor ? {color: boldColor} : {}),
-                    ...(boldGlowColor ? {textShadow: `0 0 8px ${boldGlowColor}, 0 0 16px ${boldGlowColor}55`} : {}),
                 }}
             >
                 {seg.text}

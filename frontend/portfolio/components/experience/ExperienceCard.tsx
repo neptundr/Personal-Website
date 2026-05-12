@@ -177,7 +177,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const isVertical = hasFlag('v');
     const isSpecial = hasFlag('s');
     const isFull = hasFlag('f');
-    const cleanTitle = item.title.replace(/ -[vsf]/g, '').trim();
+    const isTop = hasFlag('t');
+    const cleanTitle = item.title.replace(/ -[vsft]/g, '').trim();
 
     const primaryColor = item.color_primary ?? '#ffffff';
     const glowColor = hexToRgba(primaryColor, 0.5);
@@ -355,7 +356,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         ? 'grayscale(0%) brightness(1)'
         : dimmed
             ? 'grayscale(90%) brightness(0.9)'
-            : 'grayscale(50%) brightness(1.15)';
+            : 'grayscale(0%) brightness(1.15)';
 
     const aspectClass = isVertical ? 'aspect-[9/12]' : 'aspect-video';
 
@@ -526,7 +527,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             src={isReadyToLoad ? resolvedSrc(src) : undefined}
                                             alt={cleanTitle}
                                             draggable={false}
-                                            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                            className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
                                             style={{zIndex: isCurrent ? 20 : 10}}
                                             initial={{opacity: isCurrent ? 0 : 1}}
                                             animate={{
@@ -690,7 +691,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                 />
                                             </>
                                         )}
-                                        {renderRichText(para, undefined, effectiveHovered ? primaryColor : undefined)}
+                                        {renderRichText(para, 'rgb(255,255,255)')}
                                     </p>
                                 );
                             });

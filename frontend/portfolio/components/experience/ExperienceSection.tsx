@@ -58,7 +58,10 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
 
     const safeItems = Array.isArray(items) ? items : [];
 
+    const noFiltersActive = filter === 'all' && !skillFilter;
+
     const filteredItems = safeItems
+        .filter(item => noFiltersActive || !item.title.includes(' -s'))
         .filter(item => filter === 'all' || item.type === filter)
         .filter(item => !skillFilter || item.skills?.includes(skillFilter));
 
