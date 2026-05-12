@@ -551,11 +551,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
                         {/* Gradient — title background, fades image to zinc-950 */}
                         <div
-                            className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                            className="absolute -bottom-1 left-0 right-0 pointer-events-none"
                             style={{
                                 height: '8rem',
                                 zIndex: 25,
-                                background: 'linear-gradient(to top, rgb(15, 15, 17) 0%, rgb(15, 15, 17) 30%, transparent 100%)',
+                                background: 'linear-gradient(to top, rgb(15, 15, 17) 0%, rgb(15, 15, 17) 20%, transparent 100%)',
                             }}
                         />
 
