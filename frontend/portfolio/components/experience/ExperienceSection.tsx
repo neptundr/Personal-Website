@@ -239,23 +239,20 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                             ) : (
                                 <motion.div
                                     key="tip"
-                                    className="px-4 py-2 text-sm text-gray-400"
+                                    className="px-4 py-2 text-sm"
+                                    // Framer handles opacity + x only.
+                                    // Color pulse uses CSS @keyframes — always starts on render,
+                                    // immune to FM hydration/initial-value quirks.
                                     initial={{opacity: 0, x: -16}}
-                                    animate={{
-                                        opacity: 1,
-                                        x: 0,
-                                        color: ["#9ca3af", "#dddddd"], // gray-400 to almost white
-                                    }}
+                                    animate={{opacity: 1, x: 0}}
                                     exit={{opacity: 0, x: 16}}
                                     transition={{
-                                        duration: 0.65,
-                                        repeat: Infinity,
-                                        repeatType: "mirror",
-                                        ease: "easeInOut",
-                                        opacity: {duration: 0.25},
-                                        x: {duration: 0.25},
+                                        opacity: {duration: 0.25, ease: "easeInOut"},
+                                        x: {duration: 0.25, ease: "easeInOut"},
                                     }}
+                                    style={{animation: 'tip-color-pulse 1.3s ease-in-out infinite'}}
                                 >
+                                    <style>{`@keyframes tip-color-pulse{0%,100%{color:#9ca3af}50%{color:#dddddd}}`}</style>
                                     Tip: click on a skill badge to filter
                                 </motion.div>
                             )}
