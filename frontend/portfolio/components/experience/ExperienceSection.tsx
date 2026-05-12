@@ -319,8 +319,9 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                         initial={{opacity: 0}}
                         animate={{opacity: 1}}
                         exit={{opacity: 0}}
-                        transition={{duration: 0.2, ease: 'easeInOut'}}
+                        transition={{duration: 0.35, ease: 'easeInOut'}}
                         className="flex gap-6 items-start"
+                        style={{transform: 'translateZ(0)'}}
                     >
                         {Array.from({length: numCols}, (_, colIdx) => (
                             <div key={colIdx} className="flex-1 flex flex-col gap-6 min-w-0">
