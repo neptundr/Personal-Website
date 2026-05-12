@@ -256,7 +256,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const imgIndexRef = useRef(imgIndex);
     imgIndexRef.current = imgIndex;
     const decodedRef = useRef<Set<string>>(new Set());
-    const imageActive = effectiveHovered;
+    // On touch: once the card is scroll-activated for the first time, keep cycling forever.
+    // Without this, rapid IntersectionObserver changes restart the interval on every scroll tick.
+    const [touchCyclingStarted, setTouchCyclingStarted] = useState(false);
+    useEffect(() => {
+        if (isTouch && scrollActive && !touchCyclingStarted) setTouchCyclingStarted(true);
+    }, [isTouch, scrollActive, touchCyclingStarted]);
+    const imageActive = isTouch ? touchCyclingStarted : effectiveHovered;
 
     const ensureDecoded = async (src: string) => {
         if (decodedRef.current.has(src)) return;
@@ -501,16 +507,18 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                         }}
                     >
                         {/* Inner clip — images only */}
-                        <div className="absolute inset-0 overflow-hidden">
+                        {/* Filter on container — one GPU layer instead of per-image, much cheaper on mobile */}
+                        <div
+                            className="absolute inset-0 overflow-hidden"
+                            style={{filter: imageFilterStyle, transition: 'filter 0.25s ease-in-out'}}
+                        >
                             {shimmerPlaceholder}
                             {isFull ? (
-                                <motion.img
+                                <img
                                     src={isReadyToLoad ? resolvedSrc(images[0]!) : undefined}
                                     alt={cleanTitle}
                                     draggable={false}
                                     className="w-full h-auto block"
-                                    animate={{filter: imageFilterStyle}}
-                                    transition={{filter: {duration: 0.25, ease: 'easeInOut'}}}
                                     onLoad={() => { setHasLoadedOnce(true); }}
                                     onError={() => handleImgError(images[0]!)}
                                 />
@@ -519,12 +527,10 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     const isPrev = idx === prevImgIndex;
                                     const isCurrent = idx === imgIndex;
                                     if (!isPrev && !isCurrent) return null;
-                                    // Stable key — no remount on role change (prevents Framer initial flash)
-                                    // Each src tracks load state independently → no snap-back on new transition
                                     const currentSrcLoaded = loadedSrcs.has(images[imgIndex] ?? '');
                                     const targetOpacity = isCurrent
                                         ? (loadedSrcs.has(src) ? 1 : 0)
-                                        : (currentSrcLoaded ? 0 : 1); // prev: visible until current loads
+                                        : (currentSrcLoaded ? 0 : 1);
                                     return (
                                         <motion.img
                                             key={`${idx}-${retrySuffixes[src] ?? 0}`}
@@ -533,14 +539,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             draggable={false}
                                             className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
                                             style={{zIndex: isCurrent ? 20 : 10}}
-                                            animate={{
-                                                opacity: targetOpacity,
-                                                filter: imageFilterStyle,
-                                            }}
-                                            transition={{
-                                                opacity: {duration: 0.4, ease: 'easeInOut'},
-                                                filter: {duration: 0.25, ease: 'easeInOut'},
-                                            }}
+                                            animate={{opacity: targetOpacity}}
+                                            transition={{opacity: {duration: 0.4, ease: 'easeInOut'}}}
                                             onLoad={() => {
                                                 decodedRef.current.add(src);
                                                 setLoadedSrcs(prev => new Set([...prev, src]));
