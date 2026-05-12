@@ -47,6 +47,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
     const [isSingleColumn, setIsSingleColumn] = useState(false);
     const [touchActiveId, setTouchActiveId] = useState<number | null>(null);
     const [numCols, setNumCols] = useState(3);
+    const [isWebKit, setIsWebKit] = useState(false);
 
     const filterRowRef = useRef<HTMLDivElement>(null);
     const cardEls = useRef<Map<number, Element>>(new Map());
@@ -67,6 +68,12 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
         .filter(item => !skillFilter || item.skills?.includes(skillFilter));
 
     const hasMore = filteredItems.length > showCount;
+
+    // Detect Safari/WebKit — use flex-column masonry to avoid CSS columns reflow bugs
+    useEffect(() => {
+        const ua = navigator.userAgent;
+        setIsWebKit(ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Chromium'));
+    }, []);
 
     // Detect touch-only device
     useEffect(() => {
@@ -294,7 +301,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                         skillIcons={skillIcons}
                     />
                 </motion.div>
-            ) : (
+            ) : isWebKit ? (
+                /* ── WebKit/Safari: flex-column masonry ──
+                   CSS columns + AnimatePresence(popLayout) causes first-row flicker
+                   and card render glitches in Safari. Real flex column divs avoid
+                   the CSS columns reflow entirely. */
                 <div className="flex gap-6 items-start">
                     {Array.from({length: numCols}, (_, colIdx) => (
                         <div key={colIdx} className="flex-1 flex flex-col gap-6 min-w-0">
@@ -337,6 +348,46 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                             </AnimatePresence>
                         </div>
                     ))}
+                </div>
+            ) : (
+                /* ── All other browsers: CSS columns + layout animations ── */
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+                    <AnimatePresence mode="popLayout">
+                        {filteredItems.slice(0, showCount).map((item, index) => (
+                            <motion.div
+                                key={item.id}
+                                layout
+                                variants={itemVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                className="mb-6 break-inside-avoid"
+                                data-card-id={item.id}
+                                ref={(el) => {
+                                    if (el) cardEls.current.set(item.id, el);
+                                    else cardEls.current.delete(item.id);
+                                }}
+                                onClick={isTouch && !isSingleColumn
+                                    ? () => setTouchActiveId(prev => prev === item.id ? null : item.id)
+                                    : undefined
+                                }
+                            >
+                                <ExperienceCard
+                                    item={item}
+                                    index={index}
+                                    onSkillClick={(skill) => {
+                                        setSkillFilter(prev => (prev === skill ? null : skill));
+                                        setFilter('all');
+                                    }}
+                                    dimmed={effectiveHoveredId !== null && effectiveHoveredId !== item.id}
+                                    onHover={setHoveredId}
+                                    currentSkillFilter={skillFilter}
+                                    skillIcons={skillIcons}
+                                    scrollActive={isTouch && touchActiveId === item.id}
+                                />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                 </div>
             )}
 
