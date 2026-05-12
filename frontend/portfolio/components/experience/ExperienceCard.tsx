@@ -620,12 +620,52 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 {hasContent && (
                     <div className={`relative px-4 ${hasDescription ? (images.length > 0 ? "pt-2": "mt-2 -pt-2") : "-pt-3"} ${infoText ? 'pb-4' : (hasSkills ? 'pb-5': "pb-1")} -mt-4`}
                          style={{zIndex: 32}}>
-                        {hasDescription && item.description!.split('\n').map((para, i) => (
-                            <p key={i} className={`${images.length > 0 ? "pl-8" : "pl-1"} pr-5 text-gray-400 text-sm mb-3 whitespace-pre-wrap`}
-                               style={{fontFamily: 'var(--font-codecLight)'}}>
-                                {para}
-                            </p>
-                        ))}
+                        {hasDescription && (() => {
+                            const paras = item.description!.split('\n').filter(p => p.trim());
+                            const showPath = images.length > 0;
+                            return paras.map((para, i) => {
+                                const isLast = i === paras.length - 1;
+                                return (
+                                    <p key={i}
+                                       className={`relative ${images.length > 0 ? 'pl-8' : 'pl-1.5'} pr-5 text-gray-400 text-sm mb-3 whitespace-pre-wrap`}
+                                       style={{fontFamily: 'var(--font-codecLight)'}}>
+                                        {showPath && (
+                                            <>
+                                                {/* Dot — 6px circle centered at x=16px (middle of pl-8 zone).
+                                                    top=5px, bottom=11px → gap G to line = 8px */}
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="absolute pointer-events-none rounded-full"
+                                                    style={{
+                                                        left: '13px',
+                                                        top: '5px',
+                                                        width: '6px',
+                                                        height: '6px',
+                                                        backgroundColor: hexToRgba(primaryColor, 0.5),
+                                                    }}
+                                                />
+                                                {/* Line — starts at top=19px (dot-bottom + G=8).
+                                                    Non-last: bottom=-9px → extends into mb gap so
+                                                    gap-between-paragraphs = mb(12) - 9 + dotTop(5) - dotH(6) ... = 8 = G.
+                                                    Last: trails down past paragraph. */}
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="absolute pointer-events-none"
+                                                    style={{
+                                                        left: '15.5px',
+                                                        top: '19px',
+                                                        width: '1px',
+                                                        bottom: isLast ? '-1.5rem' : '-9px',
+                                                        backgroundColor: hexToRgba(primaryColor, 0.22),
+                                                    }}
+                                                />
+                                            </>
+                                        )}
+                                        {para}
+                                    </p>
+                                );
+                            });
+                        })()}
 
                         {hasSkills && (
                             <div className={`flex flex-wrap gap-x-1.5 gap-y-2 ${hasDescription ? 'mt-3' : 'mt-7'}`}>
