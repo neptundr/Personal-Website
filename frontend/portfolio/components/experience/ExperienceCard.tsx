@@ -359,11 +359,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         return () => ro.disconnect();
     }, []);
 
-    const imageFilterStyle = effectiveHovered
-        ? 'grayscale(0%) brightness(1)'
-        : dimmed
-            ? 'grayscale(90%) brightness(0.9)'
-            : 'grayscale(0%) brightness(1.15)';
+    // Dimming handled by an overlay div — no CSS filter on the image container,
+    // which would force main-thread compositing and cause mobile flicker.
+    const showDimOverlay = dimmed && !effectiveHovered;
 
     const aspectClass = isVertical ? 'aspect-[9/12]' : 'aspect-video';
 
@@ -509,12 +507,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             setHovered(false);
                         }}
                     >
-                        {/* Inner clip — images only */}
-                        {/* Filter on container — no transition, instant switch is cheaper on mobile */}
-                        <div
-                            className="absolute inset-0 overflow-hidden"
-                            style={{filter: imageFilterStyle}}
-                        >
+                        {/* Inner clip — plain overflow-hidden, NO filter.
+                            filter on a parent prevents compositor-thread animation of children. */}
+                        <div className="absolute inset-0 overflow-hidden">
                             {/* @keyframes injected once per card instance */}
                             <style>{`@keyframes img-fade-in{from{opacity:0}to{opacity:1}}`}</style>
                             {shimmerPlaceholder}
@@ -536,9 +531,10 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     const srcLoaded = loadedSrcs.has(src);
 
                                     if (isCurrent) {
-                                        // New key on every transition → always a fresh mount →
-                                        // CSS animation always starts from opacity:0 regardless of
-                                        // whether this image was previously loaded (avoids pop-in).
+                                        // New key on every transition → fresh mount →
+                                        // CSS animation always plays from opacity:0 (avoids pop-in).
+                                        // No willChange/translateZ — too many GPU layers on mobile
+                                        // exhausts VRAM → layer eviction → flicker.
                                         return (
                                             <img
                                                 key={`curr-${idx}-${transitionCount}-${retrySuffixes[src] ?? 0}`}
@@ -548,11 +544,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                 className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
                                                 style={{
                                                     zIndex: 20,
-                                                    // Wait for load before starting animation; once loaded play fade-in.
                                                     opacity: srcLoaded ? undefined : 0,
                                                     animation: srcLoaded ? 'img-fade-in 0.5s ease-in-out forwards' : 'none',
-                                                    willChange: 'opacity',
-                                                    transform: 'translateZ(0)',
                                                 }}
                                                 onLoad={() => {
                                                     decodedRef.current.add(src);
@@ -565,7 +558,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     }
 
                                     // Prev image — stable key, always fully visible underneath.
-                                    // Fade-in of current image on top creates the crossfade effect.
                                     return (
                                         <img
                                             key={`prev-${idx}-${retrySuffixes[src] ?? 0}`}
@@ -573,17 +565,24 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                             alt={cleanTitle}
                                             draggable={false}
                                             className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
-                                            style={{
-                                                zIndex: 10,
-                                                opacity: 1,
-                                                transform: 'translateZ(0)',
-                                            }}
+                                            style={{zIndex: 10, opacity: 1}}
                                             onError={() => handleImgError(src)}
                                         />
                                     );
                                 })
                             )}
                         </div>
+
+                        {/* Dim overlay — simple opacity, no filter, compositor-safe */}
+                        <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                                zIndex: 18,
+                                background: 'rgba(0,0,0,0.5)',
+                                opacity: showDimOverlay ? 1 : 0,
+                                transition: 'opacity 0.3s ease-in-out',
+                            }}
+                        />
 
                         {/* Gradient — title background, fades image to zinc-950 */}
                         <div
