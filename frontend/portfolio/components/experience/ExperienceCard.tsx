@@ -427,11 +427,20 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             {isStarHovered && (
                                 <motion.div
                                     key="star-tip"
-                                    className="absolute right-full mr-1 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center"
+                                    className="absolute right-full mr-1.5 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-10 text-center border border-white/25"
                                     initial={{opacity: 0, x: 15, scale: 0.5}} animate={{opacity: 1, x: 0, scale: 1}}
                                     exit={{opacity: 0, x: 6, scale: 0.9}} transition={{duration: 0.18, ease: 'easeOut'}}
                                 >
                                     Featured<br/>Experience
+                                    {/* Triangle pointing right toward the star button */}
+                                    <div className="absolute" style={{
+                                        right: '-4px', top: '50%',
+                                        transform: 'translateY(-50%) rotate(45deg)',
+                                        width: '8px', height: '8px',
+                                        backgroundColor: 'black',
+                                        borderTop: '1px solid rgba(255,255,255,0.25)',
+                                        borderRight: '1px solid rgba(255,255,255,0.25)',
+                                    }}/>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -548,7 +557,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             transition={{duration: 0.25, ease: 'easeOut'}}
                         >
                             <h3
-                                className="text-2xl sm:text-3xl text-gray-200 group-hover:text-white transition-colors leading-tight"
+                                className="text-2xl sm:text-3xl text-white group-hover:text-white transition-colors leading-tight"
                                 style={{fontFamily: 'var(--font-codecBold)'}}
                             >
                                 {cleanTitle}
@@ -646,7 +655,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                         width: '7px',
                                                         height: '7px',
                                                         backgroundColor: pathColor,
-                                                        transition: 'background-color 0.3s',
+                                                        boxShadow: hovered ? `0 0 6px 2px ${primaryColor}` : 'none',
+                                                        transition: 'background-color 0.3s, box-shadow 0.3s',
                                                     }}
                                                 />
                                                 {/* Line — top=21px (dot-bottom 13 + G=8).
@@ -671,7 +681,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                 />
                                             </>
                                         )}
-                                        {renderRichText(para, hovered ? primaryColor : 'rgb(209,213,219)')}
+                                        {renderRichText(para, hovered ? primaryColor : 'rgb(230,230,230)')}
                                     </p>
                                 );
                             });

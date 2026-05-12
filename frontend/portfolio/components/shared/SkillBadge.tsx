@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useState, useEffect, useRef} from 'react';
-import {motion, type MotionStyle} from 'framer-motion';
+import {motion, AnimatePresence, type MotionStyle} from 'framer-motion';
 
 type SkillBadgeProps = {
     skill: string;
@@ -194,7 +194,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
             onMouseLeave={() => setBadgeHovered(false)}
             style={dynamicStyle}
             className={`
-                inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border-[1.2px]
+                relative inline-flex items-center gap-1.5 ${sizeClasses[size]} rounded-full border-[1.2px]
                 ${isActive && !primaryColor
                 ? 'border-red-500 bg-red-500/20 text-white'
                 : 'border-gray-400/45 bg-white/8 text-gray-200'}
@@ -206,6 +206,31 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({
             <motion.span className="tracking-wide" style={{fontFamily: 'var(--font-codec)'}}>
                 {skill}
             </motion.span>
+
+            <AnimatePresence>
+                {badgeHovered && onClick && (
+                    <motion.div
+                        key="badge-tip"
+                        className="absolute bg-black text-white text-xs px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-50 border border-white/25"
+                        style={{bottom: 'calc(100% + 6px)', left: '50%'}}
+                        initial={{opacity: 0, x: '-50%', y: 6, scale: 0.5}}
+                        animate={{opacity: 1, x: '-50%', y: 0, scale: 1}}
+                        exit={{opacity: 0, x: '-50%', y: 3, scale: 0.9}}
+                        transition={{duration: 0.18, ease: 'easeOut'}}
+                    >
+                        {isActive ? 'Remove filter' : 'Click to filter'}
+                        {/* Triangle pointing down toward badge */}
+                        <div className="absolute" style={{
+                            bottom: '-4px', left: '50%',
+                            transform: 'translateX(-50%) rotate(45deg)',
+                            width: '8px', height: '8px',
+                            backgroundColor: 'black',
+                            borderRight: '1px solid rgba(255,255,255,0.25)',
+                            borderBottom: '1px solid rgba(255,255,255,0.25)',
+                        }}/>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.span>
     );
 };

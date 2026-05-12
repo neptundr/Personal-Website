@@ -225,7 +225,8 @@ const ContactSection = ({settings}) => {
                                         whileTap={{scale: 0.98}}
                                         whileHover={{
                                             scale: 1.03,
-                                            boxShadow: `0 0 20px 5px ${hoverGlowColors[link.color] || 'rgba(255,255,255,0.3)'}`
+                                            boxShadow: `0 0 20px 5px ${hoverGlowColors[link.color] || 'rgba(255,255,255,0.3)'}`,
+                                            transition: {duration: 0.35, ease: 'easeOut', type: 'spring', damping: 9, stiffness: 180},
                                         }}
                                         className={baseClasses}
                                     >
@@ -249,7 +250,8 @@ const ContactSection = ({settings}) => {
                                     whileTap={{scale: 0.98}}
                                     whileHover={{
                                         scale: 1.03,
-                                        boxShadow: `0 0 20px 5px ${hoverGlowColors[link.color] || 'rgba(255,255,255,0.3)'}`
+                                        boxShadow: `0 0 20px 5px ${hoverGlowColors[link.color] || 'rgba(255,255,255,0.3)'}`,
+                                        transition: {duration: 0.35, ease: 'easeOut', type: 'spring', damping: 9, stiffness: 180},
                                     }}
                                     className={baseClasses}
                                 >

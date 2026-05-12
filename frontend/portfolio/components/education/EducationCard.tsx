@@ -34,7 +34,8 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
             whileHover={{
                 y: -6,
                 boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
-                borderRadius: '1.5rem'
+                borderRadius: '1.5rem',
+                transition: {duration: 0.25, ease: 'easeOut', type: 'spring', damping: 9, stiffness: 180},
             }}
             className="group relative"
         >
