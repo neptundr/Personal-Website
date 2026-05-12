@@ -464,13 +464,12 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 boxShadow: `0 0 40px 5px ${glowColor}`,
                 borderRadius: '2rem',
             }}
-            animate={isTouch ? (scrollActive ? {
-                y: -6,
-                boxShadow: `0 0 40px 5px ${glowColor}`,
-            } : {
-                y: 0,
-                boxShadow: '0 0 0px 0px rgba(0,0,0,0)',
-            }) : undefined}
+            animate={isTouch
+                ? (scrollActive
+                    ? {y: -6, boxShadow: `0 0 40px 5px ${glowColor}`}
+                    : {y: 0, boxShadow: '0 0 0px 0px rgba(0,0,0,0)'})
+                : {}
+            }
         >
             <div
                 ref={cardRef}

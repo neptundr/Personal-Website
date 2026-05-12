@@ -1,12 +1,13 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {motion} from 'framer-motion';
 import Image from 'next/image';
 import {ExternalLink} from 'lucide-react';
 import {renderRichText} from '../shared/richText';
 
 interface Education {
+    id?: number;
     type: 'university' | 'school';
     institution: string;
     institution_url?: string;
@@ -20,23 +21,40 @@ interface Education {
 interface EducationCardProps {
     education: Education;
     index: number;
+    /** True when this card is the most-visible card during touch scroll. */
+    scrollActive?: boolean;
 }
 
-const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
+const EducationCard: React.FC<EducationCardProps> = ({education, index, scrollActive = false}) => {
     const [logoHovered, setLogoHovered] = useState(false);
+    const [isTouch, setIsTouch] = useState(false);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
+        setIsTouch(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
 
     return (
         <motion.div
             initial={{opacity: 0, y: 40}}
             whileInView={{opacity: 1, y: 0}}
             viewport={{once: true, margin: '-50px'}}
-            transition={{duration: 0.25, delay: 0.15*index, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
+            transition={{duration: 0.25, delay: 0.15 * index, ease: 'easeOut', type: "spring", damping: 9, stiffness: 180}}
             whileHover={{
                 y: -6,
                 boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)',
                 borderRadius: '1.5rem',
                 transition: {duration: 0.25, ease: 'easeOut', type: 'spring', damping: 9, stiffness: 180},
             }}
+            animate={isTouch
+                ? (scrollActive
+                    ? {y: -6, boxShadow: '0 0 40px 5px rgba(255,255,255,0.5)'}
+                    : {y: 0, boxShadow: '0 0 0px 0px rgba(0,0,0,0)'})
+                : {}
+            }
             className="group relative"
         >
             <div
@@ -116,7 +134,7 @@ const EducationCard: React.FC<EducationCardProps> = ({education, index}) => {
                         style={{fontFamily: 'var(--font-codecBold)'}}
                     >
                         <span className="whitespace-nowrap pr-4 ">
-                            {education.institution} {" "}
+                            {education.institution}{" "}
                         </span>
 
                         <span className="text-gray-400 whitespace-nowrap pr-5" style={{fontFamily: 'var(--font-codecBold)'}}>
