@@ -285,16 +285,18 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         const nextImage = async () => {
             const next = (imgIndexRef.current + 1) % images.length;
             await ensureDecoded(images[next]!);
+            // Image already decoded — mark loaded immediately so it renders at
+            // full opacity in the same batch, eliminating the black-flash flicker.
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(next);
-            setImgLoaded(false);
+            setImgLoaded(true);
         };
 
         const resetToFirst = async () => {
             await ensureDecoded(images[0]!);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(0);
-            setImgLoaded(false);
+            setImgLoaded(true);
         };
 
         if (imageActive) {
@@ -624,7 +626,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                     <div
                         className="relative pointer-events-none"
                         style={{
-                            zIndex: 20,
+                            zIndex: 29,
                             marginTop: '-2rem',
                             height: '2rem',
                             backdropFilter: 'blur(12px)',
