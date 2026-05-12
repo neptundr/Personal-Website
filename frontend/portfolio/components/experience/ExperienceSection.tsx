@@ -267,13 +267,25 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
             {/* Masonry Grid */}
             {filteredItems.length === 0 ? (
                 <motion.div
-                    className="flex justify-center items-center text-gray-400 text-lg h-48"
+                    className="max-w-sm"
                     initial={{y: 40, opacity: 0}}
                     animate={{y: 0, opacity: 1}}
                     exit={{y: 20, opacity: 0}}
                     transition={{duration: 0.25}}
                 >
-                    No items match this filter
+                    <ExperienceCard
+                        item={{
+                            id: -1,
+                            title: 'Nothing found 🌚',
+                            description: 'Nothing showed up for this filter – try adjusting your selection.',
+                        }}
+                        index={0}
+                        onSkillClick={() => {}}
+                        dimmed={false}
+                        onHover={() => {}}
+                        currentSkillFilter={null}
+                        skillIcons={skillIcons}
+                    />
                 </motion.div>
             ) : (
                 <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
