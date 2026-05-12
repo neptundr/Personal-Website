@@ -310,31 +310,26 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                     />
                 </motion.div>
             ) : isWebKit ? (
-                /* ── WebKit/Safari: flex-column masonry ──
-                   CSS columns + AnimatePresence(popLayout) causes first-row flicker
-                   and card render glitches in Safari. Real flex column divs avoid
-                   the CSS columns reflow entirely. */
-                <div className="flex gap-6 items-start">
-                    {/* CSS keyframe — enter animation applies opacity:0 on first paint,
-                        before any JS runs. Prevents Framer FOUC where element renders
-                        at full opacity for one frame before initial state is applied. */}
-                    <style>{`@keyframes safari-card-fadein{from{opacity:0}to{opacity:1}}`}</style>
-                    {Array.from({length: numCols}, (_, colIdx) => (
-                        <div key={colIdx} className="flex-1 flex flex-col gap-6 min-w-0">
-                            {/* popLayout: exiting item goes position:absolute immediately,
-                                leaves flex flow, fades out in place. Safe now — flex columns
-                                have no CSS columns reflow bug. */}
-                            <AnimatePresence mode="popLayout">
+                /* ── WebKit/Safari: animate the whole grid, not individual cards ──
+                   key changes on filter → old grid fades out, new grid fades in.
+                   mode="wait" ensures no overlap. Zero per-card animation needed. */
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={filter + '|' + (skillFilter ?? '') + '|' + showCount}
+                        initial={{opacity: 0}}
+                        animate={{opacity: 1}}
+                        exit={{opacity: 0}}
+                        transition={{duration: 0.2, ease: 'easeInOut'}}
+                        className="flex gap-6 items-start"
+                    >
+                        {Array.from({length: numCols}, (_, colIdx) => (
+                            <div key={colIdx} className="flex-1 flex flex-col gap-6 min-w-0">
                                 {filteredItems
                                     .slice(0, showCount)
                                     .filter((_, i) => i % numCols === colIdx)
                                     .map((item, index) => (
-                                        <motion.div
+                                        <div
                                             key={item.id}
-                                            // No initial/animate variants — CSS animation handles enter.
-                                            // Framer only manages the exit (keeps element alive for fade-out).
-                                            exit={{opacity: 0, transition: {duration: 0.2, ease: 'easeInOut'}}}
-                                            style={{animation: 'safari-card-fadein 0.3s ease-in-out forwards'}}
                                             data-card-id={item.id}
                                             ref={(el) => {
                                                 if (el) cardEls.current.set(item.id, el);
@@ -358,12 +353,12 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                                 skillIcons={skillIcons}
                                                 scrollActive={isTouch && touchActiveId === item.id}
                                             />
-                                        </motion.div>
+                                        </div>
                                     ))}
-                            </AnimatePresence>
-                        </div>
-                    ))}
-                </div>
+                            </div>
+                        ))}
+                    </motion.div>
+                </AnimatePresence>
             ) : (
                 /* ── All other browsers: CSS columns + layout animations ── */
                 <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
