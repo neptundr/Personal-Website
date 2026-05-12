@@ -7,7 +7,14 @@ import EducationCard from './EducationCard';
 interface EducationItem {
     id: number;
     order?: number;
-    [key: string]: any;
+    type: 'university' | 'school';
+    institution: string;
+    institution_url?: string;
+    start_year: number | string;
+    end_year?: number | string;
+    degree?: string;
+    description?: string;
+    logo_url?: string;
 }
 
 const EducationSection: React.FC<{ education: any }> = ({education}) => {
