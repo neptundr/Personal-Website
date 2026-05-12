@@ -88,42 +88,42 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
         const timers: NodeJS.Timeout[] = []
 
+        // All delays ÷ 1.5 — sequence is 1.5× faster; individual element animations unchanged
         timers.push(setTimeout(() => {
             setShowMain(false)
-        }, 2700))
+        }, 1800))
 
         timers.push(setTimeout(() => {
             setShowWords(true)
-        }, 3300))
+        }, 2200))
 
         timers.push(setTimeout(() => {
             setShowWords(false)
-        }, 4300))
+        }, 2867))
 
         timers.push(setTimeout(() => {
             setShowPortfolio(true)
             setTunnelVisible(true)
             setShowSkipButton(false)
-        }, 4600))
+        }, 3067))
 
         timers.push(setTimeout(() => {
             setShowPortfolio(false)
             setShowFinal(true)
-        }, 7000))
+        }, 4667))
 
         timers.push(setTimeout(() => {
             setShowPortfolioLine(true)
-
-        }, 8400))
+        }, 5600))
 
         timers.push(setTimeout(() => {
             if (availableForHire) setShowBadge(true)
             document.body.style.overflow = ''
-        }, 5000))
+        }, 3333))
 
         timers.push(setTimeout(() => {
             setShowScrollHint(true)
-        }, 11900))
+        }, 7933))
 
         return () => timers.forEach(clearTimeout)
     }, [availableForHire])
