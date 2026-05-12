@@ -285,18 +285,16 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         const nextImage = async () => {
             const next = (imgIndexRef.current + 1) % images.length;
             await ensureDecoded(images[next]!);
-            // Image already decoded — mark loaded immediately so it renders at
-            // full opacity in the same batch, eliminating the black-flash flicker.
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(next);
-            setImgLoaded(true);
+            setImgLoaded(false); // prev stays visible at 1 until new image onLoad fires
         };
 
         const resetToFirst = async () => {
             await ensureDecoded(images[0]!);
             setPrevImgIndex(imgIndexRef.current);
             setImgIndex(0);
-            setImgLoaded(true);
+            setImgLoaded(false);
         };
 
         if (imageActive) {
@@ -523,17 +521,21 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                     const isPrev = idx === prevImgIndex;
                                     const isCurrent = idx === imgIndex;
                                     if (!isPrev && !isCurrent) return null;
+                                    // Stable key — no remount on role change (prevents Framer initial flash)
+                                    // Crossfade: prev stays at 1 until current loads, then both transition
+                                    const targetOpacity = isCurrent
+                                        ? (imgLoaded ? 1 : 0)
+                                        : (imgLoaded ? 0 : 1);
                                     return (
                                         <motion.img
-                                            key={`${idx}-${isPrev ? 'prev' : 'curr'}-${retrySuffixes[src] ?? 0}`}
+                                            key={`${idx}-${retrySuffixes[src] ?? 0}`}
                                             src={isReadyToLoad ? resolvedSrc(src) : undefined}
                                             alt={cleanTitle}
                                             draggable={false}
                                             className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${isTop ? 'object-top' : ''}`}
                                             style={{zIndex: isCurrent ? 20 : 10}}
-                                            initial={{opacity: isCurrent ? 0 : 1}}
                                             animate={{
-                                                opacity: isCurrent && imgLoaded ? 1 : 0,
+                                                opacity: targetOpacity,
                                                 filter: imageFilterStyle,
                                             }}
                                             transition={{
