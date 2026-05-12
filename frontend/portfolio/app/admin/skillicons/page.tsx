@@ -119,7 +119,7 @@ export default function AdminSkillIcons() {
                                         <input
                                             id="icon-upload"
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,.svg"
                                             onChange={handleUpload}
                                             className="hidden"
                                             disabled={uploading}

@@ -8,7 +8,13 @@ export const dynamic = 'force-dynamic';
 // will fail and need to be uploaded directly to Supabase Storage via the
 // dashboard, then pasted as a URL.
 
-const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']);
+const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.avif']);
+
+// Explicit MIME types for formats browsers may report incorrectly (e.g. iOS SVG → empty type)
+const EXT_MIME: Record<string, string> = {
+    '.svg': 'image/svg+xml',
+    '.avif': 'image/avif',
+};
 const VIDEO_EXTS = new Set(['.mp4', '.webm', '.mov', '.avi']);
 const DOCUMENT_EXTS = new Set(['.pdf', '.doc', '.docx']);
 
@@ -63,7 +69,8 @@ export async function POST(request: NextRequest) {
         const uploadOptions: { contentType?: string; upsert: boolean } = {
             upsert: false,
         };
-        if (file.type) uploadOptions.contentType = file.type;
+        // Prefer explicit ext-based MIME over browser-reported type (iOS SVG often reports '')
+        uploadOptions.contentType = EXT_MIME[ext] ?? (file.type || 'application/octet-stream');
 
         const { error: uploadError } = await supabaseAdmin()
             .storage.from(SUPABASE_BUCKET)
