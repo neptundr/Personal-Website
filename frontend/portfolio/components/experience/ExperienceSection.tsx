@@ -38,6 +38,14 @@ const itemVariants: Variants = {
     exit: {opacity: 0, y: -16, transition: {duration: 0.25, ease: "easeInOut"}},
 };
 
+// Safari: y+opacity simultaneously forces GPU layer creation mid-animation → flicker.
+// Pure opacity runs on existing compositor layer, no new layer creation needed.
+const itemVariantsSafari: Variants = {
+    hidden: {opacity: 0},
+    visible: {opacity: 1, transition: {duration: 0.3, ease: "easeInOut"}},
+    exit: {opacity: 0, transition: {duration: 0.2, ease: "easeInOut"}},
+};
+
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons = []}) => {
     const [filter, setFilter] = useState<'all' | 'work' | 'project' | 'achievement'>('all');
     const [skillFilter, setSkillFilter] = useState<string | null>(null);
@@ -316,7 +324,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                     .map((item, index) => (
                                         <motion.div
                                             key={item.id}
-                                            variants={itemVariants}
+                                            variants={itemVariantsSafari}
                                             initial="hidden"
                                             animate="visible"
                                             exit="exit"
