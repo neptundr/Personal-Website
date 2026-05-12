@@ -46,6 +46,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
     const [isTouch, setIsTouch] = useState(false);
     const [isSingleColumn, setIsSingleColumn] = useState(false);
     const [touchActiveId, setTouchActiveId] = useState<number | null>(null);
+    const [numCols, setNumCols] = useState(3);
 
     const filterRowRef = useRef<HTMLDivElement>(null);
     const cardEls = useRef<Map<number, Element>>(new Map());
@@ -83,6 +84,15 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
         const handler = (e: MediaQueryListEvent) => setIsSingleColumn(e.matches);
         mq.addEventListener('change', handler);
         return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    // Track column count for flex-masonry distribution (matches Tailwind md/lg breakpoints)
+    useEffect(() => {
+        const update = () =>
+            setNumCols(window.innerWidth >= 1280 ? 3 : window.innerWidth >= 768 ? 2 : 1);
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
     }, []);
 
     // Reset active card when column count changes
@@ -285,43 +295,48 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                     />
                 </motion.div>
             ) : (
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-                    <AnimatePresence mode="popLayout">
-                        {filteredItems.slice(0, showCount).map((item, index) => (
-                            <motion.div
-                                key={item.id}
-                                layout
-                                variants={itemVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit="exit"
-                                className="mb-6 break-inside-avoid"
-                                data-card-id={item.id}
-                                ref={(el) => {
-                                    if (el) cardEls.current.set(item.id, el);
-                                    else cardEls.current.delete(item.id);
-                                }}
-                                onClick={isTouch && !isSingleColumn
-                                    ? () => setTouchActiveId(prev => prev === item.id ? null : item.id)
-                                    : undefined
-                                }
-                            >
-                                <ExperienceCard
-                                    item={item}
-                                    index={index}
-                                    onSkillClick={(skill) => {
-                                        setSkillFilter(prev => (prev === skill ? null : skill));
-                                        setFilter('all');
-                                    }}
-                                    dimmed={effectiveHoveredId !== null && effectiveHoveredId !== item.id}
-                                    onHover={setHoveredId}
-                                    currentSkillFilter={skillFilter}
-                                    skillIcons={skillIcons}
-                                    scrollActive={isTouch && touchActiveId === item.id}
-                                />
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
+                <div className="flex gap-6 items-start">
+                    {Array.from({length: numCols}, (_, colIdx) => (
+                        <div key={colIdx} className="flex-1 flex flex-col gap-6 min-w-0">
+                            <AnimatePresence mode="sync">
+                                {filteredItems
+                                    .slice(0, showCount)
+                                    .filter((_, i) => i % numCols === colIdx)
+                                    .map((item, index) => (
+                                        <motion.div
+                                            key={item.id}
+                                            variants={itemVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            exit="exit"
+                                            data-card-id={item.id}
+                                            ref={(el) => {
+                                                if (el) cardEls.current.set(item.id, el);
+                                                else cardEls.current.delete(item.id);
+                                            }}
+                                            onClick={isTouch && !isSingleColumn
+                                                ? () => setTouchActiveId(prev => prev === item.id ? null : item.id)
+                                                : undefined
+                                            }
+                                        >
+                                            <ExperienceCard
+                                                item={item}
+                                                index={index}
+                                                onSkillClick={(skill) => {
+                                                    setSkillFilter(prev => (prev === skill ? null : skill));
+                                                    setFilter('all');
+                                                }}
+                                                dimmed={effectiveHoveredId !== null && effectiveHoveredId !== item.id}
+                                                onHover={setHoveredId}
+                                                currentSkillFilter={skillFilter}
+                                                skillIcons={skillIcons}
+                                                scrollActive={isTouch && touchActiveId === item.id}
+                                            />
+                                        </motion.div>
+                                    ))}
+                            </AnimatePresence>
+                        </div>
+                    ))}
                 </div>
             )}
 
