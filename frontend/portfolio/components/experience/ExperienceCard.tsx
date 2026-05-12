@@ -194,8 +194,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     }, []);
 
     const [hovered, setHovered] = useState(false);
-    // On touch: treat scroll-active card as if hovered
-    const effectiveHovered = hovered || (isTouch && scrollActive);
+    // On touch: only scrollActive drives highlight (tap-triggered mouseenter ignored)
+    const effectiveHovered = isTouch ? scrollActive : hovered;
     const [isStarHovered, setIsStarHovered] = useState(false);
     const [imageHovered, setImageHovered] = useState(false);
     const [viewerOpen, setViewerOpen] = useState(false);
