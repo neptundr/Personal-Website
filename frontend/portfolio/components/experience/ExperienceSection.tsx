@@ -44,6 +44,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
     const [showCount, setShowCount] = useState(50);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
     const [isTouch, setIsTouch] = useState(false);
+    const [isSingleColumn, setIsSingleColumn] = useState(false);
     const [touchActiveId, setTouchActiveId] = useState<number | null>(null);
 
     const filterRowRef = useRef<HTMLDivElement>(null);
@@ -72,9 +73,23 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
         return () => mq.removeEventListener('change', handler);
     }, []);
 
-    // IntersectionObserver — lights up the most-visible card on touch
+    // Detect single-column layout (below md breakpoint = 768px)
     useEffect(() => {
-        if (!isTouch) return;
+        const mq = window.matchMedia('(max-width: 767px)');
+        setIsSingleColumn(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsSingleColumn(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    // Reset active card when column count changes
+    useEffect(() => {
+        setTouchActiveId(null);
+    }, [isSingleColumn]);
+
+    // IntersectionObserver — lights up the most-visible card on touch (single column only)
+    useEffect(() => {
+        if (!isTouch || !isSingleColumn) return;
 
         const ratios = new Map<number, number>();
         const thresholds = Array.from({length: 11}, (_, i) => i * 0.1);
@@ -103,7 +118,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
         }
 
         return () => observer.disconnect();
-    }, [isTouch, filteredItems.length, showCount]);
+    }, [isTouch, isSingleColumn, filteredItems.length, showCount]);
 
     useEffect(() => {
         if (!skillFilter || !filterRowRef.current) return;
@@ -274,6 +289,10 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                     if (el) cardEls.current.set(item.id, el);
                                     else cardEls.current.delete(item.id);
                                 }}
+                                onClick={isTouch && !isSingleColumn
+                                    ? () => setTouchActiveId(prev => prev === item.id ? null : item.id)
+                                    : undefined
+                                }
                             >
                                 <ExperienceCard
                                     item={item}

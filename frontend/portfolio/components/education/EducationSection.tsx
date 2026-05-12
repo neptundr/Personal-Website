@@ -19,6 +19,7 @@ interface EducationItem {
 
 const EducationSection: React.FC<{ education: any }> = ({education}) => {
     const [isTouch, setIsTouch] = useState(false);
+    const [isSingleColumn, setIsSingleColumn] = useState(false);
     const [touchActiveId, setTouchActiveId] = useState<number | null>(null);
 
     const cardEls = useRef<Map<number, Element>>(new Map());
@@ -41,9 +42,23 @@ const EducationSection: React.FC<{ education: any }> = ({education}) => {
         return () => mq.removeEventListener('change', handler);
     }, []);
 
-    // IntersectionObserver — lights up the most-visible card on touch
+    // Detect single-column layout (below lg breakpoint = 1024px)
     useEffect(() => {
-        if (!isTouch) return;
+        const mq = window.matchMedia('(max-width: 1023px)');
+        setIsSingleColumn(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsSingleColumn(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    // Reset active card when column count changes
+    useEffect(() => {
+        setTouchActiveId(null);
+    }, [isSingleColumn]);
+
+    // IntersectionObserver — lights up the most-visible card on touch (single column only)
+    useEffect(() => {
+        if (!isTouch || !isSingleColumn) return;
 
         const ratios = new Map<number, number>();
         const thresholds = Array.from({length: 11}, (_, i) => i * 0.1);
@@ -72,7 +87,7 @@ const EducationSection: React.FC<{ education: any }> = ({education}) => {
         }
 
         return () => observer.disconnect();
-    }, [isTouch, sortedEducation.length]);
+    }, [isTouch, isSingleColumn, sortedEducation.length]);
 
     if (educationList.length === 0) return null;
 
@@ -117,6 +132,10 @@ const EducationSection: React.FC<{ education: any }> = ({education}) => {
                             if (el) cardEls.current.set(edu.id, el);
                             else cardEls.current.delete(edu.id);
                         }}
+                        onClick={isTouch && !isSingleColumn
+                            ? () => setTouchActiveId(prev => prev === edu.id ? null : edu.id)
+                            : undefined
+                        }
                     >
                         <EducationCard
                             education={edu}
