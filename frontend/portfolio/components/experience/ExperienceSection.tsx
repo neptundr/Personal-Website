@@ -43,8 +43,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
     const [skillFilter, setSkillFilter] = useState<string | null>(null);
     const [showCount, setShowCount] = useState(50);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
+    const [isTouch, setIsTouch] = useState(false);
+    const [touchActiveId, setTouchActiveId] = useState<number | null>(null);
 
     const filterRowRef = useRef<HTMLDivElement>(null);
+    const cardEls = useRef<Map<number, Element>>(new Map());
 
     const getSkillIcon = (skill: string) =>
         skillIcons.find(
@@ -59,6 +62,48 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
         .filter(item => !skillFilter || item.skills?.includes(skillFilter));
 
     const hasMore = filteredItems.length > showCount;
+
+    // Detect touch-only device
+    useEffect(() => {
+        const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
+        setIsTouch(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    // IntersectionObserver — lights up the most-visible card on touch
+    useEffect(() => {
+        if (!isTouch) return;
+
+        const ratios = new Map<number, number>();
+        const thresholds = Array.from({length: 11}, (_, i) => i * 0.1);
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    const id = Number((entry.target as HTMLElement).dataset.cardId);
+                    ratios.set(id, entry.intersectionRatio);
+                }
+                let bestId: number | null = null;
+                let bestRatio = 0.15; // minimum threshold to activate
+                for (const [id, ratio] of ratios) {
+                    if (ratio > bestRatio) {
+                        bestRatio = ratio;
+                        bestId = id;
+                    }
+                }
+                setTouchActiveId(bestId);
+            },
+            {threshold: thresholds}
+        );
+
+        for (const el of cardEls.current.values()) {
+            observer.observe(el);
+        }
+
+        return () => observer.disconnect();
+    }, [isTouch, filteredItems.length, showCount]);
 
     useEffect(() => {
         if (!skillFilter || !filterRowRef.current) return;
@@ -81,6 +126,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
 
         return () => cancelAnimationFrame(handle);
     }, [skillFilter, filteredItems.length]);
+
+    const effectiveHoveredId = isTouch ? touchActiveId : hoveredId;
 
     if (!items.length) return null;
 
@@ -222,6 +269,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                 animate="visible"
                                 exit="exit"
                                 className="mb-6 break-inside-avoid"
+                                data-card-id={item.id}
+                                ref={(el) => {
+                                    if (el) cardEls.current.set(item.id, el);
+                                    else cardEls.current.delete(item.id);
+                                }}
                             >
                                 <ExperienceCard
                                     item={item}
@@ -230,10 +282,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({items, skillIcons 
                                         setSkillFilter(prev => (prev === skill ? null : skill));
                                         setFilter('all');
                                     }}
-                                    dimmed={hoveredId !== null && hoveredId !== item.id}
+                                    dimmed={effectiveHoveredId !== null && effectiveHoveredId !== item.id}
                                     onHover={setHoveredId}
                                     currentSkillFilter={skillFilter}
                                     skillIcons={skillIcons}
+                                    scrollActive={isTouch && touchActiveId === item.id}
                                 />
                             </motion.div>
                         ))}

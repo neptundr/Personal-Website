@@ -36,6 +36,8 @@ interface ExperienceCardProps {
     onHover: (id: number | null) => void;
     currentSkillFilter?: string | null;
     skillIcons?: { skill_name: string; icon_url: string }[];
+    /** True when this card is the most-visible card during touch scroll. */
+    scrollActive?: boolean;
 }
 
 const formatDate = (date?: string) => {
@@ -169,6 +171,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                            onHover,
                                                            currentSkillFilter,
                                                            skillIcons = [],
+                                                           scrollActive = false,
                                                        }) => {
     const hasFlag = (f: string) => item.title.includes(` -${f}`);
     const isVertical = hasFlag('v');
@@ -190,6 +193,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     }, []);
 
     const [hovered, setHovered] = useState(false);
+    // On touch: treat scroll-active card as if hovered
+    const effectiveHovered = hovered || (isTouch && scrollActive);
     const [isStarHovered, setIsStarHovered] = useState(false);
     const [imageHovered, setImageHovered] = useState(false);
     const [viewerOpen, setViewerOpen] = useState(false);
@@ -250,7 +255,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
     const imgIndexRef = useRef(imgIndex);
     imgIndexRef.current = imgIndex;
     const decodedRef = useRef<Set<string>>(new Set());
-    const imageActive = isTouch || hovered;
+    const imageActive = effectiveHovered;
 
     const ensureDecoded = async (src: string) => {
         if (decodedRef.current.has(src)) return;
@@ -346,13 +351,11 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
         return () => ro.disconnect();
     }, []);
 
-    const imageFilterStyle = isTouch
+    const imageFilterStyle = effectiveHovered
         ? 'grayscale(0%) brightness(1)'
-        : hovered
-            ? 'grayscale(0%) brightness(1)'
-            : dimmed
-                ? 'grayscale(90%) brightness(0.9)'
-                : 'grayscale(50%) brightness(1.15)';
+        : dimmed
+            ? 'grayscale(90%) brightness(0.9)'
+            : 'grayscale(50%) brightness(1.15)';
 
     const aspectClass = isVertical ? 'aspect-[9/12]' : 'aspect-video';
 
@@ -461,6 +464,13 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 boxShadow: `0 0 40px 5px ${glowColor}`,
                 borderRadius: '2rem',
             }}
+            animate={isTouch ? (scrollActive ? {
+                y: -6,
+                boxShadow: `0 0 40px 5px ${glowColor}`,
+            } : {
+                y: 0,
+                boxShadow: '0 0 0px 0px rgba(0,0,0,0)',
+            }) : undefined}
         >
             <div
                 ref={cardRef}
@@ -634,7 +644,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                             const paras = item.description!.split('\n').filter(p => p.trim());
                             const showPath = images.length > 0;
                             // Matches InfoBar: primaryColor on hover, gray-400/45 at rest
-                            const pathColor = hovered ? primaryColor : 'rgba(156,163,175,0.45)';
+                            const pathColor = effectiveHovered ? primaryColor : 'rgba(156,163,175,0.45)';
                             return paras.map((para, i) => {
                                 const isLast = i === paras.length - 1;
                                 return (
@@ -655,7 +665,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                         width: '7px',
                                                         height: '7px',
                                                         backgroundColor: pathColor,
-                                                        boxShadow: hovered ? `0 0 6px 2px ${primaryColor}` : 'none',
+                                                        boxShadow: effectiveHovered ? `0 0 6px 2px ${primaryColor}` : 'none',
                                                         transition: 'background-color 0.3s, box-shadow 0.3s',
                                                     }}
                                                 />
@@ -681,7 +691,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                                 />
                                             </>
                                         )}
-                                        {renderRichText(para, hovered ? primaryColor : 'rgb(230,230,230)')}
+                                        {renderRichText(para, effectiveHovered ? primaryColor : 'rgb(230,230,230)')}
                                     </p>
                                 );
                             });
@@ -700,7 +710,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                                         size: 'sm',
                                         isActive: currentSkillFilter === skill,
                                         dimmed,
-                                        hovered,
+                                        hovered: effectiveHovered,
                                         primaryColor,
                                         onClick: () => onSkillClick(currentSkillFilter === skill ? null : skill),
                                     };
@@ -714,7 +724,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
                 {/* ── INFO BAR — very bottom, full width ── */}
                 {infoText && (
-                    <InfoBar text={infoText} primaryColor={primaryColor} hovered={hovered}/>
+                    <InfoBar text={infoText} primaryColor={primaryColor} hovered={effectiveHovered}/>
                 )}
             </div>
 
