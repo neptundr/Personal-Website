@@ -1,0 +1,16 @@
+/*
+ * Redesign tokens. Everything is scoped under .v2-root so nothing here can
+ * affect the classic site, which shares the root layout and globals.css.
+ */
+.v2-root {
+    --v2-surface: #ffffff;
+    --v2-text: #171717;
+    --v2-muted: #6b6b6b;
+    --v2-accent: #e5484d;
+
+    --v2-space-section: clamp(4rem, 3rem + 5vw, 10rem);
+
+    min-height: 100vh;
+    background: var(--v2-surface);
+    color: var(--v2-text);
+}
