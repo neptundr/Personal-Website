@@ -16,6 +16,12 @@ export async function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
+    // Local `next dev` can open the redesign without logging in.
+    // Production builds always require an admin session.
+    if (pathname.startsWith('/v2') && process.env.NODE_ENV === 'development') {
+        return NextResponse.next();
+    }
+
     const token = request.cookies.get(ADMIN_COOKIE)?.value;
     const payload = await verifyAdminToken(token);
 

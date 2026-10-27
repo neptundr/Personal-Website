@@ -1,0 +1,195 @@
+/* ─── Top line ───────────────────────────────────────────────────────────── */
+
+.v2-top {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: calc(env(safe-area-inset-top) + clamp(1rem, 0.7rem + 1.4vw, 2rem)) var(--v2-gutter) 0;
+    font-family: var(--v2-font);
+    font-size: clamp(0.95rem, 0.85rem + 0.35vw, 1.2rem);
+    font-weight: 600;
+    color: var(--v2-ink);
+}
+
+/* Arrives once the :D has landed. */
+.v2-top > :not(.v2-top__line) {
+    transition:
+        opacity 0.6s var(--v2-ease-out),
+        transform 0.8s var(--v2-ease-bounce);
+}
+
+.v2-top__right {
+    transition-delay: 0.12s;
+}
+
+.v2-hero[data-stage='loading'] .v2-top > :not(.v2-top__line) {
+    opacity: 0;
+    transform: translateY(-14px);
+    pointer-events: none;
+}
+
+.v2-top a {
+    color: inherit;
+    text-decoration: none;
+    outline: none;
+}
+
+.v2-top__name {
+    letter-spacing: -0.01em;
+}
+
+.v2-top__right {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+}
+
+/* ─── Hiring? pill ───────────────────────────────────────────────────────── */
+
+.v2-top__hire {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.42em 1.05em 0.52em;
+    border: 1.5px solid var(--v2-ink);
+    border-radius: 999px;
+    transition: transform var(--v2-dur-fast) var(--v2-ease-bounce);
+}
+
+.v2-top__hire:active {
+    transform: scale(0.95);
+}
+
+.v2-top__hire:focus-visible {
+    box-shadow: 0 0 0 3px var(--v2-bg), 0 0 0 4.5px var(--v2-ink);
+}
+
+/* ─── ":" menu ───────────────────────────────────────────────────────────── */
+
+.v2-menu {
+    position: relative;
+}
+
+.v2-menu__button {
+    display: grid;
+    place-items: center;
+    width: 2.5em;
+    height: 2.5em;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--v2-ink);
+    color: var(--v2-bg);
+    cursor: pointer;
+    font: inherit;
+    transition: transform 0.35s var(--v2-ease-bounce);
+}
+
+.v2-menu__button:hover {
+    transform: scale(1.07);
+}
+
+.v2-menu__button:active {
+    transform: scale(0.93);
+}
+
+.v2-menu__button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--v2-bg), 0 0 0 4.5px var(--v2-ink);
+}
+
+/* ":" turns into ". ." */
+.v2-menu__dots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    transition: transform 0.55s var(--v2-ease-bounce);
+}
+
+.v2-menu__dots > i {
+    display: block;
+    width: 0.3em;
+    height: 0.3em;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.v2-menu__button:hover .v2-menu__dots,
+.v2-menu[data-open='true'] .v2-menu__dots {
+    transform: rotate(90deg);
+}
+
+/* The list hangs below the button; its top padding bridges the gap so the
+   pointer can travel down without the menu closing. */
+.v2-menu__list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    display: grid;
+    justify-items: end;
+    gap: 0.3em;
+    margin: 0;
+    padding: 0.9em 0.1em 0;
+    list-style: none;
+    pointer-events: none;
+}
+
+.v2-menu[data-open='true'] .v2-menu__list {
+    pointer-events: auto;
+}
+
+.v2-menu__list li {
+    opacity: 0;
+    transform: translateY(-0.7em) scale(0.94);
+    transform-origin: right center;
+    transition:
+        opacity 0.22s var(--v2-ease-out),
+        transform 0.5s var(--v2-ease-bounce);
+    transition-delay: calc((3 - var(--i, 0)) * 25ms);
+}
+
+.v2-menu[data-open='true'] .v2-menu__list li {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(var(--i, 0) * 45ms);
+}
+
+.v2-menu__list a {
+    display: inline-block;
+    padding: 0.18em 0;
+    font-size: 1.15em;
+    white-space: nowrap;
+}
+
+/* ─── Shared underline ───────────────────────────────────────────────────── */
+
+/* A 1px-wide bar scaled to each link's width; transform-only, so the jump
+   between links (sideways, up, down) runs on the compositor. */
+.v2-top__line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 2px;
+    background: var(--v2-ink);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(var(--x, 0px), var(--y, 0px)) scaleX(var(--w, 0));
+    transform-origin: 0 50%;
+    transition:
+        transform 0.55s var(--v2-ease-bounce),
+        opacity 0.25s var(--v2-ease-out);
+}
+
+.v2-top__line[data-on='true'] {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .v2-top__line {
+        display: none;
+    }
+}
