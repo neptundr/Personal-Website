@@ -866,9 +866,7 @@ export class FaceEngine {
         this.busyUntil = Math.max(this.busyUntil, this.time + WAVE_AFTER_HI + WAVE_TIME);
         this.express('beam');
         this.hop(0.5);
-        // On the other side from the waving arm, so they don't overlap.
-        const size = this.size.value;
-        this.floaters.spawn('hi!', this.x.value - size * 0.5, this.y.value - size * 0.5, size * 0.26, { vy: -26, life: 1.8 });
+        this.say('hi!', 0.26, { vy: -26, life: 1.8 });
         if (this.reducedMotion || !ARMS_ENABLED) {
             this.after(1.2, () => this.express(HOME_EXPRESSION), seq);
             return;
