@@ -19,8 +19,8 @@ const MIN_LOADER_S = 0.65;
 const MAX_DPR = 2;
 /** The face is the text ":D" turned upright (90°), then tilted a touch like the reference. */
 const HOME_ROT = 90 - 14;
-/** The face rests this share of the hole's height below the opening's centre. */
-const HOME_DROP = 0.03;
+/** The face rests this share of the hole's height below the opening's centre (negative: above). */
+const HOME_DROP = -0.03;
 /** Black outline around the :D and its words, screen px. */
 const FACE_OUTLINE_PX = 8;
 const PROGRESS_RATE = 7;

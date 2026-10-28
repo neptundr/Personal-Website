@@ -48,9 +48,8 @@ const POSE = { x: 0.05, y: 0.45, scale: 1.16, tilt: 6 * DEG, turn: 161 * DEG, ro
 // Dragging the ring: sideways spins it about its axis, up/down tips it.
 const TURN_PER_PX = (Math.PI * 2) / 700;
 const TILT_PER_PX = 0.004;
-/** A held ring can only be tipped within this range; springs may overshoot it after release. */
-const TILT_MIN = 0;
-const TILT_MAX = 27 * DEG;
+/** A held ring can only be tipped this far either way from its rest tilt; springs may overshoot after release. */
+const TILT_RANGE = 5 * DEG;
 /** Fastest the ring may spin, rad/s (1.5 turns a second), however hard it's flung. */
 const MAX_SPIN = Math.PI * 2 * 1.5;
 /** While held, the ring follows the pointer tightly… */
@@ -332,13 +331,12 @@ export class MobiusScene {
         return true;
     }
 
-    /** Sideways spins the ring about its axis; up/down tips it, kept within 0–45° while held. */
+    /** Sideways spins the ring about its axis; up/down tips it, within ±5° while held. */
     dragTo(x: number, y: number): void {
         const d = this.drag;
         if (!d) return;
         const turn = d.turn + (x - d.x) * TURN_PER_PX;
-        const wanted = this.place.tilt + d.tilt + (y - d.y) * TILT_PER_PX;
-        const tilt = clamp(wanted, TILT_MIN, TILT_MAX) - this.place.tilt;
+        const tilt = clamp(d.tilt + (y - d.y) * TILT_PER_PX, -TILT_RANGE, TILT_RANGE);
         this.dragTurn.set(turn);
         this.dragTilt.set(tilt);
 

@@ -138,6 +138,8 @@ const LOOK_RANGE = 5;
 /** How far the whole face drifts towards the cursor, as a share of the hole's radii. */
 const FOLLOW_X = 0.22;
 const FOLLOW_Y = 0.16;
+/** Downwards it follows less, so it doesn't sink onto the front of the ring. */
+const FOLLOW_Y_DOWN = 0.05;
 /** Cursor distance (in hole radii) at which the follow drift maxes out. */
 const FOLLOW_REACH = 2.2;
 /** Max lean towards the cursor, degrees. */
@@ -1109,7 +1111,8 @@ export class FaceEngine {
         let ty = home.y + wy * (hole ? hole.ry * 0.08 : 0) + (hole ? hole.ry * droop : 0);
         if (fresh && hole && !this.reducedMotion && !this.sleeping) {
             tx += clamp((this.pointerX - home.x) / (hole.rx * FOLLOW_REACH), -1, 1) * hole.rx * FOLLOW_X;
-            ty += clamp((this.pointerY - home.y) / (hole.ry * FOLLOW_REACH), -1, 1) * hole.ry * FOLLOW_Y;
+            const fy = clamp((this.pointerY - home.y) / (hole.ry * FOLLOW_REACH), -1, 1);
+            ty += fy * hole.ry * (fy > 0 ? FOLLOW_Y_DOWN : FOLLOW_Y);
         }
         this.x.set(tx);
         this.y.set(ty);
