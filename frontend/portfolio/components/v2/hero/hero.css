@@ -23,7 +23,8 @@
     touch-action: pan-y;
 }
 
-.v2-stage.is-over-face {
+.v2-stage.is-over-face,
+.v2-stage.is-over-ring {
     cursor: grab;
 }
 

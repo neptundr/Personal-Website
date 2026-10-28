@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import {
-    RANGES,
     getServerSettings,
     getSettings,
     resetSettings,
@@ -13,69 +12,16 @@ import {
 // @ts-ignore
 import './dev.css';
 
-// Slide-in palette for tuning the stage live. Shown in `next dev`, or on any
-// build with ?dev in the URL. Toggle with the tab or the \ key.
+// Slide-in palette for tuning the stage colours live. Shown in `next dev`, or
+// on any build with ?dev in the URL. Toggle with the tab or the \ key.
 
 const TOGGLE_KEY = '\\';
 
-type ColorField = { readonly key: 'colorOuter' | 'colorInner' | 'bg'; readonly label: string };
-type SliderField = { readonly key: keyof typeof RANGES; readonly label: string; readonly unit?: string };
-
-const COLORS: readonly ColorField[] = [
+const COLORS: ReadonlyArray<{ readonly key: keyof StageSettings; readonly label: string }> = [
     { key: 'colorOuter', label: 'Ribbon A' },
     { key: 'colorInner', label: 'Ribbon B' },
     { key: 'bg', label: 'Background' },
 ];
-
-const SECTIONS: ReadonlyArray<{ readonly title: string; readonly fields: readonly SliderField[] }> = [
-    {
-        title: 'Text',
-        fields: [
-            { key: 'textSpeed', label: 'Speed' },
-            { key: 'textScale', label: 'Size' },
-        ],
-    },
-    {
-        title: 'Ring position',
-        fields: [
-            { key: 'posX', label: 'X' },
-            { key: 'posY', label: 'Y' },
-        ],
-    },
-    {
-        title: 'Ring rotation',
-        fields: [
-            { key: 'tilt', label: 'Tilt', unit: '°' },
-            { key: 'turn', label: 'Turn', unit: '°' },
-            { key: 'roll', label: 'Roll', unit: '°' },
-        ],
-    },
-];
-
-function Slider({ field, settings }: { field: SliderField; settings: StageSettings }) {
-    const range = RANGES[field.key];
-    const value = settings[field.key];
-    const digits = range.step < 1 ? 2 : 0;
-    return (
-        <label className="v2-dev__row v2-dev__row--stack">
-            <span>
-                {field.label}{' '}
-                <output>
-                    {value.toFixed(digits)}
-                    {field.unit ?? ''}
-                </output>
-            </span>
-            <input
-                type="range"
-                min={range.min}
-                max={range.max}
-                step={range.step}
-                value={value}
-                onChange={(e) => updateSettings({ [field.key]: Number(e.target.value) })}
-            />
-        </label>
-    );
-}
 
 export default function DevPanel() {
     const [enabled, setEnabled] = useState(false);
@@ -113,14 +59,6 @@ export default function DevPanel() {
                         />
                         <code>{settings[field.key]}</code>
                     </label>
-                ))}
-                {SECTIONS.map((section) => (
-                    <div key={section.title} className="v2-dev__group">
-                        <p className="v2-dev__title">{section.title}</p>
-                        {section.fields.map((field) => (
-                            <Slider key={field.key} field={field} settings={settings} />
-                        ))}
-                    </div>
                 ))}
                 <button type="button" className="v2-dev__reset" onClick={resetSettings}>
                     Reset

@@ -1,5 +1,5 @@
 import { Spring, SPRINGS } from '../lib/spring';
-import { clamp, easeInCubic, easeInOutCubic, easeOutCubic, lerp, progress, randRange } from '../lib/math';
+import { clamp, easeInCubic, easeInOutCubic, lerp, progress, randRange } from '../lib/math';
 import {
     EXPRESSIONS,
     EYE_UPRIGHT,
@@ -7,7 +7,7 @@ import {
     FACE_LETTER_SPACING,
     type ExpressionName,
 } from './expressions';
-import { Floaters } from './floaters';
+import { Floaters, type FloatMotion } from './floaters';
 import type { FaceSignal } from './face-bus';
 
 // The :D's brain and body. The face itself is three characters of the site
@@ -29,6 +29,8 @@ export interface FaceElements {
     /** Wrapper that gets the hole clip while diving. */
     readonly clip: SVGGElement;
     readonly clipShape: SVGEllipseElement;
+    /** Everything above the opening's centre line: the dive only clips below it. */
+    readonly clipTop: SVGRectElement;
     readonly root: SVGGElement;
     readonly eyes: readonly [SVGTextElement, SVGTextElement];
     readonly mouth: SVGTextElement;
@@ -109,6 +111,16 @@ const ALWAYS = -1;
 const HOME_EXPRESSION: ExpressionName = 'grin';
 const IDLE_MOODS: readonly ExpressionName[] = ['smile', 'beam', 'wink', 'curious', 'content', 'tongue', 'cat'];
 const REPLIES = ['hey!', 'ouch!', 'oof!', 'ow!', 'easy!'] as const;
+const REQUESTS = ['pet me?', 'play with me!', 'throw me!', 'pet me pls', 'wanna play?'] as const;
+/** The first request lands in this window (seconds since the page started)… */
+const FIRST_REQUEST = [6, 12] as const;
+/** …later ones are rare. */
+const REQUEST_GAP = [40, 75] as const;
+const REQUEST_RETRY = 1;
+/** No request while the visitor has petted, grabbed or clicked it this recently, seconds. */
+const PLAY_QUIET = 20;
+/** No idle expression starts this close (seconds) before a request. */
+const REQUEST_CLEARANCE = 3;
 
 /** Minimum gap between two plays of the same hover reaction, seconds. */
 const COOLDOWN = 2.5;
@@ -122,7 +134,14 @@ const BLINK_HOLD = 0.07;
 const BLINK_SQUASH = 0.08;
 const Z_GAP = 1.15;
 /** How far eyes shift towards the cursor, face units. */
-const LOOK_RANGE = 3.5;
+const LOOK_RANGE = 5;
+/** How far the whole face drifts towards the cursor, as a share of the hole's radii. */
+const FOLLOW_X = 0.22;
+const FOLLOW_Y = 0.16;
+/** Cursor distance (in hole radii) at which the follow drift maxes out. */
+const FOLLOW_REACH = 2.2;
+/** Max lean towards the cursor, degrees. */
+const FOLLOW_LEAN = 12;
 
 /** Pointer travel over the face (px, decaying) that counts as petting. */
 const RUB_TO_PET = 320;
@@ -135,10 +154,16 @@ const RESTITUTION = 0.55;
 /** Where a thrown face bounces, as a share of the hole's radii. */
 const WALL_X = 0.72;
 const WALL_Y = 0.62;
+/** The dive's mask sits this share of the hole's height above the traced opening. */
+const MASK_LIFT = 0.14;
 const GRAVITY = 9000;
 const FALL_KICK = 900;
-/** $-eyes switch off/on this many times, ending on $. */
-const MONEY_SWITCHES = 6;
+/** The intro hop into the ring: arc height in face sizes, and duration. */
+const INTRO_HOP_HEIGHT = 0.9;
+const INTRO_HOP_TIME = 0.5;
+/** $-eyes blink this many times, staying $ throughout. */
+const MONEY_BLINKS = 3;
+const MONEY_BLINK_GAP = 0.24;
 /** Glyph pop: dip to this scale, swap the character once below SWAP_AT. */
 const POP_DIP = 0.45;
 const SWAP_AT = 0.6;
@@ -238,8 +263,9 @@ export class FaceEngine {
     private money = false;
     private petting = false;
     private clipped = false;
-    private fallIsIntro = false;
     private nextIdle = 0;
+    private nextRequest = randRange(FIRST_REQUEST[0], FIRST_REQUEST[1]);
+    private lastPlay = -Infinity;
     private nextBlink = 1.2;
     private nextYawn = 0;
     private nextZ = 0;
@@ -418,8 +444,8 @@ export class FaceEngine {
 
     /**
      * Loader done: the ":D" wakes up and turns upright into a face, crouches,
-     * launches off the top of the screen, and drops into place exactly like
-     * after a click, with the ring slamming in on the same frame it lands.
+     * and hops in one short arc into the ring, which slams in on the frame it
+     * lands.
      */
     beginIntro(): void {
         if (this.mode !== 'loader') return;
@@ -442,12 +468,20 @@ export class FaceEngine {
             this.sx.set(1);
             this.sy.kick(7);
             this.express('ooh');
+            // One natural hop: even horizontal speed, a parabolic arc, and the
+            // ring slams in on the frame it lands.
             this.startTween({
-                to: { x: this.x.value, y: -this.home.size * 1.4, size: this.home.size, rot: 0 },
-                duration: 0.38,
-                apex: 0,
-                ease: easeOutCubic,
-                done: () => this.startFall(true),
+                to: this.home,
+                duration: INTRO_HOP_TIME,
+                apex: this.home.size * INTRO_HOP_HEIGHT,
+                ease: (t) => t,
+                done: () => {
+                    this.mode = 'live';
+                    this.callbacks.onLanded();
+                    this.land(1.8);
+                    this.express(HOME_EXPRESSION);
+                    this.goLive();
+                },
             });
         }, seq);
     }
@@ -553,7 +587,7 @@ export class FaceEngine {
     }
 
     /** Pop a word out of the face's top-right, like a typed aside. */
-    private say(text: string, scale: number, motion: { vx?: number; vy?: number; life?: number } = {}): void {
+    private say(text: string, scale: number, motion: FloatMotion = {}): void {
         const size = this.size.value;
         this.floaters.spawn(text, this.x.value + size * 0.42, this.y.value - size * 0.55, size * scale, motion);
     }
@@ -644,7 +678,7 @@ export class FaceEngine {
         this.after(1.15, () => this.express(HOME_EXPRESSION), seq);
     }
 
-    /** $-eyes that pop off and on three times, ending on $. */
+    /** $-eyes that pop in and blink a few times, staying $. */
     private setMoney(on: boolean): void {
         if (on === this.money) return;
         this.money = on;
@@ -659,9 +693,8 @@ export class FaceEngine {
         this.stopPet();
         this.express('money');
         this.hop(0.5);
-        for (let i = 1; i <= MONEY_SWITCHES; i++) {
-            const char = i % 2 === 1 ? '.' : '$';
-            this.after(0.32 + (i - 1) * 0.2, () => this.eyes.forEach((g) => g.set(char)), seq);
+        for (let i = 0; i < MONEY_BLINKS; i++) {
+            this.after(0.4 + i * MONEY_BLINK_GAP, () => this.blink(), seq);
         }
     }
 
@@ -681,6 +714,7 @@ export class FaceEngine {
             this.stopPet();
             return;
         }
+        this.lastPlay = this.time;
         this.busyUntil = this.time + 0.6;
         if (this.reducedMotion) return;
         if (this.time >= this.nextWiggle) {
@@ -719,6 +753,10 @@ export class FaceEngine {
             if (this.time >= this.nextZ) this.snore();
             return;
         }
+        if (this.time >= this.nextRequest) {
+            this.askToPlay();
+            return;
+        }
         if (!this.bored && idle > BORED_AFTER) {
             this.bored = true;
             this.cancel();
@@ -731,7 +769,33 @@ export class FaceEngine {
             else if (this.time >= this.nextYawn) this.yawn();
             return;
         }
-        if (this.time >= this.nextIdle) this.idleExpression();
+        // Keep the stage clear for an upcoming request.
+        if (this.time >= this.nextIdle && this.nextRequest - this.time > REQUEST_CLEARANCE) this.idleExpression();
+    }
+
+    /** Now and then it asks the visitor to pet it or play with it. */
+    private askToPlay(): void {
+        if (this.mode !== 'live') {
+            this.nextRequest = this.time + REQUEST_RETRY;
+            return;
+        }
+        // Already playing with it: no need to ask.
+        if (this.time - this.lastPlay < PLAY_QUIET) {
+            this.nextRequest = this.lastPlay + PLAY_QUIET;
+            return;
+        }
+        this.bored = false;
+        this.cancel();
+        const seq = this.sequence;
+        const pick = REQUESTS[Math.floor(Math.random() * REQUESTS.length)] ?? 'pet me?';
+        this.busyUntil = this.time + 2.2;
+        this.express(pick.startsWith('pet') ? 'cat' : 'beam');
+        this.hop(0.8);
+        this.after(0.5, () => this.hop(0.5), seq);
+        this.say(pick, 0.2, { vy: -22, life: 2.4, sway: 4 });
+        this.after(2, () => this.express(HOME_EXPRESSION), seq);
+        this.nextRequest = this.time + randRange(REQUEST_GAP[0], REQUEST_GAP[1]);
+        this.nextIdle = Math.max(this.nextIdle, this.time + 4);
     }
 
     private yawn(): void {
@@ -811,6 +875,7 @@ export class FaceEngine {
         const p = this.pressed;
         this.pressed = null;
         if (!p || this.mode !== 'live') return;
+        this.lastPlay = this.time;
         this.cancel();
         this.stopPet();
         this.mode = 'held';
@@ -931,6 +996,7 @@ export class FaceEngine {
     // ─── Dive into the ring, fall back from the sky ────────────────────────
 
     private dive(): void {
+        this.lastPlay = this.time;
         this.cancel();
         this.stopPet();
         this.mode = 'tween';
@@ -943,20 +1009,19 @@ export class FaceEngine {
             duration: 0.5,
             apex: this.home.size * 0.6,
             ease: easeInCubic,
-            done: () => this.startFall(false),
+            done: () => this.startFall(),
         });
     }
 
-    /** Drop from above the screen onto home. The intro's drop lands dead centre. */
-    private startFall(intro: boolean): void {
+    /** Drop from above the screen back onto home. */
+    private startFall(): void {
         this.setClip(false);
         this.mode = 'fall';
-        this.fallIsIntro = intro;
-        const spread = this.hole && !intro ? this.hole.rx * 0.15 : 0;
+        const spread = this.hole ? this.hole.rx * 0.15 : 0;
         this.x.snap(this.home.x + randRange(-1, 1) * spread);
         this.y.snap(-this.home.size * 0.8);
-        this.size.snap(this.home.size);
         this.fallVelocity = FALL_KICK;
+        this.size.snap(this.home.size);
         this.spin += 360;
         this.express('ooh');
         this.sy.set(1.18);
@@ -972,14 +1037,6 @@ export class FaceEngine {
         }
         this.y.snap(this.home.y);
         this.mode = 'live';
-        if (this.fallIsIntro) {
-            // Ring first, so it's there to take the hit on the same frame.
-            this.callbacks.onLanded();
-            this.land(1.8);
-            this.express(HOME_EXPRESSION);
-            this.goLive();
-            return;
-        }
         this.land(1.6);
         this.express('dizzy');
         const seq = this.sequence;
@@ -1051,13 +1108,13 @@ export class FaceEngine {
         let tx = home.x + wx * (hole ? hole.rx * 0.14 : 0);
         let ty = home.y + wy * (hole ? hole.ry * 0.08 : 0) + (hole ? hole.ry * droop : 0);
         if (fresh && hole && !this.reducedMotion && !this.sleeping) {
-            tx += clamp((this.pointerX - home.x) / (hole.rx * 3), -1, 1) * hole.rx * 0.12;
-            ty += clamp((this.pointerY - home.y) / (hole.ry * 3), -1, 1) * hole.ry * 0.1;
+            tx += clamp((this.pointerX - home.x) / (hole.rx * FOLLOW_REACH), -1, 1) * hole.rx * FOLLOW_X;
+            ty += clamp((this.pointerY - home.y) / (hole.ry * FOLLOW_REACH), -1, 1) * hole.ry * FOLLOW_Y;
         }
         this.x.set(tx);
         this.y.set(ty);
         this.size.set(home.size * (this.sleeping ? 0.92 : this.bored ? 0.95 : 1));
-        const lean = fresh ? clamp((this.pointerX - this.x.value) / 600, -1, 1) * 7 : 0;
+        const lean = fresh ? clamp((this.pointerX - this.x.value) / 600, -1, 1) * FOLLOW_LEAN : 0;
         this.rot.set(home.rot + this.spin + wx * 5 + lean);
 
         this.updateLook(fresh);
@@ -1153,10 +1210,16 @@ export class FaceEngine {
         );
 
         if (this.clipped && this.hole) {
+            const cy = this.hole.cy - this.hole.ry * MASK_LIFT;
             this.el.clipShape.setAttribute('cx', f(this.hole.cx));
-            this.el.clipShape.setAttribute('cy', f(this.hole.cy));
+            this.el.clipShape.setAttribute('cy', f(cy));
             this.el.clipShape.setAttribute('rx', f(this.hole.rx));
             this.el.clipShape.setAttribute('ry', f(this.hole.ry));
+            const far = 1e5;
+            this.el.clipTop.setAttribute('x', f(-far));
+            this.el.clipTop.setAttribute('y', f(-far));
+            this.el.clipTop.setAttribute('width', f(far * 2));
+            this.el.clipTop.setAttribute('height', f(far + cy));
         }
     }
 }

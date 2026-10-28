@@ -19,6 +19,8 @@ const MIN_LOADER_S = 0.65;
 const MAX_DPR = 2;
 /** The face is the text ":D" turned upright (90°), then tilted a touch like the reference. */
 const HOME_ROT = 90 - 14;
+/** The face rests this share of the hole's height below the opening's centre. */
+const HOME_DROP = 0.03;
 /** Black outline around the :D and its words, screen px. */
 const FACE_OUTLINE_PX = 8;
 const PROGRESS_RATE = 7;
@@ -103,7 +105,7 @@ export default function HeroStage() {
         const updateHome = () => {
             const hole = scene ? scene.restHole() : fallbackHole(width, height);
             const size = Math.min(hole.ry * 1.75, hole.rx * 0.8);
-            engine.setHome({ x: hole.cx, y: hole.cy - hole.ry * 0.04, size, rot: HOME_ROT }, hole);
+            engine.setHome({ x: hole.cx, y: hole.cy + hole.ry * HOME_DROP, size, rot: HOME_ROT }, hole);
         };
 
         engine.setOutline(FACE_OUTLINE_PX);
@@ -156,6 +158,8 @@ export default function HeroStage() {
                 }
                 scene = created;
                 layout();
+                // Shader compile + uploads now, so the landing frame doesn't hitch.
+                created.prepare();
                 loaded = 1;
             })
             .catch((error: unknown) => {
@@ -203,20 +207,41 @@ export default function HeroStage() {
         raf = requestAnimationFrame(tick);
 
         // Input. A press on the face becomes a click (dive) or a drag (throw).
+        // A press on the face goes to the face (click = dive, drag = throw);
+        // otherwise a press on the ring spins/tips it.
+        let draggingRing = false;
         const onMove = (e: PointerEvent) => {
             const p = local(e.clientX, e.clientY);
             engine.pointer(p.x, p.y);
             engine.input();
-            root.classList.toggle('is-over-face', engine.isLive && engine.isOver(p.x, p.y));
+            if (draggingRing) {
+                scene?.dragTo(p.x, p.y);
+                return;
+            }
+            const overFace = engine.isLive && engine.isOver(p.x, p.y);
+            root.classList.toggle('is-over-face', overFace);
+            root.classList.toggle('is-over-ring', !overFace && !engine.isHeld && (scene?.isOver(p.x, p.y) ?? false));
             root.classList.toggle('is-holding', engine.isHeld);
         };
         const onDown = (e: PointerEvent) => {
             const p = local(e.clientX, e.clientY);
-            if (!engine.pointerDown(p.x, p.y)) return;
+            if (engine.pointerDown(p.x, p.y)) {
+                e.preventDefault();
+                root.setPointerCapture(e.pointerId);
+                return;
+            }
+            if (!scene?.grab(p.x, p.y)) return;
+            draggingRing = true;
+            engine.signal({ type: 'agree' });
+            root.classList.add('is-holding');
             e.preventDefault();
             root.setPointerCapture(e.pointerId);
         };
         const onUp = (e: PointerEvent) => {
+            if (draggingRing) {
+                draggingRing = false;
+                scene?.release();
+            }
             engine.pointerUp();
             root.classList.remove('is-holding');
             if (root.hasPointerCapture(e.pointerId)) root.releasePointerCapture(e.pointerId);

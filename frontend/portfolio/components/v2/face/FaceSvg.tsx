@@ -12,8 +12,10 @@ const FaceSvg = forwardRef<SVGSVGElement>(function FaceSvg(_, ref) {
     return (
         <svg ref={ref} className="v2-stage__face" aria-hidden="true">
             <defs>
+                {/* Union: the opening, plus everything above its centre line. */}
                 <clipPath id="v2-hole-clip" clipPathUnits="userSpaceOnUse">
                     <ellipse data-part="clip-shape" />
+                    <rect data-part="clip-top" />
                 </clipPath>
             </defs>
             <g data-part="clip">
@@ -39,11 +41,12 @@ export function readFaceElements(svg: SVGSVGElement): FaceElements | null {
     const part = <T extends Element>(name: string) => svg.querySelector<T>(`[data-part="${name}"]`);
     const clip = part<SVGGElement>('clip');
     const clipShape = part<SVGEllipseElement>('clip-shape');
+    const clipTop = part<SVGRectElement>('clip-top');
     const root = part<SVGGElement>('root');
     const left = part<SVGTextElement>('eye-0');
     const right = part<SVGTextElement>('eye-1');
     const mouth = part<SVGTextElement>('mouth');
     const floaters = Array.from(svg.querySelectorAll<SVGTextElement>('[data-part="floater"]'));
-    if (!clip || !clipShape || !root || !left || !right || !mouth) return null;
-    return { clip, clipShape, root, eyes: [left, right], mouth, floaters };
+    if (!clip || !clipShape || !clipTop || !root || !left || !right || !mouth) return null;
+    return { clip, clipShape, clipTop, root, eyes: [left, right], mouth, floaters };
 }

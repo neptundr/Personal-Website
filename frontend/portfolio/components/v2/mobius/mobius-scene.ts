@@ -5,15 +5,18 @@ import {
     Group,
     Mesh,
     PerspectiveCamera,
+    Raycaster,
     Scene,
     ShaderMaterial,
     SRGBColorSpace,
+    Vector2,
     Vector3,
     WebGLRenderer,
 } from 'three';
 import { createMobiusGeometry, type MobiusShape } from './mobius-geometry';
 import { createWelcomeTile, type TextTile } from './text-texture';
-import { Spring } from '../lib/spring';
+import { Spring, type SpringConfig } from '../lib/spring';
+import { clamp, randRange } from '../lib/math';
 import type { StageSettings } from '../dev/settings';
 import type { Hole } from '../face/face-engine';
 
@@ -33,7 +36,30 @@ const FILL_Y = 0.76;
 /** Fit the camera against every Nth vertex of the ring. */
 const FIT_STRIDE = 9;
 /** Inner opening, as a radius in ring units (inside of the bar). */
-const HOLE_RADIUS = SHAPE.radius - SHAPE.side * 0.6;
+/** Directions sampled when tracing the opening's edge. */
+const HOLE_BINS = 96;
+
+const DEG = Math.PI / 180;
+/** How fast "WELCOME!" rolls along the ribbon, in text tiles per second. */
+const TEXT_SPEED = 0.48;
+/** The ring's resting pose (tuned in the dev palette): offset in ring units, scale, angles. */
+const POSE = { x: 0.05, y: 0.45, scale: 1.16, tilt: 6 * DEG, turn: 161 * DEG, roll: 1 * DEG } as const;
+
+// Dragging the ring: sideways spins it about its axis, up/down tips it.
+const TURN_PER_PX = (Math.PI * 2) / 700;
+const TILT_PER_PX = 0.004;
+/** A held ring can only be tipped within this range; springs may overshoot it after release. */
+const TILT_MIN = 0;
+const TILT_MAX = 27 * DEG;
+/** Fastest the ring may spin, rad/s (1.5 turns a second), however hard it's flung. */
+const MAX_SPIN = Math.PI * 2 * 1.5;
+/** While held, the ring follows the pointer tightly… */
+const HELD: SpringConfig = { stiffness: 420, damping: 30 };
+/** …and once released it carries its momentum and wobbles back. */
+const RELEASED_TURN: SpringConfig = { stiffness: 36, damping: 5.5 };
+const RELEASED_TILT: SpringConfig = { stiffness: 150, damping: 7 };
+/** How far ahead (s) the spin's momentum carries when picking which whole turn to settle on. */
+const SPIN_CARRY = 0.35;
 
 const VERTEX = /* glsl */ `
 attribute float aFace;
@@ -87,6 +113,14 @@ export class MobiusScene {
     private readonly lift = new Spring(-0.9, { stiffness: 320, damping: 13 });
     private readonly grow = new Spring(0.55, { stiffness: 300, damping: 12 });
     private readonly tilt = new Spring(0, { stiffness: 160, damping: 7 });
+    /** Extra rotation from dragging, on top of the palette pose. */
+    private readonly dragTurn = new Spring(0, RELEASED_TURN);
+    private readonly dragTilt = new Spring(0, RELEASED_TILT);
+    private readonly wobble = new Spring(0, { stiffness: 180, damping: 6 });
+    private drag: { x: number; y: number; turn: number; tilt: number; lastTurn: number; lastAt: number } | null = null;
+    private turnVelocity = 0;
+    private readonly raycaster = new Raycaster();
+    private readonly pointerNdc = new Vector2();
     /** Text tiles over the bar's two laps at text size 1. */
     private readonly laps: number;
 
@@ -94,9 +128,7 @@ export class MobiusScene {
     private height = 1;
     private time = 0;
     private offset = 0;
-    private speed: number;
-    /** User placement from the palette (ring units, radians). */
-    private place = { x: 0, y: 0, tilt: 0, turn: 0, roll: 0 };
+    private readonly place = POSE;
 
     static async create(canvas: HTMLCanvasElement, fontFamily: string, settings: StageSettings): Promise<MobiusScene> {
         const tile = await createWelcomeTile(fontFamily);
@@ -129,7 +161,8 @@ export class MobiusScene {
         this.group.add(this.mesh);
         this.group.visible = false;
         this.scene.add(this.group);
-        this.speed = settings.textSpeed;
+        // Whole tiles over two laps so the text joins seamlessly.
+        this.material.uniforms.uRepeat!.value = Math.max(1, Math.round(this.laps)) / 2;
         this.setSettings(settings);
         this.applyRest(true);
     }
@@ -138,18 +171,6 @@ export class MobiusScene {
         const u = this.material.uniforms;
         (u.uOuter!.value as Color).set(settings.colorOuter);
         (u.uInner!.value as Color).set(settings.colorInner);
-        this.speed = settings.textSpeed;
-        // Smaller text → more tiles; always a whole number over two laps so the text joins seamlessly.
-        u.uTextScale!.value = settings.textScale;
-        u.uRepeat!.value = Math.max(1, Math.round(this.laps / settings.textScale)) / 2;
-        const rad = Math.PI / 180;
-        this.place = {
-            x: settings.posX,
-            y: settings.posY,
-            tilt: settings.tilt * rad,
-            turn: settings.turn * rad,
-            roll: settings.roll * rad,
-        };
     }
 
     resize(width: number, height: number, dpr: number): void {
@@ -218,42 +239,129 @@ export class MobiusScene {
         this.grow.kick(-0.5 * strength);
     }
 
-    /** Screen-space ellipse of the ring's opening, at rest. */
+    /**
+     * Screen-space ellipse of the ring's opening, at rest. Traced from the real
+     * mesh: around the projected centre, the nearest vertex in each direction
+     * is the edge of the opening, twist and all.
+     */
     restHole(): Hole {
         this.applyRest(true);
         this.group.updateMatrixWorld(true);
-        // Measured along the top of the bar: that rim is what frames the opening on screen.
-        const project = (x: number, z: number) => {
-            const v = new Vector3(x, SHAPE.side / 2, z).applyMatrix4(this.mesh.matrixWorld).project(this.camera);
-            return { x: ((v.x + 1) / 2) * this.width, y: ((1 - v.y) / 2) * this.height };
-        };
-        const right = project(HOLE_RADIUS, 0);
-        const left = project(-HOLE_RADIUS, 0);
-        const front = project(0, HOLE_RADIUS);
-        const back = project(0, -HOLE_RADIUS);
-        return {
-            cx: (right.x + left.x + front.x + back.x) / 4,
-            cy: (right.y + left.y + front.y + back.y) / 4,
-            rx: Math.hypot(right.x - left.x, right.y - left.y) / 2,
-            ry: Math.abs(front.y - back.y) / 2,
-        };
+        const toScreen = (v: Vector3) => ({ x: ((v.x + 1) / 2) * this.width, y: ((1 - v.y) / 2) * this.height });
+        const centre = toScreen(new Vector3().applyMatrix4(this.mesh.matrixWorld).project(this.camera));
+        const position = this.mesh.geometry.getAttribute('position') as BufferAttribute;
+        const nearest = new Array<{ x: number; y: number; d: number } | undefined>(HOLE_BINS);
+        const v = new Vector3();
+        for (let i = 0; i < position.count; i++) {
+            const p = toScreen(v.fromBufferAttribute(position, i).applyMatrix4(this.mesh.matrixWorld).project(this.camera));
+            const dx = p.x - centre.x;
+            const dy = p.y - centre.y;
+            const d = Math.hypot(dx, dy);
+            const bin = Math.floor(((Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2)) * HOLE_BINS) % HOLE_BINS;
+            const best = nearest[bin];
+            if (!best || d < best.d) nearest[bin] = { x: p.x, y: p.y, d };
+        }
+        const edge = nearest.filter((p): p is { x: number; y: number; d: number } => p !== undefined);
+        const xs = edge.map((p) => p.x);
+        const ys = edge.map((p) => p.y);
+        const left = Math.min(...xs);
+        const right = Math.max(...xs);
+        const top = Math.min(...ys);
+        const bottom = Math.max(...ys);
+        return { cx: (left + right) / 2, cy: (top + bottom) / 2, rx: (right - left) / 2, ry: (bottom - top) / 2 };
     }
 
     frame(dt: number, reducedMotion: boolean): void {
         this.time += dt;
-        this.offset += this.speed * dt;
+        this.offset += TEXT_SPEED * dt;
         this.material.uniforms.uOffset!.value = this.offset;
         this.lift.update(dt);
         this.grow.update(dt);
         this.tilt.update(dt);
+        this.dragTurn.update(dt);
+        this.dragTurn.velocity = clamp(this.dragTurn.velocity, -MAX_SPIN, MAX_SPIN);
+        this.dragTilt.update(dt);
+        this.wobble.update(dt);
 
         const sway = reducedMotion ? 0 : 1;
         const p = this.place;
         this.group.position.set(p.x, p.y + this.lift.value + Math.sin(this.time * 0.9) * 0.05 * sway, 0);
-        this.group.scale.setScalar(Math.max(0.001, this.grow.value));
-        this.group.rotation.set(p.tilt + this.tilt.value, 0, ROLL + p.roll + Math.sin(this.time * 0.37) * 0.02 * sway);
-        this.mesh.rotation.y = Math.PI + p.turn + Math.sin(this.time * 0.23) * 0.06 * sway;
+        this.group.scale.setScalar(Math.max(0.001, this.grow.value * p.scale));
+        this.group.rotation.set(
+            p.tilt + this.tilt.value + this.dragTilt.value,
+            0,
+            ROLL + p.roll + this.wobble.value + Math.sin(this.time * 0.37) * 0.02 * sway,
+        );
+        this.mesh.rotation.y = Math.PI + p.turn + this.dragTurn.value + Math.sin(this.time * 0.23) * 0.06 * sway;
         this.renderer.render(this.scene, this.camera);
+    }
+
+    /**
+     * Compile the shader and upload geometry and the text texture now (during
+     * loading), so the frame the ring slams in doesn't stall on that work.
+     */
+    prepare(): void {
+        const wasVisible = this.group.visible;
+        this.group.visible = true;
+        this.renderer.compile(this.scene, this.camera);
+        this.renderer.initTexture(this.tile.texture);
+        // One invisible draw (scaled to nothing) uploads the buffers too.
+        this.group.scale.setScalar(1e-4);
+        this.renderer.render(this.scene, this.camera);
+        this.renderer.clear();
+        this.group.visible = wasVisible;
+    }
+
+    /** Is the pointer (CSS px) over the ring? */
+    isOver(x: number, y: number): boolean {
+        if (!this.group.visible) return false;
+        this.pointerNdc.set((x / this.width) * 2 - 1, -(y / this.height) * 2 + 1);
+        this.raycaster.setFromCamera(this.pointerNdc, this.camera);
+        return this.raycaster.intersectObject(this.mesh, false).length > 0;
+    }
+
+    /** Start dragging if the pointer is on the ring; the grab itself knocks it off balance. */
+    grab(x: number, y: number): boolean {
+        if (!this.isOver(x, y)) return false;
+        this.drag = { x, y, turn: this.dragTurn.value, tilt: this.dragTilt.value, lastTurn: this.dragTurn.value, lastAt: performance.now() };
+        this.turnVelocity = 0;
+        this.dragTurn.config = HELD;
+        this.dragTilt.config = HELD;
+        this.wobble.kick(randRange(-1, 1) * 2.4);
+        this.lift.kick(-1.2);
+        return true;
+    }
+
+    /** Sideways spins the ring about its axis; up/down tips it, kept within 0–45° while held. */
+    dragTo(x: number, y: number): void {
+        const d = this.drag;
+        if (!d) return;
+        const turn = d.turn + (x - d.x) * TURN_PER_PX;
+        const wanted = this.place.tilt + d.tilt + (y - d.y) * TILT_PER_PX;
+        const tilt = clamp(wanted, TILT_MIN, TILT_MAX) - this.place.tilt;
+        this.dragTurn.set(turn);
+        this.dragTilt.set(tilt);
+
+        const now = performance.now();
+        const dt = Math.max(1, now - d.lastAt) / 1000;
+        const measured = this.turnVelocity * 0.6 + ((turn - d.lastTurn) / dt) * 0.4;
+        this.turnVelocity = clamp(measured, -MAX_SPIN, MAX_SPIN);
+        d.lastTurn = turn;
+        d.lastAt = now;
+    }
+
+    /** Let go: the spin carries on and settles on a whole turn, the tilt springs back with a wobble. */
+    release(): void {
+        if (!this.drag) return;
+        this.drag = null;
+        const full = Math.PI * 2;
+        const carried = this.dragTurn.value + this.turnVelocity * SPIN_CARRY;
+        this.dragTurn.config = RELEASED_TURN;
+        this.dragTurn.velocity = this.turnVelocity;
+        this.dragTurn.set(Math.round(carried / full) * full);
+        this.dragTilt.config = RELEASED_TILT;
+        this.dragTilt.set(0);
+        this.wobble.kick(randRange(-1, 1) * 1.8);
     }
 
     dispose(): void {
@@ -265,9 +373,9 @@ export class MobiusScene {
 
     /** The ring at rest, with or without the palette's placement. */
     private applyRest(withPlacement: boolean): void {
-        const p = withPlacement ? this.place : { x: 0, y: 0, tilt: 0, turn: 0, roll: 0 };
+        const p = withPlacement ? this.place : { x: 0, y: 0, scale: 1, tilt: 0, turn: 0, roll: 0 };
         this.group.position.set(p.x, p.y, 0);
-        this.group.scale.setScalar(1);
+        this.group.scale.setScalar(p.scale);
         this.group.rotation.set(p.tilt, 0, ROLL + p.roll);
         this.mesh.rotation.set(0, Math.PI + p.turn, 0);
     }
