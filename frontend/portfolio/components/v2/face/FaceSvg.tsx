@@ -1,11 +1,11 @@
 import { forwardRef } from 'react';
-import type { EyeElements, FaceElements } from './face-engine';
+import { FACE_FONT_SIZE } from './expressions';
+import type { FaceElements } from './face-engine';
 
-// The :D's drawing, in a 100-unit face box, styled like type: solid colon
-// dots for eyes and a hollow stroked mouth. The engine owns every attribute
-// after mount; React only renders the skeleton once.
+// The :D's drawing: three characters of the site font (two eyes, a mouth)
+// plus a pool of floating words. The engine owns every attribute after
+// mount; React only renders the skeleton once.
 
-const EYES = [0, 1] as const;
 const FLOATER_POOL = 8;
 
 const FaceSvg = forwardRef<SVGSVGElement>(function FaceSvg(_, ref) {
@@ -17,35 +17,10 @@ const FaceSvg = forwardRef<SVGSVGElement>(function FaceSvg(_, ref) {
                 </clipPath>
             </defs>
             <g data-part="clip">
-                <g data-part="root">
-                    {EYES.map((i) => (
-                        <g key={i} data-part={`eye-${i}`}>
-                            <ellipse data-part="dot" rx="7.5" ry="7.5" fill="#fff" />
-                            <path
-                                data-part="happy"
-                                d="M -8.5 4.5 L 0 -4.5 L 8.5 4.5"
-                                fill="none"
-                                stroke="#fff"
-                                strokeWidth="6.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                opacity="0"
-                            />
-                            <text
-                                data-part="glyph"
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                fontSize="28"
-                                fontWeight="800"
-                                fill="#fff"
-                                opacity="0"
-                            />
-                        </g>
-                    ))}
-                    <g fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round">
-                        <path data-part="bowl" />
-                        <path data-part="lid" />
-                    </g>
+                <g data-part="root" fill="#fff" fontSize={FACE_FONT_SIZE} fontWeight="800">
+                    <text data-part="eye-0">.</text>
+                    <text data-part="eye-1">.</text>
+                    <text data-part="mouth">D</text>
                 </g>
             </g>
             <g data-part="floaters" fill="#fff" fontWeight="800" textAnchor="middle" dominantBaseline="central">
@@ -61,23 +36,14 @@ export default FaceSvg;
 
 /** Collects the parts the engine animates; null if the markup is incomplete. */
 export function readFaceElements(svg: SVGSVGElement): FaceElements | null {
-    const part = <T extends Element>(scope: Element, name: string) => scope.querySelector<T>(`[data-part="${name}"]`);
-    const eye = (i: number): EyeElements | null => {
-        const group = part<SVGGElement>(svg, `eye-${i}`);
-        if (!group) return null;
-        const dot = part<SVGEllipseElement>(group, 'dot');
-        const happy = part<SVGPathElement>(group, 'happy');
-        const glyph = part<SVGTextElement>(group, 'glyph');
-        return dot && happy && glyph ? { group, dot, happy, glyph } : null;
-    };
-    const clip = part<SVGGElement>(svg, 'clip');
-    const clipShape = part<SVGEllipseElement>(svg, 'clip-shape');
-    const root = part<SVGGElement>(svg, 'root');
-    const bowl = part<SVGPathElement>(svg, 'bowl');
-    const lid = part<SVGPathElement>(svg, 'lid');
+    const part = <T extends Element>(name: string) => svg.querySelector<T>(`[data-part="${name}"]`);
+    const clip = part<SVGGElement>('clip');
+    const clipShape = part<SVGEllipseElement>('clip-shape');
+    const root = part<SVGGElement>('root');
+    const left = part<SVGTextElement>('eye-0');
+    const right = part<SVGTextElement>('eye-1');
+    const mouth = part<SVGTextElement>('mouth');
     const floaters = Array.from(svg.querySelectorAll<SVGTextElement>('[data-part="floater"]'));
-    const left = eye(0);
-    const right = eye(1);
-    if (!clip || !clipShape || !root || !bowl || !lid || !left || !right) return null;
-    return { clip, clipShape, root, bowl, lid, floaters, eyes: [left, right] };
+    if (!clip || !clipShape || !root || !left || !right || !mouth) return null;
+    return { clip, clipShape, root, eyes: [left, right], mouth, floaters };
 }

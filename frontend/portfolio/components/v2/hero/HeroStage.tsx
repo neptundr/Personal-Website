@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import FaceSvg, { readFaceElements } from '../face/FaceSvg';
 import { FaceEngine, type Hole } from '../face/face-engine';
-import { EYE_RADIUS, EYE_Y, GRIN_DEPTH, GRIN_HALF_WIDTH, GRIN_STROKE } from '../face/expressions';
 import { onFaceSignal } from '../face/face-bus';
 import { getSettings, subscribeSettings } from '../dev/settings';
 import type { MobiusScene } from '../mobius/mobius-scene';
@@ -18,14 +17,10 @@ import Loader from './Loader';
 
 const MIN_LOADER_S = 0.65;
 const MAX_DPR = 2;
-const HOME_TILT = -14;
-/** In the loader the face is turned so its eyes stack like a colon and its mouth reads as a D. */
-const LOADER_ROT = -90;
-/** Height and horizontal centre of the turned ":D", in face units, from the grin's geometry. */
-const TEXT_FACE_HEIGHT = GRIN_HALF_WIDTH * 2 + GRIN_STROKE;
-const TEXT_FACE_LEFT = EYE_Y - EYE_RADIUS;
-const TEXT_FACE_RIGHT = GRIN_DEPTH + GRIN_STROKE / 2;
-const TEXT_FACE_CENTRE = (TEXT_FACE_LEFT + TEXT_FACE_RIGHT) / 2;
+/** The face is the text ":D" turned upright (90°), then tilted a touch like the reference. */
+const HOME_ROT = 90 - 14;
+/** Black outline around the :D and its words, screen px. */
+const FACE_OUTLINE_PX = 8;
 const PROGRESS_RATE = 7;
 /** A tab return after at least this long earns a "hi!". */
 const WELCOME_BACK_MS = 3000;
@@ -86,6 +81,7 @@ export default function HeroStage() {
                 },
             },
             reducedMotion,
+            fontFamily,
         );
 
         const local = (clientX: number, clientY: number) => {
@@ -93,18 +89,29 @@ export default function HeroStage() {
             return { x: clientX - r.left, y: clientY - r.top };
         };
 
+        // The loader's ":D" is real (invisible) text; the face sits exactly on
+        // its baseline at its font size, so it reads as part of the word.
         const placeOnSlot = () => {
+            const marker = slot.querySelector<HTMLElement>('[data-baseline]');
             const s = slot.getBoundingClientRect();
-            const p = local(s.left + s.width / 2, s.top + s.height / 2);
-            const size = (s.height / TEXT_FACE_HEIGHT) * 100;
-            engine.placeAt({ x: p.x - (TEXT_FACE_CENTRE * size) / 100, y: p.y, size, rot: LOADER_ROT });
+            const baseline = marker ? marker.getBoundingClientRect().top : s.bottom;
+            const fontSize = parseFloat(getComputedStyle(slot).fontSize) || 100;
+            const p = local(s.left, baseline);
+            engine.placeAsText(p.x, p.y, fontSize);
         };
 
         const updateHome = () => {
             const hole = scene ? scene.restHole() : fallbackHole(width, height);
             const size = Math.min(hole.ry * 1.75, hole.rx * 0.8);
-            engine.setHome({ x: hole.cx, y: hole.cy - hole.ry * 0.04, size, rot: HOME_TILT }, hole);
+            engine.setHome({ x: hole.cx, y: hole.cy - hole.ry * 0.04, size, rot: HOME_ROT }, hole);
         };
+
+        engine.setOutline(FACE_OUTLINE_PX);
+
+        // Background colour is a palette setting; it recolours the whole v2 page.
+        const themeRoot = root.closest<HTMLElement>('.v2-root');
+        const applyBackground = () => themeRoot?.style.setProperty('--v2-bg', getSettings().bg);
+        applyBackground();
 
         const layout = () => {
             const rect = root.getBoundingClientRect();
@@ -136,6 +143,7 @@ export default function HeroStage() {
         void document.fonts.ready.then(() => {
             if (disposed) return;
             loaded = Math.max(loaded, 0.35);
+            engine.remeasure();
             if (!introStarted) placeOnSlot();
         });
         import('../mobius/mobius-scene')
@@ -232,7 +240,12 @@ export default function HeroStage() {
         document.addEventListener('visibilitychange', onVisibility);
 
         const offSignals = onFaceSignal((s) => engine.signal(s));
-        const offSettings = subscribeSettings(() => scene?.setSettings(getSettings()));
+        const offSettings = subscribeSettings(() => {
+            scene?.setSettings(getSettings());
+            applyBackground();
+            // The ring may have moved: the face's home follows its opening.
+            updateHome();
+        });
 
         const resizeObserver = new ResizeObserver(layout);
         resizeObserver.observe(root);

@@ -56,14 +56,18 @@ uniform vec3 uInner;
 uniform sampler2D uText;
 uniform float uOffset;
 uniform float uRepeat;
+uniform float uTextScale;
 varying vec2 vUv;
 varying float vFace;
 varying float vFacing;
 void main() {
     // Track B/D (the big outer wall at the front) wears the first colour.
     vec3 base = mix(uInner, uOuter, step(0.5, vFace));
+    // Text height as a share of the face, centred across it.
+    float v = (vUv.y - 0.5) / uTextScale + 0.5;
+    float inside = step(0.0, v) * step(v, 1.0);
     // Sampled rotated 180° so the text reads upright on the front face.
-    float ink = texture2D(uText, vec2(-vUv.x * uRepeat - uOffset, 1.0 - vUv.y)).a;
+    float ink = inside * texture2D(uText, vec2(-vUv.x * uRepeat - uOffset, 1.0 - v)).a;
     vec3 color = mix(base, vec3(1.0, 0.985, 0.95), ink);
     gl_FragColor = vec4(color * mix(0.78, 1.0, vFacing), 1.0);
     #include <colorspace_fragment>
@@ -79,16 +83,20 @@ export class MobiusScene {
     private readonly material: ShaderMaterial;
     private readonly tile: TextTile;
 
-    /** Rise from below, scale-in, and a rocking tilt for impacts. */
-    private readonly lift = new Spring(-3.2, { stiffness: 140, damping: 11 });
-    private readonly grow = new Spring(0.25, { stiffness: 180, damping: 12 });
+    /** Slam in from below, scale pop, and a rocking tilt for impacts. */
+    private readonly lift = new Spring(-0.9, { stiffness: 320, damping: 13 });
+    private readonly grow = new Spring(0.55, { stiffness: 300, damping: 12 });
     private readonly tilt = new Spring(0, { stiffness: 160, damping: 7 });
+    /** Text tiles over the bar's two laps at text size 1. */
+    private readonly laps: number;
 
     private width = 1;
     private height = 1;
     private time = 0;
     private offset = 0;
     private speed: number;
+    /** User placement from the palette (ring units, radians). */
+    private place = { x: 0, y: 0, tilt: 0, turn: 0, roll: 0 };
 
     static async create(canvas: HTMLCanvasElement, fontFamily: string, settings: StageSettings): Promise<MobiusScene> {
         const tile = await createWelcomeTile(fontFamily);
@@ -102,9 +110,7 @@ export class MobiusScene {
         this.renderer.setClearColor(0x000000, 0);
         tile.texture.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
 
-        // Whole tiles per two laps, so the text joins seamlessly.
-        const laps = (2 * 2 * Math.PI * SHAPE.radius) / (SHAPE.side * tile.aspect);
-        const repeat = Math.max(1, Math.round(laps)) / 2;
+        this.laps = (2 * 2 * Math.PI * SHAPE.radius) / (SHAPE.side * tile.aspect);
 
         this.material = new ShaderMaterial({
             uniforms: {
@@ -112,7 +118,8 @@ export class MobiusScene {
                 uInner: { value: new Color(settings.colorInner) },
                 uText: { value: tile.texture },
                 uOffset: { value: 0 },
-                uRepeat: { value: repeat },
+                uRepeat: { value: 1 },
+                uTextScale: { value: 1 },
             },
             vertexShader: VERTEX,
             fragmentShader: FRAGMENT,
@@ -123,13 +130,26 @@ export class MobiusScene {
         this.group.visible = false;
         this.scene.add(this.group);
         this.speed = settings.textSpeed;
-        this.applyRest();
+        this.setSettings(settings);
+        this.applyRest(true);
     }
 
     setSettings(settings: StageSettings): void {
-        (this.material.uniforms.uOuter!.value as Color).set(settings.colorOuter);
-        (this.material.uniforms.uInner!.value as Color).set(settings.colorInner);
+        const u = this.material.uniforms;
+        (u.uOuter!.value as Color).set(settings.colorOuter);
+        (u.uInner!.value as Color).set(settings.colorInner);
         this.speed = settings.textSpeed;
+        // Smaller text → more tiles; always a whole number over two laps so the text joins seamlessly.
+        u.uTextScale!.value = settings.textScale;
+        u.uRepeat!.value = Math.max(1, Math.round(this.laps / settings.textScale)) / 2;
+        const rad = Math.PI / 180;
+        this.place = {
+            x: settings.posX,
+            y: settings.posY,
+            tilt: settings.tilt * rad,
+            turn: settings.turn * rad,
+            roll: settings.roll * rad,
+        };
     }
 
     resize(width: number, height: number, dpr: number): void {
@@ -146,7 +166,8 @@ export class MobiusScene {
      * ring (at rest) lands inside the allowed frame. Exact for any aspect.
      */
     private fitCamera(): void {
-        this.applyRest();
+        // Fit the untransformed ring, so palette moves don't change the zoom.
+        this.applyRest(false);
         this.group.updateMatrixWorld(true);
         const position = this.mesh.geometry.getAttribute('position') as BufferAttribute;
         const points: Vector3[] = [];
@@ -177,12 +198,16 @@ export class MobiusScene {
         this.camera.updateProjectionMatrix();
     }
 
-    /** Pop up from underneath (when the :D lands). */
+    /** Slam in from underneath on the frame the :D lands. */
     appear(): void {
         this.group.visible = true;
+        this.lift.snap(-0.9);
+        this.grow.snap(0.55);
         this.lift.set(0);
         this.grow.set(1);
-        this.tilt.kick(1.4);
+        this.lift.kick(9);
+        this.grow.kick(5);
+        this.tilt.kick(1.6);
     }
 
     /** Something landed on/in the ring: it dips and rocks. */
@@ -195,7 +220,7 @@ export class MobiusScene {
 
     /** Screen-space ellipse of the ring's opening, at rest. */
     restHole(): Hole {
-        this.applyRest();
+        this.applyRest(true);
         this.group.updateMatrixWorld(true);
         // Measured along the top of the bar: that rim is what frames the opening on screen.
         const project = (x: number, z: number) => {
@@ -223,10 +248,11 @@ export class MobiusScene {
         this.tilt.update(dt);
 
         const sway = reducedMotion ? 0 : 1;
-        this.group.position.y = this.lift.value + Math.sin(this.time * 0.9) * 0.05 * sway;
+        const p = this.place;
+        this.group.position.set(p.x, p.y + this.lift.value + Math.sin(this.time * 0.9) * 0.05 * sway, 0);
         this.group.scale.setScalar(Math.max(0.001, this.grow.value));
-        this.group.rotation.set(this.tilt.value, 0, ROLL + Math.sin(this.time * 0.37) * 0.02 * sway);
-        this.mesh.rotation.y = Math.PI + Math.sin(this.time * 0.23) * 0.06 * sway;
+        this.group.rotation.set(p.tilt + this.tilt.value, 0, ROLL + p.roll + Math.sin(this.time * 0.37) * 0.02 * sway);
+        this.mesh.rotation.y = Math.PI + p.turn + Math.sin(this.time * 0.23) * 0.06 * sway;
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -237,10 +263,12 @@ export class MobiusScene {
         this.renderer.dispose();
     }
 
-    private applyRest(): void {
-        this.group.position.set(0, 0, 0);
+    /** The ring at rest, with or without the palette's placement. */
+    private applyRest(withPlacement: boolean): void {
+        const p = withPlacement ? this.place : { x: 0, y: 0, tilt: 0, turn: 0, roll: 0 };
+        this.group.position.set(p.x, p.y, 0);
         this.group.scale.setScalar(1);
-        this.group.rotation.set(0, 0, ROLL);
-        this.mesh.rotation.set(0, Math.PI, 0);
+        this.group.rotation.set(p.tilt, 0, ROLL + p.roll);
+        this.mesh.rotation.set(0, Math.PI + p.turn, 0);
     }
 }

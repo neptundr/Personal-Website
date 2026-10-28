@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import {
-    TEXT_SPEED_MAX,
+    RANGES,
     getServerSettings,
     getSettings,
     resetSettings,
     subscribeSettings,
     updateSettings,
+    type StageSettings,
 } from './settings';
 // @ts-ignore
 import './dev.css';
@@ -16,6 +17,65 @@ import './dev.css';
 // build with ?dev in the URL. Toggle with the tab or the \ key.
 
 const TOGGLE_KEY = '\\';
+
+type ColorField = { readonly key: 'colorOuter' | 'colorInner' | 'bg'; readonly label: string };
+type SliderField = { readonly key: keyof typeof RANGES; readonly label: string; readonly unit?: string };
+
+const COLORS: readonly ColorField[] = [
+    { key: 'colorOuter', label: 'Ribbon A' },
+    { key: 'colorInner', label: 'Ribbon B' },
+    { key: 'bg', label: 'Background' },
+];
+
+const SECTIONS: ReadonlyArray<{ readonly title: string; readonly fields: readonly SliderField[] }> = [
+    {
+        title: 'Text',
+        fields: [
+            { key: 'textSpeed', label: 'Speed' },
+            { key: 'textScale', label: 'Size' },
+        ],
+    },
+    {
+        title: 'Ring position',
+        fields: [
+            { key: 'posX', label: 'X' },
+            { key: 'posY', label: 'Y' },
+        ],
+    },
+    {
+        title: 'Ring rotation',
+        fields: [
+            { key: 'tilt', label: 'Tilt', unit: '°' },
+            { key: 'turn', label: 'Turn', unit: '°' },
+            { key: 'roll', label: 'Roll', unit: '°' },
+        ],
+    },
+];
+
+function Slider({ field, settings }: { field: SliderField; settings: StageSettings }) {
+    const range = RANGES[field.key];
+    const value = settings[field.key];
+    const digits = range.step < 1 ? 2 : 0;
+    return (
+        <label className="v2-dev__row v2-dev__row--stack">
+            <span>
+                {field.label}{' '}
+                <output>
+                    {value.toFixed(digits)}
+                    {field.unit ?? ''}
+                </output>
+            </span>
+            <input
+                type="range"
+                min={range.min}
+                max={range.max}
+                step={range.step}
+                value={value}
+                onChange={(e) => updateSettings({ [field.key]: Number(e.target.value) })}
+            />
+        </label>
+    );
+}
 
 export default function DevPanel() {
     const [enabled, setEnabled] = useState(false);
@@ -42,38 +102,26 @@ export default function DevPanel() {
                 palette
             </button>
             <div className="v2-dev__panel">
-                <p className="v2-dev__title">Stage</p>
-                <label className="v2-dev__row">
-                    <span>Ribbon A</span>
-                    <input
-                        type="color"
-                        value={settings.colorOuter}
-                        onChange={(e) => updateSettings({ colorOuter: e.target.value })}
-                    />
-                    <code>{settings.colorOuter}</code>
-                </label>
-                <label className="v2-dev__row">
-                    <span>Ribbon B</span>
-                    <input
-                        type="color"
-                        value={settings.colorInner}
-                        onChange={(e) => updateSettings({ colorInner: e.target.value })}
-                    />
-                    <code>{settings.colorInner}</code>
-                </label>
-                <label className="v2-dev__row v2-dev__row--stack">
-                    <span>
-                        Text speed <output>{settings.textSpeed.toFixed(2)}</output>
-                    </span>
-                    <input
-                        type="range"
-                        min={0}
-                        max={TEXT_SPEED_MAX}
-                        step={0.01}
-                        value={settings.textSpeed}
-                        onChange={(e) => updateSettings({ textSpeed: Number(e.target.value) })}
-                    />
-                </label>
+                <p className="v2-dev__title">Colours</p>
+                {COLORS.map((field) => (
+                    <label key={field.key} className="v2-dev__row">
+                        <span>{field.label}</span>
+                        <input
+                            type="color"
+                            value={settings[field.key]}
+                            onChange={(e) => updateSettings({ [field.key]: e.target.value })}
+                        />
+                        <code>{settings[field.key]}</code>
+                    </label>
+                ))}
+                {SECTIONS.map((section) => (
+                    <div key={section.title} className="v2-dev__group">
+                        <p className="v2-dev__title">{section.title}</p>
+                        {section.fields.map((field) => (
+                            <Slider key={field.key} field={field} settings={settings} />
+                        ))}
+                    </div>
+                ))}
                 <button type="button" className="v2-dev__reset" onClick={resetSettings}>
                     Reset
                 </button>

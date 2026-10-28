@@ -1,8 +1,9 @@
 import type { CSSProperties, MutableRefObject, RefObject } from 'react';
 
-// ":Denis Web" + progress. The ":D" isn't text: it's an empty slot sized like
-// two glyphs, and the live face sits in it from the very first frame, so
-// when loading ends the same face simply wakes up and hops away.
+// ":Denis Web" + progress. The ":D" is real but invisible text: it holds the
+// exact space, and the live face (made of the same font's characters) sits
+// on its baseline from the very first frame, so when loading ends the same
+// characters simply wake up, turn into a face and hop away.
 
 const REST = 'enis Web';
 const DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
@@ -27,7 +28,10 @@ export default function Loader({ rootRef, slotRef, barRef, digitRefs }: LoaderPr
             aria-valuenow={0}
         >
             <p className="v2-loader__word" aria-label=":Denis Web">
-                <span ref={slotRef} className="v2-loader__slot" aria-hidden="true" />
+                <span ref={slotRef} className="v2-loader__slot" aria-hidden="true">
+                    <span data-baseline="" className="v2-loader__baseline" />
+                    :D
+                </span>
                 <span className="v2-loader__rest" aria-hidden="true">
                     {Array.from(REST).map((ch, i) => (
                         <span key={i} className="v2-loader__char" style={{ '--i': i } as CSSProperties}>

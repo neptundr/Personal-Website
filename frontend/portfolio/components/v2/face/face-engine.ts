@@ -1,41 +1,50 @@
 import { Spring, SPRINGS } from '../lib/spring';
-import { clamp, easeInCubic, easeInOutCubic, lerp, progress, randRange } from '../lib/math';
-import { EXPRESSIONS, EYE_X, EYE_Y, bowlPath, lidPath, type EyeShape, type ExpressionName } from './expressions';
+import { clamp, easeInCubic, easeInOutCubic, easeOutCubic, lerp, progress, randRange } from '../lib/math';
+import {
+    EXPRESSIONS,
+    EYE_UPRIGHT,
+    FACE_FONT_SIZE,
+    FACE_LETTER_SPACING,
+    type ExpressionName,
+} from './expressions';
 import { Floaters } from './floaters';
 import type { FaceSignal } from './face-bus';
 
-// The :D's brain and body. Every visible quantity (position, size, tilt,
-// squash, nod, each eye, the mouth) is a spring, so any state can flow into
-// any other and every change overshoots a little: that is the "juice".
+// The :D's brain and body. The face itself is three characters of the site
+// font (two eyes, a mouth), laid out exactly like the text ":D". Changing
+// expression swaps characters with a pop: dip, swap at the bottom, overshoot.
+// The body (position, size, tilt, squash, nod) is all springs, so every move
+// overshoots a little: that's the "juice".
 //
 // Behaviour runs in layers, highest first:
 //   body     intro hop, dive & fall, being held, being thrown
-//   reaction spin, nod, :O, $-eyes, petting, flick-chase, "hi!"
+//   reaction spin, nod, :O, $-eyes, petting, "hi!"
 //   mood     bored → yawning → asleep (z z z)
 //   idle     wander, blinks, glances, random expressions, eye tracking
 //
 // Timed steps go through a tiny scheduler; starting a new reaction bumps the
 // `sequence` so the previous one's pending steps quietly drop.
 
-export interface EyeElements {
-    readonly group: SVGGElement;
-    readonly dot: SVGEllipseElement;
-    readonly happy: SVGPathElement;
-    readonly glyph: SVGTextElement;
-}
-
 export interface FaceElements {
     /** Wrapper that gets the hole clip while diving. */
     readonly clip: SVGGElement;
     readonly clipShape: SVGEllipseElement;
     readonly root: SVGGElement;
-    readonly eyes: readonly [EyeElements, EyeElements];
-    readonly bowl: SVGPathElement;
-    readonly lid: SVGPathElement;
+    readonly eyes: readonly [SVGTextElement, SVGTextElement];
+    readonly mouth: SVGTextElement;
     readonly floaters: readonly SVGTextElement[];
 }
 
-/** Placement of the face; `size` is pixels per 100 face units, `rot` in degrees. */
+/** Ink bounds of a character relative to its text origin (alphabetic baseline). */
+interface GlyphBox {
+    readonly x: number;
+    readonly y: number;
+    readonly w: number;
+    readonly h: number;
+    readonly advance: number;
+}
+
+/** Placement of the face; `size` is the font size in px, `rot` in degrees (0 = reads as text). */
 export interface Pose {
     readonly x: number;
     readonly y: number;
@@ -59,7 +68,12 @@ export interface FaceCallbacks {
 }
 
 type Mode = 'loader' | 'intro' | 'tween' | 'live' | 'held' | 'thrown' | 'fall';
-type Reaction = 'spin' | 'nod' | 'ooh' | 'chase' | 'hi';
+type Reaction = 'spin' | 'nod' | 'ooh' | 'hi';
+
+interface Point {
+    readonly x: number;
+    readonly y: number;
+}
 
 interface Task {
     readonly at: number;
@@ -82,25 +96,37 @@ interface Tween {
     readonly done: () => void;
 }
 
+/** Where the colon's dots and the mouth sit, measured from the real font. */
+interface Layout {
+    readonly lowerEye: Point;
+    readonly upperEye: Point;
+    readonly mouthX: number;
+    readonly centre: Point;
+    readonly radius: number;
+}
+
 const ALWAYS = -1;
 const HOME_EXPRESSION: ExpressionName = 'grin';
-const IDLE_MOODS: readonly ExpressionName[] = ['smile', 'beam', 'wink', 'curious', 'content'];
+const IDLE_MOODS: readonly ExpressionName[] = ['smile', 'beam', 'wink', 'curious', 'content', 'tongue', 'cat'];
+const REPLIES = ['hey!', 'ouch!', 'oof!', 'ow!', 'easy!'] as const;
 
-const COOLDOWN = 5;
+/** Minimum gap between two plays of the same hover reaction, seconds. */
+const COOLDOWN = 2.5;
 const BORED_AFTER = 11;
 const SLEEP_AFTER = 30;
 const YAWN_GAP = [6, 9] as const;
 const IDLE_GAP = [4.5, 8.5] as const;
 const BLINK_GAP = [2, 5.2] as const;
+const BLINK_HOLD = 0.07;
+/** Quick blinks squash the eye flat and spring back; "-" is only for eyes that stay shut. */
+const BLINK_SQUASH = 0.08;
 const Z_GAP = 1.15;
-const LOOK_RANGE = 5;
-const CHASE_LOOK_RANGE = 10;
+/** How far eyes shift towards the cursor, face units. */
+const LOOK_RANGE = 3.5;
 
 /** Pointer travel over the face (px, decaying) that counts as petting. */
 const RUB_TO_PET = 320;
 const RUB_DECAY = 2.5;
-/** Cursor speed (px/s) that counts as a flick. */
-const FLICK_SPEED = 2800;
 const DRAG_THRESHOLD = 6;
 const THROW_DRAG = 1.3;
 const THROW_MAX = 3800;
@@ -113,35 +139,65 @@ const GRAVITY = 9000;
 const FALL_KICK = 900;
 /** $-eyes switch off/on this many times, ending on $. */
 const MONEY_SWITCHES = 6;
+/** Glyph pop: dip to this scale, swap the character once below SWAP_AT. */
+const POP_DIP = 0.45;
+const SWAP_AT = 0.6;
+/** Eyes that aren't colon dots (^ $ × -) move this much further apart… */
+const GLYPH_EYE_SPREAD = 1.55;
+/** …and are scaled to fill this share of the gap between eye centres. */
+const GLYPH_EYE_FILL = 0.92;
 
 const f = (n: number): string => n.toFixed(2);
 
-class EyeSprings {
-    readonly rx = new Spring(7.5, SPRINGS.juicy);
-    readonly ry = new Spring(7.5, SPRINGS.juicy);
-    readonly happy = new Spring(0, SPRINGS.juicy);
-    readonly glyph = new Spring(0, SPRINGS.juicy);
-    readonly y = new Spring(0, SPRINGS.juicy);
-    readonly lookX = new Spring(0, SPRINGS.snappy);
-    readonly lookY = new Spring(0, SPRINGS.snappy);
-    shape: EyeShape = EXPRESSIONS.grin.eyes;
+/** One character of the face, swapped with a pop. */
+class Glyph {
+    readonly pop = new Spring(1, SPRINGS.juicy);
+    char: string;
+    private pending: string | null = null;
 
-    all(): Spring[] {
-        return [this.rx, this.ry, this.happy, this.glyph, this.y, this.lookX, this.lookY];
+    constructor(
+        private readonly node: SVGTextElement,
+        char: string,
+    ) {
+        this.char = char;
+        node.textContent = char;
     }
 
-    apply(shape: EyeShape): void {
-        this.shape = shape;
-        this.rx.set(shape.rx);
-        this.ry.set(shape.ry);
-        this.happy.set(shape.happy);
-        this.glyph.set(shape.glyph);
-        this.y.set(shape.y);
+    /** Swap the character, with a pop (dip, swap, overshoot) or instantly (blinks). */
+    set(char: string, pop = true): void {
+        if (!pop) {
+            this.pending = null;
+            this.write(char);
+            return;
+        }
+        if (char === this.char) {
+            if (this.pending !== null) {
+                this.pending = null;
+                this.pop.set(1);
+            }
+            return;
+        }
+        this.pending = char;
+        this.pop.set(POP_DIP);
     }
 
-    look(x: number, y: number): void {
-        this.lookX.set(x);
-        this.lookY.set(y);
+    /** The character it's heading to (for decisions that shouldn't wait for the pop). */
+    get target(): string {
+        return this.pending ?? this.char;
+    }
+
+    update(dt: number): void {
+        this.pop.update(dt);
+        if (this.pending !== null && this.pop.value <= SWAP_AT) {
+            this.write(this.pending);
+            this.pending = null;
+            this.pop.set(1);
+        }
+    }
+
+    private write(char: string): void {
+        this.char = char;
+        this.node.textContent = char;
     }
 }
 
@@ -152,27 +208,27 @@ export class FaceEngine {
     private readonly x = new Spring(0, SPRINGS.soft);
     private readonly y = new Spring(0, SPRINGS.soft);
     private readonly size = new Spring(100, SPRINGS.snappy);
-    private readonly rot = new Spring(-90, SPRINGS.snappy);
+    private readonly rot = new Spring(0, SPRINGS.snappy);
     private readonly sx = new Spring(1, SPRINGS.wobble);
     private readonly sy = new Spring(1, SPRINGS.wobble);
     private readonly nod = new Spring(0, SPRINGS.nod);
-    private readonly eyes = [new EyeSprings(), new EyeSprings()] as const;
-    private readonly mouth = {
-        w: new Spring(30, SPRINGS.juicy),
-        depth: new Spring(40, SPRINGS.juicy),
-        arch: new Spring(0, SPRINGS.juicy),
-        round: new Spring(0.86, SPRINGS.juicy),
-        thick: new Spring(11, SPRINGS.juicy),
-        y: new Spring(0, SPRINGS.juicy),
-        bowl: new Spring(1, SPRINGS.juicy),
-        lid: new Spring(1, SPRINGS.juicy),
-    };
+    private readonly lookX = new Spring(0, SPRINGS.snappy);
+    private readonly lookY = new Spring(0, SPRINGS.snappy);
+    private readonly mouthScale = new Spring(1, SPRINGS.juicy);
+    private readonly blinkSquash = new Spring(1, { stiffness: 1400, damping: 30 });
+    private readonly eyeSpread = new Spring(1, SPRINGS.juicy);
     private readonly springs: readonly Spring[];
+    private readonly eyes: readonly [Glyph, Glyph];
+    private readonly mouth: Glyph;
     private readonly floaters: Floaters;
+    private readonly glyphCentres = new Map<string, Point>();
+    private readonly glyphBoxes = new Map<string, GlyphBox | null>();
+    /** SVG getBBox() reports the em box, not the ink, so glyphs are measured on a canvas. */
+    private readonly metrics = document.createElement('canvas').getContext('2d');
+    private layout: Layout;
 
     private expression: ExpressionName = HOME_EXPRESSION;
-    private glyphChar = '';
-    private home: Pose = { x: 0, y: 0, size: 100, rot: -14 };
+    private home: Pose = { x: 0, y: 0, size: 100, rot: 76 };
     private hole: Hole | null = null;
     private spin = 0;
     private busyUntil = 0;
@@ -182,6 +238,7 @@ export class FaceEngine {
     private money = false;
     private petting = false;
     private clipped = false;
+    private fallIsIntro = false;
     private nextIdle = 0;
     private nextBlink = 1.2;
     private nextYawn = 0;
@@ -189,15 +246,14 @@ export class FaceEngine {
     private nextWiggle = 0;
     private nextHeart = 0;
     private wiggleSide = 1;
-    private chasingUntil = 0;
     private rub = 0;
+    private lastReply = '';
     private readonly cooldowns = new Map<Reaction, number>();
 
     private pointerX = 0;
     private pointerY = 0;
     private pointerAt = -1e9;
-    private pointerStamp = 0;
-    private pressed: { x: number; y: number } | null = null;
+    private pressed: Point | null = null;
     private grabX = 0;
     private grabY = 0;
     private velX = 0;
@@ -213,15 +269,18 @@ export class FaceEngine {
         private readonly el: FaceElements,
         private readonly callbacks: FaceCallbacks,
         private readonly reducedMotion: boolean,
+        /** CSS font-family list of the site font, for measuring glyphs. */
+        private readonly fontFamily: string,
     ) {
+        const grin = EXPRESSIONS[HOME_EXPRESSION];
+        this.eyes = [new Glyph(el.eyes[0], grin.eyes[0]), new Glyph(el.eyes[1], grin.eyes[1])];
+        this.mouth = new Glyph(el.mouth, grin.mouth);
         this.springs = [
             this.x, this.y, this.size, this.rot, this.sx, this.sy, this.nod,
-            ...this.eyes.flatMap((e) => e.all()),
-            ...Object.values(this.mouth),
+            this.lookX, this.lookY, this.mouthScale, this.eyeSpread, this.blinkSquash,
         ];
         this.floaters = new Floaters(el.floaters);
-        this.express(HOME_EXPRESSION, false);
-        this.springs.forEach((s) => s.snap(s.target));
+        this.layout = this.measure();
     }
 
     // ─── Public API ────────────────────────────────────────────────────────
@@ -234,7 +293,37 @@ export class FaceEngine {
         return this.mode === 'held';
     }
 
-    /** Jump to a pose instantly (the loader keeps the face glued to its text). */
+    /** Re-read glyph metrics (call once the font has loaded). */
+    remeasure(): void {
+        this.glyphCentres.clear();
+        this.glyphBoxes.clear();
+        this.layout = this.measure();
+    }
+
+    /** Outline width in screen pixels for every face character and floating word. */
+    setOutline(px: number): void {
+        const nodes = [...this.el.eyes, this.el.mouth, ...this.el.floaters];
+        nodes.forEach((node) => {
+            node.setAttribute('stroke', '#000');
+            node.setAttribute('stroke-width', f(Math.max(0, px)));
+            node.setAttribute('stroke-linejoin', 'round');
+            node.setAttribute('paint-order', 'stroke fill');
+            node.setAttribute('vector-effect', 'non-scaling-stroke');
+        });
+    }
+
+    /** Pin the face so its ":D" sits exactly where text starting at (left, baseline) would. */
+    placeAsText(left: number, baseline: number, fontSize: number): void {
+        const k = fontSize / FACE_FONT_SIZE;
+        this.placeAt({
+            x: left + this.layout.centre.x * k,
+            y: baseline + this.layout.centre.y * k,
+            size: fontSize,
+            rot: 0,
+        });
+    }
+
+    /** Jump to a pose instantly. */
     placeAt(pose: Pose): void {
         this.x.snap(pose.x);
         this.y.snap(pose.y);
@@ -248,27 +337,21 @@ export class FaceEngine {
     }
 
     isOver(x: number, y: number): boolean {
-        return Math.hypot(x - this.x.value, y - this.y.value) < this.size.value * 0.5;
+        const k = this.size.value / FACE_FONT_SIZE;
+        return Math.hypot(x - this.x.value, y - this.y.value) < this.layout.radius * k;
     }
 
-    /** Pointer moved: eye tracking, petting, flick detection, dragging. */
+    /** Pointer moved: eye tracking, petting, dragging. */
     pointer(x: number, y: number): void {
-        const now = performance.now();
-        const elapsed = now - this.pointerStamp;
         const dist = Math.hypot(x - this.pointerX, y - this.pointerY);
-        const speed = elapsed > 0 && elapsed < 120 ? (dist / elapsed) * 1000 : 0;
-        this.pointerStamp = now;
         this.pointerX = x;
         this.pointerY = y;
         this.pointerAt = this.time;
-
         if (this.pressed && Math.hypot(x - this.pressed.x, y - this.pressed.y) > DRAG_THRESHOLD) {
             this.grab();
             return;
         }
-        if (this.mode !== 'live') return;
-        if (!this.pressed && this.isOver(x, y)) this.rub += dist;
-        if (speed > FLICK_SPEED) this.chase();
+        if (this.mode === 'live' && !this.pressed && this.isOver(x, y)) this.rub += dist;
     }
 
     /** Press on the face: becomes a click (dive) or a drag (grab & throw). */
@@ -333,7 +416,11 @@ export class FaceEngine {
         this.after(1.7, () => this.express(HOME_EXPRESSION), seq);
     }
 
-    /** Loader done: wake up, beam, and hop over into the ring. */
+    /**
+     * Loader done: the ":D" wakes up and turns upright into a face, crouches,
+     * launches off the top of the screen, and drops into place exactly like
+     * after a click, with the ring slamming in on the same frame it lands.
+     */
     beginIntro(): void {
         if (this.mode !== 'loader') return;
         this.mode = 'intro';
@@ -349,21 +436,20 @@ export class FaceEngine {
         this.sy.kick(-3);
         this.sx.kick(2);
         this.after(0.12, () => this.express('beam'), seq);
-        this.after(0.85, () => this.anticipate(0.7), seq);
-        this.after(1.02, () =>
+        this.after(0.8, () => this.anticipate(0.8), seq);
+        this.after(0.95, () => {
+            this.sy.set(1);
+            this.sx.set(1);
+            this.sy.kick(7);
+            this.express('ooh');
             this.startTween({
-                to: this.home,
-                duration: 0.78,
-                apex: this.home.size * 1.6,
-                ease: (t) => t,
-                done: () => {
-                    this.land(1.3);
-                    this.express(HOME_EXPRESSION);
-                    this.goLive();
-                    this.callbacks.onLanded();
-                },
-            }),
-        seq);
+                to: { x: this.x.value, y: -this.home.size * 1.4, size: this.home.size, rot: 0 },
+                duration: 0.38,
+                apex: 0,
+                ease: easeOutCubic,
+                done: () => this.startFall(true),
+            });
+        }, seq);
     }
 
     update(dt: number): void {
@@ -377,8 +463,76 @@ export class FaceEngine {
         else if (this.mode === 'live') this.updateLive();
         else if (this.time >= this.nextBlink) this.autoBlink();
         for (const s of this.springs) s.update(dt);
+        this.eyes.forEach((g) => g.update(dt));
+        this.mouth.update(dt);
+        // Blinks ("-") keep the colon's spacing; real glyph eyes spread out.
+        const glyphEyes = this.eyes.some((g) => g.target !== '.');
+        this.eyeSpread.set(glyphEyes ? GLYPH_EYE_SPREAD : 1);
         this.floaters.update(dt);
         this.render();
+    }
+
+    // ─── Glyph metrics ─────────────────────────────────────────────────────
+
+    /** Ink box of a character at FACE_FONT_SIZE, or null if it can't be measured yet. */
+    private glyphBox(char: string): GlyphBox | null {
+        if (this.glyphBoxes.has(char)) return this.glyphBoxes.get(char) ?? null;
+        const ctx = this.metrics;
+        if (!ctx) return null;
+        ctx.font = `800 ${FACE_FONT_SIZE}px ${this.fontFamily}`;
+        const m = ctx.measureText(char);
+        const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+        const h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+        const box = w <= 0 && h <= 0 ? null : { x: -m.actualBoundingBoxLeft, y: -m.actualBoundingBoxAscent, w, h, advance: m.width };
+        this.glyphBoxes.set(char, box);
+        return box;
+    }
+
+    /** Scale that makes a character's ink fit inside `slot` face units (never enlarges). */
+    private glyphFit(char: string, slot: number): number {
+        const b = this.glyphBox(char);
+        if (!b) return 0.6;
+        return Math.min(1, slot / Math.max(b.w, b.h, 1));
+    }
+
+    /** Ink centre of a character, relative to its text origin. */
+    private glyphCentre(char: string): Point {
+        const cached = this.glyphCentres.get(char);
+        if (cached) return cached;
+        const b = this.glyphBox(char);
+        const centre: Point = b ? { x: b.x + b.w / 2, y: b.y + b.h / 2 } : { x: FACE_FONT_SIZE * 0.25, y: -FACE_FONT_SIZE * 0.35 };
+        this.glyphCentres.set(char, centre);
+        return centre;
+    }
+
+    /** Lays the face out exactly like the text ":D", using the font's own metrics. */
+    private measure(): Layout {
+        const colon = this.glyphBox(':');
+        const dot = this.glyphBox('.');
+        const d = this.glyphBox('D');
+        if (!colon || !dot || !d || colon.h === 0) {
+            // Font not laid out yet: sensible estimates for a heavy sans.
+            return {
+                lowerEye: { x: 13, y: -8 },
+                upperEye: { x: 13, y: -45 },
+                mouthX: 26 + FACE_LETTER_SPACING,
+                centre: { x: 46, y: -35 },
+                radius: 55,
+            };
+        }
+        const eyeX = colon.x + colon.w / 2;
+        const mouthX = colon.advance + FACE_LETTER_SPACING;
+        const left = colon.x;
+        const right = mouthX + d.x + d.w;
+        const top = Math.min(colon.y, d.y);
+        const bottom = Math.max(colon.y + colon.h, d.y + d.h);
+        return {
+            lowerEye: { x: eyeX, y: colon.y + colon.h - dot.h / 2 },
+            upperEye: { x: eyeX, y: colon.y + dot.h / 2 },
+            mouthX,
+            centre: { x: (left + right) / 2, y: (top + bottom) / 2 },
+            radius: Math.max(right - left, bottom - top) * 0.6,
+        };
     }
 
     // ─── Expressions & small gestures ──────────────────────────────────────
@@ -387,23 +541,10 @@ export class FaceEngine {
         const e = EXPRESSIONS[name];
         const changed = name !== this.expression;
         this.expression = name;
-        this.eyes[0].apply(e.eyes);
-        this.eyes[1].apply(e.rightEye ?? e.eyes);
-        if (e.glyph && e.glyph !== this.glyphChar) {
-            this.glyphChar = e.glyph;
-            this.el.eyes.forEach((eye) => {
-                eye.glyph.textContent = e.glyph ?? '';
-            });
-        }
-        const m = this.mouth;
-        m.w.set(e.mouth.w);
-        m.depth.set(e.mouth.depth);
-        m.arch.set(e.mouth.arch);
-        m.round.set(e.mouth.round);
-        m.thick.set(e.mouth.thick);
-        m.y.set(e.mouth.y);
-        m.bowl.set(e.mouth.bowl);
-        m.lid.set(e.mouth.lid);
+        this.eyes[0].set(e.eyes[0]);
+        this.eyes[1].set(e.eyes[1]);
+        this.mouth.set(e.mouth);
+        this.mouthScale.set(e.mouthScale ?? 1);
         if (kick && changed && !this.reducedMotion) {
             this.sy.kick(-2.4);
             this.sx.kick(1.8);
@@ -417,18 +558,24 @@ export class FaceEngine {
         this.floaters.spawn(text, this.x.value + size * 0.42, this.y.value - size * 0.55, size * scale, motion);
     }
 
+    /** A different reply each time it gets bumped. */
+    private reply(): string {
+        const options = REPLIES.filter((r) => r !== this.lastReply);
+        const pick = options[Math.floor(Math.random() * options.length)] ?? 'hey!';
+        this.lastReply = pick;
+        return pick;
+    }
+
+    /** A quick blink: eyes squash flat and spring back (no character swap). */
     private blink(): void {
-        this.eyes.forEach((e) => {
-            if (e.shape.happy > 0.5 || e.shape.glyph > 0.5 || e.shape.ry < 3.5) return;
-            e.ry.set(1);
-            e.rx.set(e.shape.rx * 1.15);
-        });
-        this.after(0.09, () => this.eyes.forEach((e) => e.apply(e.shape)), ALWAYS);
+        if (this.eyes.some((g) => g.target === '-' || g.target === '^')) return;
+        this.blinkSquash.set(BLINK_SQUASH);
+        this.after(BLINK_HOLD, () => this.blinkSquash.set(1), ALWAYS);
     }
 
     private autoBlink(): void {
         this.blink();
-        if (Math.random() < 0.22) this.after(0.2, () => this.blink(), ALWAYS);
+        if (Math.random() < 0.22) this.after(0.22, () => this.blink(), ALWAYS);
         this.nextBlink = this.time + randRange(BLINK_GAP[0], BLINK_GAP[1]);
     }
 
@@ -497,7 +644,7 @@ export class FaceEngine {
         this.after(1.15, () => this.express(HOME_EXPRESSION), seq);
     }
 
-    /** $-eyes that swap off and on three times (each swap hidden in a blink), ending on $. */
+    /** $-eyes that pop off and on three times, ending on $. */
     private setMoney(on: boolean): void {
         if (on === this.money) return;
         this.money = on;
@@ -513,28 +660,9 @@ export class FaceEngine {
         this.express('money');
         this.hop(0.5);
         for (let i = 1; i <= MONEY_SWITCHES; i++) {
-            const glyph = i % 2 === 1 ? 0 : 1;
-            this.after(0.32 + (i - 1) * 0.2, () => {
-                this.eyes.forEach((e) => e.ry.set(1.2));
-                this.after(0.05, () => this.eyes.forEach((e) => e.apply({ ...e.shape, glyph })), seq);
-            }, seq);
+            const char = i % 2 === 1 ? '.' : '$';
+            this.after(0.32 + (i - 1) * 0.2, () => this.eyes.forEach((g) => g.set(char)), seq);
         }
-    }
-
-    /** A fast flick of the cursor: eyes try to keep up, then spin out. */
-    private chase(): void {
-        if (this.money || this.petting || !this.claim('chase')) return;
-        this.cancel();
-        const seq = this.sequence;
-        this.busyUntil = this.time + 2.2;
-        this.chasingUntil = this.time + 0.8;
-        this.express('ooh');
-        this.after(0.8, () => {
-            this.express('spiral');
-            this.sx.kick(4);
-            for (let i = 0; i < 4; i++) this.after(i * 0.14, () => this.rot.kick(i % 2 ? -220 : 220), seq);
-        }, seq);
-        this.after(2.0, () => this.express(HOME_EXPRESSION), seq);
     }
 
     // ─── Petting ───────────────────────────────────────────────────────────
@@ -653,7 +781,7 @@ export class FaceEngine {
         this.nextIdle = this.time + 4;
     }
 
-    /** Roused from boredom: a curious blink. */
+    /** Roused from boredom: a curious look. */
     private wake(): void {
         this.bored = false;
         this.cancel();
@@ -661,7 +789,6 @@ export class FaceEngine {
         this.busyUntil = this.time + 0.9;
         this.express('curious');
         this.hop(0.7);
-        this.blink();
         this.after(0.55, () => this.express(HOME_EXPRESSION), seq);
         this.nextIdle = this.time + 4;
     }
@@ -793,7 +920,7 @@ export class FaceEngine {
         this.busyUntil = this.time + 1.6;
         if (this.bounces > 0) {
             this.express('grumpy');
-            this.say('hey!', 0.24, { vy: -34, life: 1.4 });
+            this.say(this.reply(), 0.24, { vy: -34, life: 1.4 });
             this.after(1.4, () => this.express(HOME_EXPRESSION), seq);
         } else {
             this.express('beam');
@@ -816,14 +943,16 @@ export class FaceEngine {
             duration: 0.5,
             apex: this.home.size * 0.6,
             ease: easeInCubic,
-            done: () => this.startFall(),
+            done: () => this.startFall(false),
         });
     }
 
-    private startFall(): void {
+    /** Drop from above the screen onto home. The intro's drop lands dead centre. */
+    private startFall(intro: boolean): void {
         this.setClip(false);
         this.mode = 'fall';
-        const spread = this.hole ? this.hole.rx * 0.15 : 0;
+        this.fallIsIntro = intro;
+        const spread = this.hole && !intro ? this.hole.rx * 0.15 : 0;
         this.x.snap(this.home.x + randRange(-1, 1) * spread);
         this.y.snap(-this.home.size * 0.8);
         this.size.snap(this.home.size);
@@ -843,6 +972,14 @@ export class FaceEngine {
         }
         this.y.snap(this.home.y);
         this.mode = 'live';
+        if (this.fallIsIntro) {
+            // Ring first, so it's there to take the hit on the same frame.
+            this.callbacks.onLanded();
+            this.land(1.8);
+            this.express(HOME_EXPRESSION);
+            this.goLive();
+            return;
+        }
         this.land(1.6);
         this.express('dizzy');
         const seq = this.sequence;
@@ -904,7 +1041,6 @@ export class FaceEngine {
         const home = this.home;
         const hole = this.hole;
         const fresh = t - this.pointerAt < 3;
-        const chasing = t < this.chasingUntil;
 
         // Float around inside the ring, drawn slightly towards the cursor.
         const calm = this.sleeping ? 0.2 : this.bored ? 0.45 : 1;
@@ -921,7 +1057,7 @@ export class FaceEngine {
         this.x.set(tx);
         this.y.set(ty);
         this.size.set(home.size * (this.sleeping ? 0.92 : this.bored ? 0.95 : 1));
-        const lean = fresh ? clamp((this.pointerX - this.x.value) / 600, -1, 1) * (chasing ? 22 : 7) : 0;
+        const lean = fresh ? clamp((this.pointerX - this.x.value) / 600, -1, 1) * 7 : 0;
         this.rot.set(home.rot + this.spin + wx * 5 + lean);
 
         this.updateLook(fresh);
@@ -930,11 +1066,10 @@ export class FaceEngine {
         if (t >= this.nextBlink && !this.sleeping) this.autoBlink();
     }
 
-    /** Eyes track the cursor (in the face's own rotated frame), or glance around. */
+    /** Eyes shift towards the cursor, in the face's own (text) frame. */
     private updateLook(fresh: boolean): void {
         let lx: number;
         let ly: number;
-        const chasing = this.time < this.chasingUntil;
         if (fresh && !this.sleeping) {
             const dx = this.pointerX - this.x.value;
             const dy = this.pointerY - this.y.value;
@@ -942,14 +1077,15 @@ export class FaceEngine {
             const localX = dx * Math.cos(a) - dy * Math.sin(a);
             const localY = dx * Math.sin(a) + dy * Math.cos(a);
             const dist = Math.hypot(localX, localY) || 1;
-            const reach = chasing ? CHASE_LOOK_RANGE : Math.min(1, dist / 250) * LOOK_RANGE;
+            const reach = Math.min(1, dist / 250) * LOOK_RANGE;
             lx = (localX / dist) * reach;
-            ly = (localY / dist) * reach * 0.8;
+            ly = (localY / dist) * reach;
         } else {
-            lx = Math.sin(this.time * 0.5) * 2.5;
-            ly = Math.sin(this.time * 0.37) * 1.5 + (this.bored || this.sleeping ? 2 : 0);
+            lx = Math.sin(this.time * 0.37) * 1.2;
+            ly = Math.sin(this.time * 0.5) * 1.8;
         }
-        this.eyes.forEach((e) => e.look(lx, ly));
+        this.lookX.set(lx);
+        this.lookY.set(ly);
     }
 
     // ─── Scheduler ─────────────────────────────────────────────────────────
@@ -976,42 +1112,45 @@ export class FaceEngine {
     // ─── Render ────────────────────────────────────────────────────────────
 
     private render(): void {
-        const k = this.size.value / 100;
+        const k = this.size.value / FACE_FONT_SIZE;
+        const { centre, radius } = this.layout;
         const sx = this.sx.value;
         const sy = this.sy.value;
         const floating = this.mode === 'live' && !this.reducedMotion;
         const bob = floating ? Math.sin(this.time * (this.sleeping ? 0.9 : 1.9)) * 2.2 : 0;
         // Squash around the bottom of the face so landings read as weight.
-        const plant = (1 - sy) * 38 * k;
+        const plant = (1 - sy) * radius * 0.7 * k;
         const y = this.y.value + (this.nod.value + bob) * k + plant;
         this.el.root.setAttribute(
             'transform',
-            `translate(${f(this.x.value)} ${f(y)}) scale(${f(sx)} ${f(sy)}) rotate(${f(this.rot.value)}) scale(${f(k)})`,
+            `translate(${f(this.x.value)} ${f(y)}) scale(${f(sx)} ${f(sy)}) rotate(${f(this.rot.value)}) scale(${f(k)}) translate(${f(-centre.x)} ${f(-centre.y)})`,
         );
 
-        this.eyes.forEach((e, i) => {
+        const { lowerEye, upperEye, mouthX } = this.layout;
+        const midY = (lowerEye.y + upperEye.y) / 2;
+        const half = ((lowerEye.y - upperEye.y) / 2) * this.eyeSpread.value;
+        const slot = half * 2 * GLYPH_EYE_FILL;
+        [midY + half, midY - half].forEach((spotY, i) => {
+            const glyph = this.eyes[i === 0 ? 0 : 1];
             const node = this.el.eyes[i === 0 ? 0 : 1];
-            const side = i === 0 ? -1 : 1;
-            node.group.setAttribute('transform', `translate(${f(side * EYE_X + e.lookX.value)} ${f(EYE_Y + e.y.value + e.lookY.value)})`);
-            const happy = clamp(e.happy.value);
-            const glyph = clamp(e.glyph.value);
-            const keep = 1 - Math.max(happy, glyph);
-            node.dot.setAttribute('rx', f(Math.max(0.01, e.rx.value * keep)));
-            node.dot.setAttribute('ry', f(Math.max(0.01, e.ry.value * keep)));
-            node.happy.setAttribute('opacity', f(happy));
-            node.happy.setAttribute('transform', `scale(${f(Math.max(0, 0.4 + 0.6 * e.happy.value))})`);
-            node.glyph.setAttribute('opacity', f(glyph));
-            node.glyph.setAttribute('transform', `scale(${f(Math.max(0, 0.3 + 0.7 * e.glyph.value))})`);
+            const c = this.glyphCentre(glyph.char);
+            const dot = glyph.char === '.';
+            const turn = dot ? 0 : EYE_UPRIGHT;
+            const fit = dot ? 1 : this.glyphFit(glyph.char, slot);
+            node.setAttribute(
+                'transform',
+                // The blink squash is applied along the text's x axis, which is
+                // the face's vertical once it's turned upright.
+                `translate(${f(lowerEye.x + this.lookX.value)} ${f(spotY + this.lookY.value)}) scale(${f(Math.max(0.01, this.blinkSquash.value))} 1) rotate(${turn}) scale(${f(Math.max(0, glyph.pop.value * fit))}) translate(${f(-c.x)} ${f(-c.y)})`,
+            );
         });
 
-        const m = this.mouth;
-        const thick = f(Math.max(1, m.thick.value));
-        this.el.bowl.setAttribute('d', bowlPath(m.w.value, m.depth.value, m.round.value, m.y.value));
-        this.el.bowl.setAttribute('stroke-width', thick);
-        this.el.bowl.setAttribute('opacity', f(clamp(m.bowl.value)));
-        this.el.lid.setAttribute('d', lidPath(m.w.value, m.arch.value, m.y.value));
-        this.el.lid.setAttribute('stroke-width', thick);
-        this.el.lid.setAttribute('opacity', f(clamp(m.lid.value)));
+        const mc = this.glyphCentre(this.mouth.char);
+        const ms = Math.max(0, this.mouth.pop.value * this.mouthScale.value);
+        this.el.mouth.setAttribute(
+            'transform',
+            `translate(${f(mouthX + mc.x)} ${f(mc.y)}) scale(${f(ms)}) translate(${f(-mc.x)} ${f(-mc.y)})`,
+        );
 
         if (this.clipped && this.hole) {
             this.el.clipShape.setAttribute('cx', f(this.hole.cx));

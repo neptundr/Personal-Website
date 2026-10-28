@@ -3,6 +3,10 @@
 .v2-hero {
     position: relative;
     isolation: isolate;
+    /* Nothing in the hero is meant to be highlighted, incl. the loader's invisible ":D". */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
     height: 100svh;
     min-height: 32rem;
     overflow: hidden;
@@ -66,11 +70,16 @@
     white-space: nowrap;
 }
 
-/* Room for the live face, sized like ":D" sitting on the baseline. */
+/* Invisible ":D" that holds the space; the live face is drawn on top of it. */
 .v2-loader__slot {
+    color: transparent;
+}
+
+/* Zero-height inline-block: its top edge sits exactly on the baseline. */
+.v2-loader__baseline {
     display: inline-block;
-    width: 0.8em;
-    height: 0.7em;
+    width: 0;
+    height: 0;
 }
 
 .v2-loader__char {
