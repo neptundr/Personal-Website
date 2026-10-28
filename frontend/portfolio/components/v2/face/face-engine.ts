@@ -8,6 +8,7 @@ import {
     type ExpressionName,
 } from './expressions';
 import { Floaters, type FloatMotion } from './floaters';
+import { Arms, type ArmFrame, type ArmPaths } from './arms';
 import type { FaceSignal } from './face-bus';
 
 // The :D's brain and body. The face itself is three characters of the site
@@ -18,8 +19,8 @@ import type { FaceSignal } from './face-bus';
 //
 // Behaviour runs in layers, highest first:
 //   body     intro hop, dive & fall, being held, being thrown
-//   reaction spin, nod, :O, $-eyes, petting, "hi!"
-//   mood     bored → yawning → asleep (z z z)
+//   reaction spin, nod, :O, $-eyes, petting, "hi!" (+ a waving arm, off for now)
+//   mood     bored → yawning → asleep (z z z); asks to play; reaches for Hiring? (off for now)
 //   idle     wander, blinks, glances, random expressions, eye tracking
 //
 // Timed steps go through a tiny scheduler; starting a new reaction bumps the
@@ -35,6 +36,8 @@ export interface FaceElements {
     readonly eyes: readonly [SVGTextElement, SVGTextElement];
     readonly mouth: SVGTextElement;
     readonly floaters: readonly SVGTextElement[];
+    /** Viewer's left arm, viewer's right arm. */
+    readonly arms: readonly [ArmPaths, ArmPaths];
 }
 
 /** Ink bounds of a character relative to its text origin (alphabetic baseline). */
@@ -117,6 +120,22 @@ const FIRST_REQUEST = [6, 12] as const;
 /** …later ones are rare. */
 const REQUEST_GAP = [40, 75] as const;
 const REQUEST_RETRY = 1;
+/** The noodle arms (landing wave, reaching for Hiring?) are switched off for now. */
+const ARMS_ENABLED = false;
+/** Reaching for the Hiring? button is switched off for now. */
+const REACH_ENABLED = false;
+/** It tries to reach the Hiring? button: first in this window, then rarely. */
+const FIRST_REACH = [22, 30] as const;
+const REACH_GAP = [55, 90] as const;
+const REACH_TIME = 2.8;
+/** After landing: say hi, then (a beat later) wave; how long the arm stays out. */
+const HI_DELAY = 0.25;
+const WAVE_AFTER_HI = 0.55;
+const WAVE_TIME = 1.6;
+/** Arms start this far out along the mouth's width (1 = its ink edge), leaving a gap beside the face. */
+const ARM_SPREAD = 1.5;
+/** No reaching for Hiring? within this long (s) of the visitor hovering it. */
+const HIRE_HOVER_QUIET = 6;
 /** No request while the visitor has petted, grabbed or clicked it this recently, seconds. */
 const PLAY_QUIET = 20;
 /** No idle expression starts this close (seconds) before a request. */
@@ -248,6 +267,12 @@ export class FaceEngine {
     private readonly eyes: readonly [Glyph, Glyph];
     private readonly mouth: Glyph;
     private readonly floaters: Floaters;
+    private readonly arms: Arms;
+    private locateHiring: () => Point | null = () => null;
+    private nextReach = randRange(FIRST_REACH[0], FIRST_REACH[1]);
+    private lastHireHover = -Infinity;
+    /** Outline stroke width in face units (font size 100); everything the face makes matches it. */
+    private outlineUnits = 8;
     private readonly glyphCentres = new Map<string, Point>();
     private readonly glyphBoxes = new Map<string, GlyphBox | null>();
     /** SVG getBBox() reports the em box, not the ink, so glyphs are measured on a canvas. */
@@ -308,6 +333,7 @@ export class FaceEngine {
             this.lookX, this.lookY, this.mouthScale, this.eyeSpread, this.blinkSquash,
         ];
         this.floaters = new Floaters(el.floaters);
+        this.arms = new Arms(el.arms, reducedMotion);
         this.layout = this.measure();
     }
 
@@ -328,16 +354,30 @@ export class FaceEngine {
         this.layout = this.measure();
     }
 
-    /** Outline width in screen pixels for every face character and floating word. */
-    setOutline(px: number): void {
+    /** Finds the Hiring? button's centre (stage px), which the arms sometimes reach for. */
+    setHiringLocator(locate: () => Point | null): void {
+        this.locateHiring = locate;
+    }
+
+    /**
+     * Outline stroke width in face units (the face is drawn at font size 100,
+     * then scaled), so it grows with the face. Floating words and arms get the
+     * same width in pixels, so everything the face produces matches.
+     */
+    setOutline(units: number): void {
+        this.outlineUnits = Math.max(0, units);
         const nodes = [...this.el.eyes, this.el.mouth, ...this.el.floaters];
         nodes.forEach((node) => {
             node.setAttribute('stroke', '#000');
-            node.setAttribute('stroke-width', f(Math.max(0, px)));
             node.setAttribute('stroke-linejoin', 'round');
             node.setAttribute('paint-order', 'stroke fill');
-            node.setAttribute('vector-effect', 'non-scaling-stroke');
         });
+        [...this.el.eyes, this.el.mouth].forEach((node) => node.setAttribute('stroke-width', f(this.outlineUnits)));
+    }
+
+    /** The outline width in screen pixels at the face's current size. */
+    private outlinePx(): number {
+        return (this.outlineUnits * this.size.value) / FACE_FONT_SIZE;
     }
 
     /** Pin the face so its ":D" sits exactly where text starting at (left, baseline) would. */
@@ -483,6 +523,7 @@ export class FaceEngine {
                     this.land(1.8);
                     this.express(HOME_EXPRESSION);
                     this.goLive();
+                    this.after(HI_DELAY, () => this.sayHi(), this.sequence);
                 },
             });
         }, seq);
@@ -504,7 +545,11 @@ export class FaceEngine {
         // Blinks ("-") keep the colon's spacing; real glyph eyes spread out.
         const glyphEyes = this.eyes.some((g) => g.target !== '.');
         this.eyeSpread.set(glyphEyes ? GLYPH_EYE_SPREAD : 1);
+        this.floaters.outline = this.outlinePx();
         this.floaters.update(dt);
+        // Arms only come out while it's sitting in the ring.
+        if (this.mode !== 'live' && this.arms.active) this.arms.retract();
+        this.arms.update(dt, this.armFrame());
         this.render();
     }
 
@@ -688,12 +733,14 @@ export class FaceEngine {
         if (!on) {
             this.busyUntil = this.time + 0.4;
             this.express(HOME_EXPRESSION);
+            this.lastHireHover = this.time;
             return;
         }
         const seq = this.sequence;
         this.busyUntil = Infinity;
         this.stopPet();
         this.express('money');
+        this.lastHireHover = this.time;
         this.hop(0.5);
         for (let i = 0; i < MONEY_BLINKS; i++) {
             this.after(0.4 + i * MONEY_BLINK_GAP, () => this.blink(), seq);
@@ -759,6 +806,10 @@ export class FaceEngine {
             this.askToPlay();
             return;
         }
+        if (ARMS_ENABLED && REACH_ENABLED && this.time >= this.nextReach) {
+            this.reachForHire();
+            return;
+        }
         if (!this.bored && idle > BORED_AFTER) {
             this.bored = true;
             this.cancel();
@@ -773,6 +824,59 @@ export class FaceEngine {
         }
         // Keep the stage clear for an upcoming request.
         if (this.time >= this.nextIdle && this.nextRequest - this.time > REQUEST_CLEARANCE) this.idleExpression();
+    }
+
+    /** It spots the Hiring? button and flails its right arm at it, never quite reaching. */
+    private reachForHire(): void {
+        const target = this.locateHiring();
+        if (!target || this.mode !== 'live') {
+            this.nextReach = this.time + randRange(REACH_GAP[0], REACH_GAP[1]);
+            return;
+        }
+        // They just looked at it themselves: no need to point.
+        if (this.time - this.lastHireHover < HIRE_HOVER_QUIET) {
+            this.nextReach = this.lastHireHover + HIRE_HOVER_QUIET;
+            return;
+        }
+        // Don't trip over an upcoming request.
+        if (this.nextRequest - this.time < REQUEST_CLEARANCE + REACH_TIME) {
+            this.nextReach = this.nextRequest + 6;
+            return;
+        }
+        this.bored = false;
+        this.cancel();
+        const seq = this.sequence;
+        this.busyUntil = this.time + REACH_TIME + 0.6;
+        this.express('ooh');
+        this.hop(0.6);
+        this.arms.reach(1, target, REACH_TIME);
+        this.after(0.9, () => {
+            this.express('grumpy');
+            this.say('hire me!', 0.2, { vy: -24, life: 1.8, sway: 4 });
+        }, seq);
+        this.after(REACH_TIME + 0.25, () => this.express(HOME_EXPRESSION), seq);
+        this.nextReach = this.time + randRange(REACH_GAP[0], REACH_GAP[1]);
+        this.nextIdle = Math.max(this.nextIdle, this.time + REACH_TIME + 3);
+    }
+
+    /** Just landed: says hi, then pops an arm out and waves like mad. */
+    private sayHi(): void {
+        if (this.mode !== 'live' || this.money) return;
+        const seq = this.sequence;
+        this.busyUntil = Math.max(this.busyUntil, this.time + WAVE_AFTER_HI + WAVE_TIME);
+        this.express('beam');
+        this.hop(0.5);
+        // On the other side from the waving arm, so they don't overlap.
+        const size = this.size.value;
+        this.floaters.spawn('hi!', this.x.value - size * 0.5, this.y.value - size * 0.5, size * 0.26, { vy: -26, life: 1.8 });
+        if (this.reducedMotion || !ARMS_ENABLED) {
+            this.after(1.2, () => this.express(HOME_EXPRESSION), seq);
+            return;
+        }
+        this.after(WAVE_AFTER_HI, () => {
+            if (this.mode === 'live') this.arms.wave(1, WAVE_TIME);
+        }, seq);
+        this.after(WAVE_AFTER_HI + WAVE_TIME, () => this.express(HOME_EXPRESSION), seq);
     }
 
     /** Now and then it asks the visitor to pet it or play with it. */
@@ -1171,16 +1275,49 @@ export class FaceEngine {
 
     // ─── Render ────────────────────────────────────────────────────────────
 
-    private render(): void {
+    /** Where the face is drawn vertically: position plus nod, bob and landing squash. */
+    private bodyY(): number {
         const k = this.size.value / FACE_FONT_SIZE;
-        const { centre, radius } = this.layout;
-        const sx = this.sx.value;
-        const sy = this.sy.value;
         const floating = this.mode === 'live' && !this.reducedMotion;
         const bob = floating ? Math.sin(this.time * (this.sleeping ? 0.9 : 1.9)) * 2.2 : 0;
         // Squash around the bottom of the face so landings read as weight.
-        const plant = (1 - sy) * radius * 0.7 * k;
-        const y = this.y.value + (this.nod.value + bob) * k + plant;
+        const plant = (1 - this.sy.value) * this.layout.radius * 0.7 * k;
+        return this.y.value + (this.nod.value + bob) * k + plant;
+    }
+
+    /** Arm attachment points: either side of the mouth, turned with the face. */
+    private armFrame(): ArmFrame {
+        const k = this.size.value / FACE_FONT_SIZE;
+        const { centre, mouthX } = this.layout;
+        const d = this.glyphBox('D') ?? { x: 4, y: -72, w: 60, h: 72, advance: 66 };
+        const a = (this.rot.value * Math.PI) / 180;
+        const cos = Math.cos(a);
+        const sin = Math.sin(a);
+        const x = this.x.value;
+        const y = this.bodyY();
+        // Text coordinates (relative to the layout centre) to screen.
+        const at = (tx: number, ty: number) => {
+            const lx = (tx - centre.x) * k;
+            const ly = (ty - centre.y) * k;
+            return { x: x + lx * cos - ly * sin, y: y + lx * sin + ly * cos };
+        };
+        const mx = mouthX + d.x + d.w / 2;
+        const half = (d.h / 2) * ARM_SPREAD;
+        const mid = d.y + d.h / 2;
+        // Text +y (below the baseline) ends up on the viewer's left once turned upright.
+        return {
+            anchors: [at(mx, mid + half), at(mx, mid - half)],
+            size: this.size.value,
+            outline: this.outlinePx(),
+        };
+    }
+
+    private render(): void {
+        const k = this.size.value / FACE_FONT_SIZE;
+        const { centre } = this.layout;
+        const sx = this.sx.value;
+        const sy = this.sy.value;
+        const y = this.bodyY();
         this.el.root.setAttribute(
             'transform',
             `translate(${f(this.x.value)} ${f(y)}) scale(${f(sx)} ${f(sy)}) rotate(${f(this.rot.value)}) scale(${f(k)}) translate(${f(-centre.x)} ${f(-centre.y)})`,

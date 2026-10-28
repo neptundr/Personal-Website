@@ -21,8 +21,8 @@ const MAX_DPR = 2;
 const HOME_ROT = 90 - 14;
 /** The face rests this share of the hole's height below the opening's centre (negative: above). */
 const HOME_DROP = -0.03;
-/** Black outline around the :D and its words, screen px. */
-const FACE_OUTLINE_PX = 8;
+/** Black outline around the :D, its words and arms, in face units (font size 100): scales with the face. */
+const FACE_OUTLINE = 8;
 const PROGRESS_RATE = 7;
 /** A tab return after at least this long earns a "hi!". */
 const WELCOME_BACK_MS = 3000;
@@ -108,7 +108,13 @@ export default function HeroStage() {
             engine.setHome({ x: hole.cx, y: hole.cy + hole.ry * HOME_DROP, size, rot: HOME_ROT }, hole);
         };
 
-        engine.setOutline(FACE_OUTLINE_PX);
+        engine.setOutline(FACE_OUTLINE);
+        engine.setHiringLocator(() => {
+            const hire = root.closest('.v2-hero')?.querySelector<HTMLElement>('.v2-top__hire');
+            if (!hire) return null;
+            const r = hire.getBoundingClientRect();
+            return local(r.left + r.width / 2, r.top + r.height / 2);
+        });
 
         // Background colour is a palette setting; it recolours the whole v2 page.
         const themeRoot = root.closest<HTMLElement>('.v2-root');

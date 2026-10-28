@@ -29,6 +29,8 @@ interface Floater {
 const f = (n: number): string => n.toFixed(2);
 
 export class Floaters {
+    /** Outline stroke width (px) given to each word as it spawns. */
+    outline = 8;
     private active: Floater[] = [];
     private readonly free: SVGTextElement[];
 
@@ -46,6 +48,7 @@ export class Floaters {
         }
         node.textContent = text;
         node.setAttribute('font-size', f(size));
+        node.setAttribute('stroke-width', f(this.outline));
         this.active.push({
             node,
             x,
